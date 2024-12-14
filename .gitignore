@@ -1,0 +1,66 @@
+# Files to be ignored by git in a DataFlex workspace
+
+# AppHtml
+**/apphtml/global.asa
+
+# AppSrc
+**/appsrc/**/*.prn
+**/appsrc/**/*.dep
+**/appsrc/**/*.dbg
+**/appsrc/**/*.exe.manifest
+**/appsrc/**/*.err
+**/appsrc/**/*.fld
+**/appsrc/**/*.pbg
+**/appsrc/**/*.pdp
+**/appsrc/**/*.pkd
+**/appsrc/**/*.prn
+**/appsrc/**/*.prp
+**/appsrc/config/classlist.xml
+loginEncryptionkey.inc
+
+# Data
+**/data/**/*.log
+**/data/**/*.dat
+**/data/**/*.vld
+**/data/**/*.k*
+**/data/**/*.bad
+**/data/**/*.hdr
+**/data/**/*.cch
+**/data/**/*.cfg
+**/data/ScintillaEdit.ini
+**/data/DUFUpdateLog.txt
+
+# DDSrc
+**/ddsrc/**/*.def
+
+# IdeSrc
+**/idesrc/*.dsk
+**/idesrc/*.loc
+**/idesrc/*.mtd
+
+# Programs
+**/programs/*.dbg
+**/programs/*.exe
+**/programs/*.exe.manifest
+**/programs/*.log
+
+# Workspace specific
+**/data/compileheader.h
+**/appsrc/**/refactoredcode.pkg
+**/appsrc/legacycode.pkg
+**/appsrc/**/importbackup
+**/help/**/*.hnd
+**/help/**/assets
+**/help/**/online help
+**/test_results.xml
+**/install
+**/capture
+**/dfrefactor backup
+**/*.mp4
+**/dfrefactor_help.zip
+AppSrc/MarcoTest001.src
+AppSrc/LegacyCode.pkg
+DFRefactor_Backup/DFRefactorLogFile.txt
+*.tmp
+AppSrc/WriteDateTimeHeaderFile.cfg
+Programs/DFRefactor64.tmp
