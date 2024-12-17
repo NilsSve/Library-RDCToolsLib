@@ -18,15 +18,33 @@
 Use cCJGrid.pkg
 Use cRDCProjectIniFile.pkg
 
+#IFNDEF CS_Settings
+    Define CS_Settings                  for "Settings"
+#ENDIF
+#IFNDEF CS_GridFontSize
+    Define CS_GridFontSize              for "GridFontSize"
+#ENDIF
+
+#IFNDEF clGreenGrey
+    Define clGreenGrey              for (RGB(64, 84, 93))
+    Define clGreenGreyLight         for (RGB(7, 117, 104))
+    Define clDarkGreen              for (RGB(49, 60, 83)) 
+#ENDIF
+#IFNDEF clAlternateRowBgColor
+    Define clAlternateRowBgColor    for (RGB(216, 217, 227))    // HTML #D8D9E3
+    Define clStatusBarColor         for (RGB(45, 130, 149))     // HTML #2D8295
+    Define clEditorBackGround       for (RGB(36, 49, 68))       // HTML 243144
+    Define clBaseColor              for (RGB(239, 239, 239))    // HTML #EFEFEF  
+    Define clActiveRow              for (RGB(1, 82, 119))       // HTML #015277 
+    Define clProgramIconBg          for (RGB(43, 59, 83))       // HTML #2B3B53
+#ENDIF
+
 Class cRDCCJGrid is a cCJGrid
 
     Procedure Construct_Object
         Forward Send Construct_Object
         // Set to true if an descending index is in use
         Property Boolean pbDescendingIndexInUse False
-
-        Set pbHeaderReorders to True
-        Set pbHeaderTogglesDirection to True
 
         // If you quickly double-right-click, or quickly click around a cCJGrid
         // (using a combination of middle-clicks, right-clicks and left-clicks), the application can crash.
@@ -39,14 +57,11 @@ Class cRDCCJGrid is a cCJGrid
         // To change the height of grid rows.
         Property Integer piGrid_Row_Height  0
 
-        On_Key Key_Alt+Key_Down_Arrow Send MoveDown
-        On_Key Key_Alt+Key_Up_Arrow   Send MoveUp
-    End_Procedure
-
-    Procedure Construct_Object
-        Forward Send Construct_Object   
+        Set pbHeaderReorders to True
+        Set pbHeaderTogglesDirection to True
         Set pbRestoreLayout to True
         Set psLayoutSection to ((Object_Label(Parent(Self))) + "-" + (Object_Label(Self)))
+        Set psNoItemsText to "No data found..."
         Set pbUseAlternateRowBackgroundColor to True     
         Set piAlternateRowBackgroundColor to clAlternateRowBgColor   
         Set pbUseFocusCellRectangle to False
@@ -55,15 +70,19 @@ Class cRDCCJGrid is a cCJGrid
         Set pbSelectionEnable to True
         Set piSelectedRowBackColor to clGreenGreyLight
         Set piHighlightBackColor   to clGreenGreyLight
+        Set piTooltipMaxWidth to 400
         Set pbShowFooter to True  
         Set peAnchors to anAll
         #IF (!@ > 180)
             #IF (!@ < 230)
                 Set peVisualTheme to xtpReportThemeExplorer
             #ELSE
-                Set peVisualTheme to xtpGridThemeVisualStudio2022 // xtpGridThemeExplorer
+                Set peVisualTheme to xtpGridThemeExplorer
             #ENDIF
         #ENDIF
+
+        On_Key Key_Alt+Key_Down_Arrow Send MoveDown
+        On_Key Key_Alt+Key_Up_Arrow   Send MoveUp
     End_Procedure
 
     Procedure ResetGrid
