@@ -176,9 +176,10 @@ Class cRDCCJGridColumnSuggestion is a cCJGridColumn
         Property String psOrgString
 
         Set pbEditable to True
+        Set pbAllowRemove to False
         Set peSuggestionMode to smCustom
         // Show suggestion list after first character is entered
-        Set piStartAtChar to 1
+        Set piStartAtChar to 2
 
         // Best guess. In most cases this is probably what is most beneficial to the user.
         Set pbFullText to True

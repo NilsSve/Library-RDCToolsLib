@@ -92,8 +92,8 @@ Class cRDCDbCJInvertSelectionsMenuItem is a cCJMenuItem
     End_Procedure
 
     Procedure OnExecute Variant vCommandBarControl
-        Send SelectInvert
-//        Set SelectItems to cx_Select_Invert
+        Send SelectInvert of (Server(Self)) 
+        Send RefreshSelectionUpdate
     End_Procedure
 
 End_Class
@@ -175,6 +175,7 @@ Class cDbGridContext_mnu is a cCJContextMenu
     End_Procedure
 
 End_Class
+Register_Object oCheckbox_Col
 
 Class cRDCDbCJGrid is a cDbCJGrid
 
@@ -201,10 +202,15 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set pbShowRowFocus to True
         Set pbHotTracking to True
         Set pbSelectionEnable to True
-        Set piSelectedRowBackColor to clGreenGreyLight
-        Set piHighlightBackColor   to clGreenGreyLight
+//        Set piSelectedRowBackColor to clGreenGreyLight
+//        Set piHighlightBackColor   to clGreenGreyLight
+        Set piSelectedRowBackColor to clActiveRow
+        Set piHighlightBackColor   to clActiveRow  
+        Set piCaptionBackColor     to clProgramIconBg
+        Set piCaptionForeColor     to clWhite   
         Set pbShowFooter to True  
         Set peAnchors to anAll
+
         #IF (!@ > 180)
             #IF (!@ < 230)
                 Set peVisualTheme to xtpReportThemeExplorer
@@ -221,6 +227,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         On_Key Key_Ctrl+Key_I Send SelectInvert
         On_Key Key_Insert     Send BrowseForFolder
     End_Procedure 
+    
     Procedure Set peGridvisualTheme Integer eGridTheme
         Set peVisualTheme to eGridTheme 
     End_Procedure
@@ -228,6 +235,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
     Procedure End_Construct_Object    
         Handle hoContextMenu
         Integer eGridTheme
+        
         Forward Send End_Construct_Object
         Get Create (RefClass(cDbGridContext_mnu)) to hoContextMenu
         Set phoContextMenu to hoContextMenu
@@ -550,6 +558,13 @@ Register_Object oCheckbox_Col
         If (hoCol <> 0) Begin
             Set psFooterText of hoCol  to ("Selected:" * String(iSelected) * "of" * String(iItems))            
         End
+
+        Get phoCheckbox_Col to hoCheckbox_Col
+        If (hoCheckbox_Col <> 0) Begin
+            Get piColumnId of hoCheckbox_Col to iCol
+            Get ColumnObject iCol to hoCol
+            Set psFooterText of hoCol  to ("#" * String(iSelected))
+        End
     End_Procedure
 
     Procedure OnCreateGridControl
@@ -557,6 +572,7 @@ Register_Object oCheckbox_Col
         Send DoChangeTooltipStyle
     End_Procedure    
     
+    // The grid must have been paged first in order to change the font size.
     Procedure Activating
         Send DoChangeFontSize      
     End_Procedure    

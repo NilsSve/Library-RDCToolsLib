@@ -68,8 +68,11 @@ Class cRDCCJGrid is a cCJGrid
         Set pbShowRowFocus to True
         Set pbHotTracking to True
         Set pbSelectionEnable to True
-        Set piSelectedRowBackColor to clGreenGreyLight
-        Set piHighlightBackColor   to clGreenGreyLight
+        Set piSelectedRowBackColor to clActiveRow
+        Set piHighlightBackColor   to clActiveRow
+//        Set piSelectedRowBackColor to clGreenGreyLight
+//        Set piHighlightBackColor   to clGreenGreyLight
+
         Set piTooltipMaxWidth to 400
         Set pbShowFooter to True  
         Set peAnchors to anAll
@@ -202,7 +205,8 @@ Class cRDCCJGrid is a cCJGrid
             Procedure_Return
         End
         Get IniFileValue of ghoProjectIniFile (psSectionName(ghoProjectIniFile)) CS_UseHighlightstateText CS_BooleanNo to sState
-        Get IniFileValue of ghoProjectIniFile (psSectionName(ghoProjectIniFile)) CS_HighlightColorText clGreenGreyLight to sColor
+        Get IniFileValue of ghoProjectIniFile (psSectionName(ghoProjectIniFile)) CS_HighlightColorText clStatusBarColor to sColor
+//        Get IniFileValue of ghoProjectIniFile (psSectionName(ghoProjectIniFile)) CS_HighlightColorText clGreenGreyLight to sColor
 
         If (sState = CS_BooleanYes) Begin
             Set pbSelectionEnable to True
