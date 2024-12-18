@@ -1,7 +1,13 @@
+
+
+
+
+
 Use Windows.pkg
 Use cDbCJGridColumnSuggestion.pkg
 Use cRDCDbSuggestionForm.pkg
 
+// 2024-12-18 NOTE: This class doesn't seem to be used anywhere!
 Class cShowSuggestions is a Mixin
     Procedure ShowSuggestions
         Integer isize ilen iLines ipoints iFIXED_PITCH ilen1 i
