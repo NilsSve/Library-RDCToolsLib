@@ -585,9 +585,12 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Get CheckedItems to iSelected
         Set psFooterText of hoCol  to ("Selected:" * String(iSelected) * "of" * String(iItems))
 
-        Get piColumnId of (phoCheckbox_Col(Self)) to iCol
-        Get ColumnObject iCol to hoCol
-        Set psFooterText of hoCol  to ("#" * String(iSelected))
+        Get phoCheckbox_Col to hoCheckbox_Col
+        If (hoCheckbox_Col <> 0) Begin
+            Get piColumnId of hoCheckbox_Col to iCol
+            Get ColumnObject iCol to hoCol
+            Set psFooterText of hoCol  to ("#" * String(iSelected))
+        End
     End_Procedure
 
     Procedure DoChangeFontSize
