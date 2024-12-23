@@ -24,7 +24,6 @@ Use cCJGridColumnRowIndicator.pkg
 Use cRDCCJGrid.pkg
 Use Cursor.pkg
 Use vWin32fh.pkg
-Use RefactorConstants.inc
 
 Enum_List
     Define cx_Select_All
