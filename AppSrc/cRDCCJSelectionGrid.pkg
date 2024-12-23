@@ -1,4 +1,4 @@
-//****************************************************************************
+﻿//****************************************************************************
 // $Module type: Package
 // $Module name: cRDCCJSelectionGrid.pkg
 //
@@ -24,35 +24,7 @@ Use cCJGridColumnRowIndicator.pkg
 Use cRDCCJGrid.pkg
 Use Cursor.pkg
 Use vWin32fh.pkg
-
-#IFNDEF clGreenGrey
-    Define clGreenGrey                for (RGB(64, 84, 93))
-    Define clGreenGreyLight           for (RGB(7, 117, 104))
-#ENDIF
-#IFNDEF CS_Settings
-    Define CS_Settings                for "Settings"
-#ENDIF
-#IFNDEF CS_GridFontSize
-    Define CS_GridFontSize            for "GridFontSize"
-#ENDIF
-#IFNDEF CS_GridRowBackgroundColor
-    Define CS_GridRowBackgroundColor  for "GridRowBackgroundColor"
-#ENDIF
-
-#IFNDEF _struct_tsSearchResult
-Struct tsSearchResult
-    String sFilename
-    String sAlternateFileName   // 8.3 format
-    DateTime dtCreationDateTime
-    DateTime dtLastAccessDateTime
-    DateTime dtLastWriteDateTime
-    BigInt biFileSize
-    Integer iFileAttributes
-#IFDEF IS$WIN64
-    Integer iMissingAlignment1
-#ENDIF
-End_Struct
-#ENDIF
+Use RefactorConstants.inc
 
 Enum_List
     Define cx_Select_All
@@ -208,34 +180,20 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Property Boolean pbEnableMoveKeys False
         Property Boolean pbAutoSaveSelections False
 
-        Set pbHeaderPrompts to False
+        Set pbHeaderPrompts  to False
+        Set pbAllowDeleteRow to False 
         Set pbAllowInsertRow to False
         Set pbAllowAppendRow to False
-        Set pbAllowDeleteRow to False 
+        Set pbAutoAppend     to False
+        Set pbAllowEdit      to True
+        Set pbEditOnClick    to True
         Set pbMultipleSelection to True
-        Set pbEditOnClick to True
-        Set piLayoutBuild to 4
-        Set Status_Help to "Select with the spacebar"
-        // This makes the ticked checkboxes to appear as bold.
-//        #IF (!@ > 180)
-//            #IF (!@ < 230)
-//                Set peVisualTheme to xtpReportThemeVisualStudio2012Light
-//            #ELSE
-//                Set peVisualTheme to xtpGridThemeVisualStudio2012Light
-//            #ENDIF
-//        #ENDIF
-//        Set piCaptionBackColor to clProgramIconBg
-//        Set piCaptionForeColor to clWhite   
-
+        Set Status_Help      to "Select with spacebar"
+        
         On_Key Key_Space      Send ToggleCurrentItem
-        On_Key Key_Delete     Send Request_Delete
-        On_Key Key_Insert     Send BrowseForFolder
         On_Key Key_Ctrl+Key_A Send SelectAll
         On_Key Key_Ctrl+Key_N Send SelectNone
         On_Key Key_Ctrl+Key_I Send SelectInvert
-        On_Key kCancel        Send CancelIfPopupObject
-        On_Key Key_Alt+Key_Down_Arrow Send MoveDown
-        On_Key Key_Alt+Key_Up_Arrow   Send MoveUp
     End_Procedure
 
     Procedure End_Construct_Object
@@ -261,59 +219,9 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Set phoContextMenu to hoContextMenu
     End_Procedure
 
-    Procedure MoveUp
-        tDataSourceRow[] TheData
-        tDataSourceRow TheRow
-        Handle hDataSource
-        Integer iCurrentRow
-
-        If (pbEnableMoveKeys(Self) = False) Begin
-            Procedure_Return
-        End
-        Get phoDataSource to hDataSource
-        Get DataSource of hDataSource to TheData
-        Get SelectedRow of hDataSource to iCurrentRow
-        If (iCurrentRow > 0) Begin
-            Move TheData[iCurrentRow - 1] to TheRow
-            Move TheData[iCurrentRow] to TheData[iCurrentRow - 1]
-            Move TheRow to TheData[iCurrentRow]
-            Send ReInitializeData TheData True
-            Send MoveToRow (iCurrentRow - 1)
-        End
-    End_Procedure
-
-    Procedure MoveDown
-        tDataSourceRow[] TheData
-        tDataSourceRow TheRow
-        Handle hDataSource
-        Integer iCurrentRow
-
-        If (pbEnableMoveKeys(Self) = False) Begin
-            Procedure_Return
-        End
-        Get phoDataSource to hDataSource
-        Get DataSource of hDataSource to TheData
-        Get SelectedRow of hDataSource to iCurrentRow
-        If ((iCurrentRow + 1) < SizeOfArray(TheData)) Begin
-            Move TheData[iCurrentRow] to TheRow
-            Move TheData[iCurrentRow + 1] to TheData[iCurrentRow]
-            Move TheRow to TheData[iCurrentRow + 1]
-            Send ReInitializeData TheData True
-            Send MoveToRow (iCurrentRow + 1)
-        End
-    End_Procedure
-
     Procedure RefreshSelectionUpdate
     End_Procedure                   
     
-    Procedure CancelIfPopupObject
-        Boolean bIsInPopupObject
-        Delegate Get Popup_State to bIsInPopupObject
-        If (bIsInPopupObject = True) Begin
-            Send Close_Panel
-        End
-    End_Procedure
-
     Procedure OnCreateGridControl
         Handle hoObject
         Integer iToolTipStyle
@@ -340,40 +248,10 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Send DoChangeFontSize
     End_Procedure
 
-    Procedure AddItem String sDataValue
-        Handle hoDataSource
-        tDataSourceRow[] TheData
-        tsSearchResult[] asFolderArray
-        Integer iSize iData_Col iCheckbox_Col
-
-        If (not(IsComObjectCreated(Self))) Begin
-            Procedure_Return
-        End
-
-        Get piColumnId of (phoData_Col(Self)) to iData_Col
-        Get piColumnId of (phoCheckbox_Col(Self)) to iCheckbox_Col
-        Get phoDataSource to hoDataSource
-        Get DataSource of hoDataSource to TheData
-        Move (SizeOfArray(TheData)) to iSize
-        Move sDataValue to TheData[iSize].sValue[iData_Col]
-        Move False      to TheData[iSize].sValue[iCheckbox_Col]
-
-        Send ReInitializeData TheData False
-        Send MoveToLastRow
-    End_Procedure
-
-    Procedure BrowseForFolder
-        String sFolderName
-        Get vSHBrowseForFolder "Select Folder to Add" to sFolderName
-        If (sFolderName <> "") Begin
-            Send AddItem sFolderName
-        End
-    End_Procedure
-
     // We don't want columns to be editable. But setting
     // pbEditable = False or pbReadOnly makes it very hard to read,
     // and makes it impossible to select the checkbox column with the mouse.
-    // So we disable those columns instead.
+    // So we disable other columns than the checkbox column instead.
     Function CanEditColumn Integer iCol Returns Boolean
         Handle hoCol
         Boolean bRetval

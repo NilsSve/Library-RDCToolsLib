@@ -59,7 +59,6 @@ Class cRDCDbCJSelectAllMenuItem is a cCJMenuItem
     End_Procedure
 
     Procedure OnExecute Variant vCommandBarControl
-
         Send SelectAll of (Server(Self))
         Send RefreshSelectionUpdate
     End_Procedure
@@ -147,34 +146,60 @@ Class cRDCDbCJRemoveItemMenuItem is a cCJMenuItem
 
 End_Class
 
-Register_Function pbDbShowAddFolderMenuItem Returns Boolean
-Register_Function pbDbShowRemoveFolderMenuItem Returns Boolean
+Class cRDCDbCJEditMenuItem is a cCJMenuItem
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psCaption to "Edit"
+        Set psImage to "Edit.ico"
+    End_Procedure
+
+    Procedure OnExecute Variant vCommandBarControl
+        Forward Send OnExecute vCommandBarControl
+        Send Request_Edit
+    End_Procedure
+
+End_Class
+
+Register_Function pbDbShowAddFolderMenuItem Returns Boolean   
+Register_Function pbDbOpenContainingFolderMenuItem Returns Boolean
+Register_Function pbDbShowRemoveItemMenuItem Returns Boolean
 Register_Function pbDbShowInvertSelectionsMenuItem Returns Boolean
+Register_Function pbDbShowEditMenuItem Returns Boolean
+Register_Procedure Request_Edit
 
 Class cDbGridContext_mnu is a cCJContextMenu
     Procedure Construct_Object
         Handle hoMenuItem
         Forward Send Construct_Object
 
-        Get Create (RefClass(cRDCDbCJToggleSelectMenuItem))      to hoMenuItem
-        Get Create (RefClass(cRDCDbCJSelectAllMenuItem))         to hoMenuItem
-        Get Create (RefClass(cRDCDbCJSelectNoneMenuItem))        to hoMenuItem
+        Get Create (RefClass(cRDCDbCJToggleSelectMenuItem)) to hoMenuItem
+        Get Create (RefClass(cRDCDbCJSelectAllMenuItem))    to hoMenuItem
+        Get Create (RefClass(cRDCDbCJSelectNoneMenuItem))   to hoMenuItem
         If (pbDbShowInvertSelectionsMenuItem(Self) = True) Begin
-            Get Create (RefClass(cRDCDbCJInvertSelectionsMenuItem))  to hoMenuItem
+            Get Create (RefClass(cRDCDbCJInvertSelectionsMenuItem)) to hoMenuItem
         End
         If (pbDbShowAddFolderMenuItem(Self) = True) Begin
-            Get Create (RefClass(cRDCDbCJAddFolderMenuItem))  to hoMenuItem
+            Get Create (RefClass(cRDCDbCJAddFolderMenuItem)) to hoMenuItem
             Set pbControlBeginGroup of hoMenuItem to True
         End
-        If (pbDbShowRemoveFolderMenuItem(Self) = True) Begin
+        If (pbDbOpenContainingFolderMenuItem(Self) = True) Begin
+            Get Create (RefClass(cRDCDbCJOpenContainingFolderMenuItem))  to hoMenuItem
+        End
+        If (pbDbShowRemoveItemMenuItem(Self) = True) Begin
             Get Create (RefClass(cRDCDbCJRemoveItemMenuItem))  to hoMenuItem
             If (pbDbShowAddFolderMenuItem(Self) = False) Begin
                 Set pbControlBeginGroup of hoMenuItem to True
             End
         End
+        If (pbDbShowEditMenuItem(Self) = True) Begin
+            Get Create (RefClass(cRDCDbCJEditMenuItem))  to hoMenuItem
+            Set pbControlBeginGroup of hoMenuItem to True
+        End
     End_Procedure
 
 End_Class
+
 Register_Object oCheckbox_Col
 
 Class cRDCDbCJGrid is a cDbCJGrid
@@ -188,44 +213,65 @@ Class cRDCDbCJGrid is a cDbCJGrid
         // If you quickly double-right-click, or quickly click around a cCJGrid
         // (using a combination of middle-clicks, right-clicks and left-clicks), the application can crash.
         // To guard against this see the augmented procedure OnComRowRClick below.
-        Property Boolean pbRightClickProcessing False   
         Property Handle phoCheckbox_Col
         Property Handle phoData_Col
+        Property Boolean pbRightClickProcessing False   
         Property Boolean pbDbShowAddFolderMenuItem False
-        Property Boolean pbDbShowRemoveFolderMenuItem False
+        Property Boolean pbDbOpenContainingFolderMenuItem False
+        Property Boolean pbDbShowRemoveItemMenuItem False
         Property Boolean pbDbShowInvertSelectionsMenuItem False
+        Property Boolean pbDbShowEditMenuItem False
         
-        Set pbRestoreLayout to True
-        Set psLayoutSection to ((Object_Label(Parent(Self))) + "-" + (Object_Label(Self)))
-        Set pbUseAlternateRowBackgroundColor to True     
-        Set pbUseFocusCellRectangle to False
-        Set pbShowRowFocus to True
-        Set pbHotTracking to True
-        Set pbSelectionEnable to True
-//        Set piSelectedRowBackColor to clGreenGreyLight
-//        Set piHighlightBackColor   to clGreenGreyLight
-        Set piSelectedRowBackColor to clActiveRow
-        Set piHighlightBackColor   to clActiveRow  
-        Set piCaptionBackColor     to clProgramIconBg
-        Set piCaptionForeColor     to clWhite   
-        Set pbShowFooter to True  
-        Set peAnchors to anAll
-
         #IF (!@ > 180)
             #IF (!@ < 230)
                 Set peVisualTheme to xtpReportThemeExplorer
             #ELSE
-                Set peVisualTheme to xtpGridThemeExplorer
+                Set peVisualTheme to xtpGridThemeVisualStudio2012Light //xtpGridThemeVisualStudio2022 //xtpGridThemeExplorer
             #ENDIF
         #ENDIF
 
-        On_Key Key_End   Send MoveToLastEnterableColumn
-        On_Key Key_Home  Send MoveToFirstEnterableColumn
-        On_Key Key_Space Send ToggleCurrentItem 
+        // General settings
+        Set pbRestoreLayout to True
+        Set psLayoutSection to ((Object_Label(Parent(Self))) + "-" + (Object_Label(Self)))
+        Set psNoItemsText to "No data found..."
+        Set pbHeaderReorders to True
+        Set pbHeaderPrompts to True
+        Set pbHeaderTogglesDirection to True
+        Set pbShowRowFocus to True
+        Set pbHotTracking to True
+        Set pbShowFooter to True
+        Set pbSelectionEnable to True
+        Set pbUseFocusCellRectangle to True
+        Set pbShadeSortColumn to False
+        Set peBorderStyle to xtpBorderThemedFrame
+        Set peHorizontalGridStyle to xtpGridSolid // SmallDots // Solid
+        Set pbAllowDeleteRow to False
+        Set pbAllowInsertRow to False
+        Set pbAllowAppendRow to False
+        Set pbEditOnClick to False
+        Set pbAutoAppend to False 
+        Set piTooltipMaxWidth to 400
+        Set peAnchors to anAll
+        
+        // Colors
+        Set pbUseAlternateRowBackgroundColor to True  
+        Set piAlternateRowBackgroundColor    to clAlternateRowBgColor   
+        Set piSelectedRowBackColor           to clActiveRow
+        Set piSelectedRowForeColor           to clWhite
+        Set piHighlightBackColor             to clActiveRow  
+        Set piCaptionBackColor               to clProgramIconBg
+        Set piCaptionForeColor               to clWhite   
+
+        Set Status_Help to ""
+        
+        On_Key Key_End        Send MoveToLastEnterableColumn
+        On_Key Key_Home       Send MoveToFirstEnterableColumn
+        On_Key Key_Delete     Send Request_Delete
+        On_Key Key_Insert     Send BrowseForFolder
+        On_Key Key_Space      Send ToggleCurrentItem 
         On_Key Key_Ctrl+Key_A send SelectAll
         On_Key Key_Ctrl+Key_N send SelectNone
         On_Key Key_Ctrl+Key_I Send SelectInvert
-        On_Key Key_Insert     Send BrowseForFolder
     End_Procedure 
     
     Procedure Set peGridvisualTheme Integer eGridTheme
@@ -252,10 +298,10 @@ Class cRDCDbCJGrid is a cDbCJGrid
     Procedure SelectInvert
         Set SelectItems to cx_DbSelect_Invert
     End_Procedure
-    { EnumList="cx_Select_All, cx_Select_None, cx_Select_Invert" }
-    // Set checkbox column to selected states.
-    // iState can be one of the following:
-    // cx_Select_All, cx_Select_None or cx_Select_Invert
+
+    { EnumList="cx_dbSelect_All, cx_dbSelect_None, cx_dbSelect_Invert" }
+    // Set checkbox column to selected state. 
+    // Note that the pbStaticData needs to be True for this to work.
     Procedure Set SelectItems Integer iState
         Integer iCount iSize iCheckbox_Col iData_Col iSelectedRow
         Boolean bChecked
@@ -307,64 +353,6 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Send DoSetCheckboxFooterText
     End_Procedure
 
-
-//    Procedure Set SelectItems Integer iState
-//        Integer iCount iSize iCheckbox_Col
-//        Boolean bChecked
-//        Handle hoDataSource hoCheckBox_Col hoDD
-//
-//        tDataSourceRow[] TheData
-//
-//        Get phoCheckbox_Col to hoCheckBox_Col
-//
-//        If (hoCheckBox_Col = 0) Begin
-//            Procedure_Return
-//        End                 
-//        
-//        Get piColumnId of (phoCheckbox_Col(Self)) to iCheckbox_Col
-//
-//        Get phoDataSource               to hoDataSource
-//        Get DataSource of hoDataSource  to TheData
-//
-//        Move (SizeOfArray(TheData))     to iSize
-//        Decrement iSize
-//        For iCount from 0 to iSize
-//            Case Begin
-//
-//                Case (iState = cx_DbSelect_All)
-//                    Move True to TheData[iCount].sValue[iCheckbox_Col]
-//                    Case Break
-//                Case (iState = cx_DbSelect_None)
-//                    Move False to TheData[iCount].sValue[iCheckbox_Col]
-//                    Case Break
-//                Case (iState = cx_DbSelect_Invert)
-//                    Move TheData[iCount].sValue[iCheckbox_Col] to bChecked
-//                    Move (not(bChecked)) to TheData[iCount].sValue[iCheckbox_Col]
-//                    Case Break
-//            Case End
-//        Loop
-//
-//
-//
-//        Send ReInitializeData TheData False
-//
-//        Send Request_Save
-//        Get Main_DD to hoDD
-//        If (hoDD <> 0) Begin    
-//            If (iState = cx_DbSelect_All) Begin
-//                Send SelectAll of hoDD
-//            End 
-//            If (iState = cx_DbSelect_None) Begin
-//                Send DeSelectAll of hoDD
-//            End 
-//            Send Request_Assign of hoDD
-//
-//
-//            Send Refind_Records of hoDD
-//        End
-//        Send DoSetCheckboxFooterText
-//    End_Procedure
-
     Procedure RefreshSelectionUpdate 
         Handle hoDataSource
         Integer iSelectedRow
@@ -372,8 +360,6 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Get SelectedRow of hoDataSource to iSelectedRow
         Send RefreshDataFromDD iSelectedRow
     End_Procedure
-
-Register_Object oCheckbox_Col
 
     // Returns a string array with selected values for the data column (phoData_Col).
     Function SelectedItems Returns String[]
@@ -414,17 +400,6 @@ Register_Object oCheckbox_Col
         Function_Return sDataArray
     End_Function
 
-//    Procedure SelectAll
-//        Set SelectItems to cx_DbSelect_All
-//    End_Procedure
-//
-//    Procedure SelectNone
-//        Set SelectItems to cx_DbSelect_None
-//    End_Procedure
-//
-//    Procedure SelectInvert
-//        Set SelectItems to cx_DbSelect_Invert
-//    End_Procedure
     Procedure AddItem String sDataValue
         Handle hoDataSource
         tDataSourceRow[] TheData  
@@ -653,10 +628,15 @@ Register_Object oCheckbox_Col
     End_Procedure
 
     Procedure DoSetCurrentRow
+        String sState sColor
+
+        Get psGridRowBackgroundColor of ghoApplication to sColor
+        Set piSelectedRowBackColor to (Eval(sColor))
+        Set piHighlightBackColor   to (Eval(sColor))
         Send DoSetCheckboxFooterText
     End_Procedure
 
-    Function Checkbox_item_State Integer iItem Returns Integer
+    Function Checkbox_Item_State Integer iItem Returns Integer
         Forward Get Checkbox_Item_State to iItem
         Send DoSetCheckboxFooterText
         Function_Return iItem
@@ -681,7 +661,7 @@ Register_Object oCheckbox_Col
     End_Procedure
 
     // Redisplay the grid records around the current record.
-    // If the  record no longer exists or no longer conforms to the current constraints
+    // If the record no longer exists or no longer conforms to the current constraints
     // this will redisplay the records with the same iOffset.
     // If both finds fail the grid will not be updated so we need to clear it.
     Procedure RefreshGrid

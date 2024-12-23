@@ -20,10 +20,10 @@ Use Windows.pkg
 Use cCommandLinkButton.pkg
 
 #IFNDEF clGreenGrey
-Define clGreenGrey      for (RGB(64, 84, 93))
+    Define clGreenGrey      for (RGB(64, 84, 93))
 #ENDIF
 #IFNDEF clGreenGreyLight
-Define clGreenGreyLight for (RGB(7, 117, 104))
+    Define clGreenGreyLight for (RGB(7, 117, 104))
 #ENDIF
 
 Enum_List
