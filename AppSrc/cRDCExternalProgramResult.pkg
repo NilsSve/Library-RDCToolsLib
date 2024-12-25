@@ -306,5 +306,4 @@ End_Class
 
 Object oRDCExternalProgramResult is a cRDCExternalProgramResult
     Move Self to ghoExternalProgramResult
-    Move 0 to ghoExternalProgramResult
 End_Object
