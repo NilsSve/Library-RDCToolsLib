@@ -6,5 +6,6 @@ ConfigFile=.\Programs\Config.ws
 TestWindowsProject=Test.src
 [Conditionals]
 Is$WebApp=False
+[WorkspacePaths]
 [Preferences]
 DefaultFormHeight=12
