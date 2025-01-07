@@ -1,6 +1,8 @@
 ﻿Use Dfclient.pkg
 Use cCJCommandBarSystem.pkg
 
+Register_Procedure ScaleFont Integer iClicks
+
 { DDOHost=True }
 { DataAware=True }
 { DesignerClass=cDTModalPanel }
