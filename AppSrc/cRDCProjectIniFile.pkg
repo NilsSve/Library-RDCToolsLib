@@ -61,12 +61,11 @@ Class cRDCProjectIniFile is a cIniFile
         Property String private_psIniFileName
         Property String psSectionName "Settings"
 
-        Set psIniFilePath to (psProgramPath(phoWorkspace(ghoApplication)))
         Get GetApplicationFileName of ghoApplication to sApplicationFileName
         Get ParseFileName sApplicationFileName to sApplicationFileName
         Get ParseFileExtension sApplicationFileName to sExtension
-
         Set psIniFileName to (Replace(sExtension, sApplicationFileName, "ini"))
+        Set psIniFilePath to (psProgramPath(phoWorkspace(ghoApplication)))
     End_Procedure
 
     Procedure Set psIniFilePath String sPath
