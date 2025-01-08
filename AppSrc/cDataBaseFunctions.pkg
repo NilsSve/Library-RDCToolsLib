@@ -636,7 +636,7 @@ Class cDatabaseFunctions is a cObject
         Get AllMasterAndAliasFiles (&aiFileIsMaster) to aiFileIsAlias 
         Close DF_ALL DF_PERMANENT
         Send SubReindexAllFiles aiFileIsMaster aiFileIsAlias
-        Send DoOpenAllFiles iFileIsMaster iFileIsAlias
+        Send DoOpenAllFiles aiFileIsMaster aiFileIsAlias
     End_Procedure
 
     // Repair & reindex all files.
@@ -646,7 +646,7 @@ Class cDatabaseFunctions is a cObject
         Get AllMasterAndAliasFiles (&aiFileIsMaster) to aiFileIsAlias
         Close DF_ALL DF_PERMANENT
         Send SubRepairAllFiles aiFileIsMaster aiFileIsAlias
-        Send DoOpenAllFiles iFileIsMaster iFileIsAlias
+        Send DoOpenAllFiles aiFileIsMaster aiFileIsAlias
     End_Procedure
 
     // Backs up all data tables to sub-folder of the Data folder.
@@ -1267,7 +1267,7 @@ Class cDatabaseFunctions is a cObject
                         Send Update_StatusPanel of ghoStatusPanel CS_CopyingRecords
                     End
 
-                    Copy_db sRootname to (sBackupFolder + sDirSep + sRootname) Callback ghoValueObject
+                    Copy_db sRootname to (sBackupFolder + sDirSep + sRootname) Callback Self
                     Send UpdateStatusBar of ghoStatusPanel
 
                     Open iTableNum
@@ -1362,7 +1362,7 @@ Class cDatabaseFunctions is a cObject
                     Set Message_Text of ghoStatusPanel to (CS_RestoringTable * sRootName)
                     // Copy data record by record:
                     Indicate Err False
-                    Copy_db (sBackupFolder + sDirSep + sRootname) to sRootname Callback ghoValueObject
+                    Copy_db (sBackupFolder + sDirSep + sRootname) to sRootname Callback Self
 
                     If (Err = True) Begin
                         If ghoStatusPanel Begin
