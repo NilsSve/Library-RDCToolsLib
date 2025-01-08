@@ -1,4 +1,4 @@
-Use AutoReindex.dg
+ï»¿Use AutoReindex.dg
 
 // English:
 Define CS_DbErrorDetected for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
@@ -6,9 +6,9 @@ Define CS_StartRepairNow  for "OK?"
 Define CS_ElseQuitProgram for "If you press No, the program will be closed."
 
 // Swedish:
-//Define CS_DbErrorDetected for "Ett databasfel har uppt„ckts och databasen beh”ver omsorteras/repareras."
+//Define CS_DbErrorDetected for "Ett databasfel har upptÃ¤ckts och databasen behÃ¶ver omsorteras/repareras."
 //Define CS_StartRepairNow  for "Starta bearbetning av databasen nu?"
-//Define CS_ElseQuitProgram for "Om du v„ljer Nej, kommer programmet att avslutas."
+//Define CS_ElseQuitProgram for "Om du vÃ¤ljer Nej, kommer programmet att avslutas."
 
 // Test to check that the 'correct' df_collate.cfg is used,
 // else reindex all tables prior to starting the program.
@@ -23,8 +23,20 @@ Define CS_ElseQuitProgram for "If you press No, the program will be closed."
 //    End_Procedure // DoOpenWorkspace
 //
 // You must use this package above the cApplication object's DoOpenWorkspace procedure.
-// Syntax:
+// Sample:
 //   Use DoCheckCollatingSequence.pkg
+//
+// Object oApplication is a cApplication
+//
+//        Procedure DoOpenWorkspace String sWorkspace
+//            String sParam
+//            Handle hoCmdLine
+//    
+//            Forward Send DoOpenWorkspace sWorkspace
+//            // Needs to be send right after the forward send...
+//            Send DoCheckCollatingSequence ManHdr.File_Number Field ManHdr.ManifestFileName // Pass file- & field-number for an ASCII field
+//        End_Procedure
+//    ...
 //
 Procedure DoCheckCollatingSequence Desktop Integer iFile Integer iField
     Integer iRetval iIndex iRecords
