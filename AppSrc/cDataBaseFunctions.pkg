@@ -625,7 +625,7 @@ Class cDatabaseFunctions is a cObject
             If (iRetval = MBR_No) Begin
                 Send Exit_Application
             End
-            Send DoRepairFiles
+            Send RepairAll
         End
     End_Procedure
 
@@ -1218,7 +1218,7 @@ Class cDatabaseFunctions is a cObject
 
         // Start the status panel
         If (ghoStatusPanel <> 0) Begin
-            Send Initialize_StatusPanel to ghoStatusPanel CS_BackupUpData "" "" (psAviFile(Self))
+            Send Initialize_StatusPanel to ghoStatusPanel CS_BackupUpData "" "" //(psAviFile(Self))
             Send Start_StatusPanel to ghoStatusPanel
         End
 
@@ -1306,7 +1306,7 @@ Class cDatabaseFunctions is a cObject
         Move (SysConf(Sysconf_Dir_Separator)) to sDirSep
         // Start the status panel
         If ghoStatusPanel Begin
-            Send Initialize_StatusPanel to ghoStatusPanel CS_RestoringData "" "" (psAviFile(Self))
+            Send Initialize_StatusPanel to ghoStatusPanel CS_RestoringData "" "" //(psAviFile(Self))
             Send Start_StatusPanel to ghoStatusPanel
         End
 
