@@ -1,8 +1,25 @@
-Use RefactorStatusPanel.pkg
+Ôªø//****************************************************************************
+// $Module type: Class
+// $Module name: cDataBaseFunctions
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2013-10-29 @ 08:25 (Military date format: YY-MM-DD)
+//
+// Description : Maintenance databasefunctions for embedded (.dat) tables
+//               Includes: Reindex all, Repair all, Backup all to subfolder,
+//                         Restore from subfolder.
+//
+// $Rev History:
+//    2013-10-29  Module header created
+//****************************************************************************
+Use RDCStatusPanel.pkg
 Use LanguageText.pkg
 
 // English
 #IFSame Language$Current = Language$English
+    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
+    Define CS_StartRepairNow      for "OK?"
+    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
     Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
     Define CS_StartRepairNow      for "OK?"
     Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
@@ -36,7 +53,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "does not contain necessary data to restore the database. Please select another backup-folder."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -76,48 +93,48 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
 
 // Swedish
 #IFSame Language$Current = Language$Svenska
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
+    Define CS_DbErrorDetected     for "Ett databasfel har uppt√§ckts och databasen beh√∂ver omsorteras/repareras."
+    Define CS_StartRepairNow      for "Starta bearbetning av databasen nu?"
+    Define CS_ElseQuitProgram     for "Om du v√§ljer Nej, kommer programmet att avslutas."
     Define CS_Reindex_Tables      for "Omsortering av data"
     Define CS_Reindexing          for "Sorterar..."
     Define CS_Sorting_Table       for "Sortererar tabell"
     Define CS_The_Table           for "Tabellen"
     Define CS_number              for "nummer"
-    Define CS_Is_in_use           for "anvÑnds av ett annat program eller anvÑndare och kan dÑrfîr ej omsorteras. StÑng det andra programmet och fîrsîk igen."
+    Define CS_Is_in_use           for "anv√§nds av ett annat program eller anv√§ndare och kan d√§rf√∂r ej omsorteras. St√§ng det andra programmet och f√∂rs√∂k igen."
     Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
     Define CS_Database_Reindexed  for "Databasen har blivit reparerad/omsorterad."
-    Define CS_Problem_In_Use      for "Problem uppstod under reparationen. StÑng îvriga program som anvÑnder de hÑr dataregistren och fîrsîk igen."
-    Define CS_NoReindex_Read_Only for "Kunde ej sortera om databasen. Kanske Ñr filattributet 'Read-Only' satt fîr *.dat filerna?"
-    Define CS_DuplicatesFound     for "Dublett-poster upptÑcktes i"
+    Define CS_Problem_In_Use      for "Problem uppstod under reparationen. St√§ng √∂vriga program som anv√§nder de h√§r dataregistren och f√∂rs√∂k igen."
+    Define CS_NoReindex_Read_Only for "Kunde ej sortera om databasen. Kanske √§r filattributet 'Read-Only' satt f√∂r *.dat filerna?"
+    Define CS_DuplicatesFound     for "Dublett-poster uppt√§cktes i"
     Define CS_CheckForBadFiles    for "register. Var god kontrollera .BAD filer i programmets Data katalog."
-    Define CS_PressOKButton       for "Tryck pÜ OK knappen fîr att starta om programmet."
-    Define CS_RepairCheck         for "Kontrollerar om filreparation Ñr nîdvÑndigt"
+    Define CS_PressOKButton       for "Tryck p√• OK knappen f√∂r att starta om programmet."
+    Define CS_RepairCheck         for "Kontrollerar om filreparation √§r n√∂dv√§ndigt"
     Define CS_FileRepair          for "Filreparation..."
     Define CS_RepairingFile       for "Reparerar fil"
-    Define CS_Backup_Exists       for "En backup med dagens datum existerar redan. Skriv îver den?"
-    Define CS_BackupFolderError   for "Kunde ej skapa backup-katalogen. Du saknar fîrmodligen rÑttigheter fîr att skapa kataloger under programmets Data katalog."
-    Define CS_PleaseTryAgain      for "Var vÑnlig ÜtgÑrda och fîrsîk igen."
-    Define CS_BackupUpData        for "SÑkerhetskopierar data"
-    Define CS_BackingUpTable      for "SÑkerhetskopierar data fîr tabell"
+    Define CS_Backup_Exists       for "En backup med dagens datum existerar redan. Skriv √∂ver den?"
+    Define CS_BackupFolderError   for "Kunde ej skapa backup-katalogen. Du saknar f√∂rmodligen r√§ttigheter f√∂r att skapa kataloger under programmets Data katalog."
+    Define CS_PleaseTryAgain      for "Var v√§nlig √•tg√§rda och f√∂rs√∂k igen."
+    Define CS_BackupUpData        for "S√§kerhetskopierar data"
+    Define CS_BackingUpTable      for "S√§kerhetskopierar data f√∂r tabell"
     Define CS_CopyingRecords      for "Kopierar poster"
-    Define CS_Skipping            for "Hoppar îver"
-    Define CS_BackupCreated       for "En backup-kopia av databasen har framgÜngsrikt skapats i katalogen"
-    Define CS_BackupNotCreated    for "Ett fel uppstod och databasen har EJ sÑkerhetskopierats korrekt."
-    Define CS_SelectBackupFolder  for "VÑlj en katalog vars namn startar med 'Backup' . fîljt av ett datum."
-    Define CS_RestoringData       for "èterstÑller backup-data"
-    Define CS_RemovingRecords     for "Tar bort nuvarande data ifrÜn tabell"
+    Define CS_Skipping            for "Hoppar √∂ver"
+    Define CS_BackupCreated       for "En backup-kopia av databasen har framg√•ngsrikt skapats i katalogen"
+    Define CS_BackupNotCreated    for "Ett fel uppstod och databasen har EJ s√§kerhetskopierats korrekt."
+    Define CS_SelectBackupFolder  for "V√§lj en katalog vars namn startar med 'Backup' . f√∂ljt av ett datum."
+    Define CS_RestoringData       for "√Öterst√§ller backup-data"
+    Define CS_RemovingRecords     for "Tar bort nuvarande data ifr√•n tabell"
     Define CS_SelectedFolder      for "Den valda katalogen:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
-    Define CS_RestoringTable      for "èterstÑller data fîr tabell"
-    Define CS_DatabaseRecreated   for "Databasen har framgÜngsrikt Üterskapats ifrÜn backupen"
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
+    Define CS_RestoringTable      for "√Öterst√§ller data f√∂r tabell"
+    Define CS_DatabaseRecreated   for "Databasen har framg√•ngsrikt √•terskapats ifr√•n backupen"
 #ENDIF
 
 // German
@@ -155,7 +172,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -195,7 +212,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -235,7 +252,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -275,7 +292,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -315,7 +332,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -355,7 +372,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -395,7 +412,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -435,7 +452,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -475,7 +492,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -515,7 +532,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -555,7 +572,7 @@ Use LanguageText.pkg
     Define CS_RestoringData       for "Restoring backup data"
     Define CS_RemovingRecords     for "Removing records from data table"
     Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehÜller ej nîdvÑndiga data fîr att ÜterstÑlla databasen. Var vÑnlig vÑlj en annan backup-katalog."
+    Define CS_DatabaseMissing     for "inneh√•ller ej n√∂dv√§ndiga data f√∂r att √•terst√§lla databasen. Var v√§nlig v√§lj en annan backup-katalog."
     Define CS_RestoringTable      for "Restoring data for table"
     Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
 #ENDIF
@@ -575,42 +592,83 @@ Class cDatabaseFunctions is a cObject
 
     // *** MAIN PROCEDURES ***
 
+    Procedure CheckCollatingSequence Integer iFile Integer iField
+        Integer iRetval iIndex iRecords
+        Boolean bOpen
+        String  sProduct
+    
+        Get_Attribute DF_FILE_OPENED of iFile to bOpen
+        If (bOpen = False) Begin
+            Open iFile                              // Pathing has been established but tables has not yet been opened.
+        End
+        Get_Attribute DF_FILE_RECORDS_USED of iFile to iRecords
+        If (iRecords = 0) Begin
+            Procedure_Return // Then nothing to do.
+        End
+    
+        Get_Attribute DF_FIELD_INDEX of iFile iField to iIndex
+        Move False to Found
+    
+        Clear iFile
+        Fill_Field iFile iField with DF_HIGH
+    
+        Vfind iFile iIndex LE                       // This table must always contain at least one record.
+        If (Found = True) Begin
+            Vfind iFile iIndex EQ     // This will always fail if df_collate.cfg is a different one then what was used to enter records (in any table).
+        End
+        Close iFile
+    
+        If (Found = False) Begin
+            Move MBR_No to iRetval
+            Get psProduct of ghoApplication to sProduct
+            Get YesNo_Box (CS_DbErrorDetected * "\n\n" + CS_StartRepairNow * CS_ElseQuitProgram) sProduct to iRetval
+            If (iRetval = MBR_No) Begin
+                Send Exit_Application
+            End
+            Send DoRepairFiles
+        End
+    End_Procedure
+
     // Reindex all files.
     Procedure ReindexAll
         Integer[] aiFileIsMaster aiFileIsAlias
+        Send OnSetAllMasterAndAlias
         Get AllMasterAndAliasFiles (&aiFileIsMaster) to aiFileIsAlias 
         Close DF_ALL DF_PERMANENT
         Send SubReindexAllFiles aiFileIsMaster aiFileIsAlias
+        Send DoOpenAllFiles iFileIsMaster iFileIsAlias
     End_Procedure
 
     // Repair & reindex all files.
     Procedure RepairAll
         Integer[] aiFileIsMaster aiFileIsAlias
+        Send OnSetAllMasterAndAlias
         Get AllMasterAndAliasFiles (&aiFileIsMaster) to aiFileIsAlias
         Close DF_ALL DF_PERMANENT
         Send SubRepairAllFiles aiFileIsMaster aiFileIsAlias
+        Send DoOpenAllFiles iFileIsMaster iFileIsAlias
     End_Procedure
 
     // Backs up all data tables to sub-folder of the Data folder.
-//    Procedure DoBackupData
-//        Integer[] iFileIsMaster aiFileIsAlias
-//
-//        Send DoSetAllMasterAndAlias
-//        Get AllMasterAndAliasFiles (&iFileIsMaster) to aiFileIsAlias
-//        Send SubBackupData iFileIsMaster aiFileIsAlias
-//        Send DoOpenAllFiles iFileIsMaster aiFileIsAlias
-//    End_Procedure
-//
+    Procedure DoBackupData
+        Integer[] iFileIsMaster aiFileIsAlias
+
+        Send OnSetAllMasterAndAlias
+        Get AllMasterAndAliasFiles (&iFileIsMaster) to aiFileIsAlias
+        Send SubBackupData iFileIsMaster aiFileIsAlias
+        Send DoOpenAllFiles iFileIsMaster aiFileIsAlias
+    End_Procedure
+
     // Restores all data tables from sub-folder of the Data folder.
-//    Procedure DoRestoreData
-//        Integer[] iFileIsMaster aiFileIsAlias
-//        Send DoSetAllMasterAndAlias
-//        Get AllMasterAndAliasFiles (&iFileIsMaster) to aiFileIsAlias
-//        Close DF_ALL
-//        Send SubRestoreData iFileIsMaster aiFileIsAlias
-//        Send DoOpenAllFiles iFileIsMaster aiFileIsAlias
-//        Broadcast Recursive Send Refresh of (Client_ID(ghoCommandBars)) Mode_Find_or_Clear_Set
-//    End_Procedure
+    Procedure DoRestoreData
+        Integer[] iFileIsMaster aiFileIsAlias
+        Send OnSetAllMasterAndAlias
+        Get AllMasterAndAliasFiles (&iFileIsMaster) to aiFileIsAlias
+        Close DF_ALL
+        Send SubRestoreData iFileIsMaster aiFileIsAlias
+        Send DoOpenAllFiles iFileIsMaster aiFileIsAlias
+        Broadcast Recursive Send Refresh of (Client_ID(ghoCommandBars)) Mode_Find_or_Clear_Set
+    End_Procedure
 
     // *** Helper procedures/functions ***
 
@@ -1019,7 +1077,8 @@ Class cDatabaseFunctions is a cObject
     // Returns all files that are Master files in array ByRef aiFileIsMaster
     // Also returns all files that are Alias files in a second array.
     // IMPORTANT: All master & alias files _must_ have been included into
-    //            the DoSetAllMasterAndAlias message above.
+    //            the OnSetAllMasterAndAlias event in the instantiation
+    //            of this class, that can be found at the bottom of this package.
     Function AllMasterAndAliasFiles Integer[] ByRef aiFileIsMaster Returns Integer[]
         Integer[] aiFileIsAlias
         Integer hTable iFileAlias iSize
@@ -1121,222 +1180,222 @@ Class cDatabaseFunctions is a cObject
         Function_Return bRepairComplete
     End_Function
 
-//    Procedure SubBackupData Integer[] aiFileIsMaster Integer[] aiFileIsAlias
-//        String sPath sToday sBackupFolder sRootName sDatFile sDateSep sDirSep
-//        Integer iTableNum iNumTables iRetval iDateSep iFileAlias
-//        Boolean bExist bSysfile
-//        Handle hTempFile
-//
-//        Get psDataPath of (phoWorkspace(ghoApplication)) to sPath
-//        Sysdate sToday
-//        Get_Attribute DF_DATE_SEPARATOR to iDateSep
-//        Move (Character(iDateSep))      to sDateSep
-//        // We cannot use "/" when creating the Backup folder name, it is an illegal
-//        // character, so we convert the "/" date separators to dashes (-) for folder names.
-//        Move (Replaces(sDateSep, sToday, "-"))  to sToday
-//        Move (SysConf(SYSCONF_DIR_SEPARATOR))   to sDirSep
-//        Move (sPath + sDirSep + "Backup" + String(sToday)) to sBackupFolder
-//        Move False to Err
-//
-//        Get vFilePathExists sBackupFolder to bExist
-//        If (bExist = True) Begin
-//            Get YesNo_Box CS_Backup_Exists to iRetval
-//            If (iRetval = MBR_No) Begin
-//                Procedure_Return
-//            End
-//        End
-//
-//        Else If (bExist = False) Begin
-//            Get vCreateDirectory sBackupFolder to iRetval
-//            Move (iRetval <> 0) to Err
-//            If (Err = True) Begin
-//                Send Info_Box (CS_BackupFolderError + "\n" + CS_PleaseTryAgain)
-//                Procedure_Return
-//            End
-//        End
-//
-//        Move 0 to iTableNum
-//
-//        // Start the status panel
-//        If (ghoStatusPanel <> 0) Begin
-//            Send Initialize_StatusPanel to ghoStatusPanel CS_BackupUpData "" "" (psAviFile(Self))
-//            Send Start_StatusPanel to ghoStatusPanel
-//        End
-//
-//        Repeat
-//            // Get next used table number
-//            Get_Attribute DF_FILE_NEXT_USED of iTableNum to iTableNum
-//            Get IsFileMasterAlias iTableNum aiFileIsMaster aiFileIsAlias to iFileAlias
-//            If (iTableNum and iFileAlias <> DF_FILE_IS_ALIAS) Begin
-//                // Count the tables
-//                Increment iNumTables
-//
-//                Send UpdateStatusBar of ghoStatusPanel
-//
-//               // Skip FlexErrs
-//                Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName
-//                If (Uppercase(Trim(sRootName)) <> "FLEXERRS") Begin
-//
-//                    // To use the copy_db command the table needs to be closed.
-//                    Close iTableNum DF_TEMPORARY
-//
-//                    // Check if the file already has been backuped.
-//                    // If true 'Zerofile' it first.
-//                    Move (sBackupFolder + sDirSep + sRootname + ".dat") to sDatFile
-//                    Get vFilePathExists sDatFile to bExist
-//                    Move (False) to bSysfile
-//                    If (bExist = True) Begin
-//                        Get_Attribute DF_FILE_NEXT_EMPTY of hTempFile to hTempFile
-//                        Open sDatFile as hTempFile      // If success, sets the Found flag=true.
-//                        Get_Attribute DF_FILE_IS_SYSTEM_FILE of hTempFile to bSysfile
-////                        If (bSysfile = True) Begin
-//                            ZeroFile hTempFile
-////                        End
-////                        Else If (bSysfile = False and Found = True) Begin
-////                            Set Message_Text of ghoStatusPanel to sRootName
-////                            Send Update_StatusPanel of ghoStatusPanel "Tar bort gamla backup-poster"
-////                            While (Found)
-////                                Vfind hTempFile 0 GT
-////                                If (Found) Delete hTempFile
-////                                Send UpdateStatusBar of ghoStatusPanel
-////                            Loop
-////                        End
-//                        Close hTempFile
-//                    End
-//                    Else Begin
-//                        Set Message_Text of ghoStatusPanel to (CS_BackingUpTable * sRootName)
-//                        Send Update_StatusPanel of ghoStatusPanel CS_CopyingRecords
-//                    End
-//
-//                    Copy_db sRootname to (sBackupFolder + sDirSep + sRootname) Callback ghoValueObject
-//                    Send UpdateStatusBar of ghoStatusPanel
-//
-//                    Open iTableNum
-//                End
-//                Else Begin
-//                    Send Update_StatusPanel of ghoStatusPanel (CS_Skipping * sRootName)
-//                End
-//            End
-//
-//        Until (iTableNum = 0)
-//
-//        // Stop progress messages
-//        If ghoStatusPanel Begin
-//            Send Stop_StatusPanel of ghoStatusPanel
-//        End
-//        If (Err = False) Begin
-//            Send Info_Box (CS_BackupCreated + "\n" + sBackupFolder)
-//        End
-//        Else If (Err = True) Begin
-//            Send Info_Box CS_BackupNotCreated
-//        End
-//    End_Procedure
-//
-//    Procedure SubRestoreData Integer[] aiFileIsMaster Integer[] aiFileIsAlias
-//        String sPath sBackupFolder sRootName sDatFile sDirSep sRecordID sCurrFiles
-//        Integer iTableNum iNumTables iField iCount iRetval iFileAlias
-//        Boolean bExist
-//        Handle hTempFile
-//
-//        Get psDataPath of (phoWorkspace(ghoApplication)) to sPath
-//        Get CJBrowseForFolder sPath "" (ToANSI(CS_SelectBackupFolder)) True to sBackupFolder
-//        If (Length(sBackupFolder) = 0) Begin
-//            Procedure_Return
-//        End
-//
-//        Move (SysConf(Sysconf_Dir_Separator)) to sDirSep
-//        // Start the status panel
-//        If ghoStatusPanel Begin
-//            Send Initialize_StatusPanel to ghoStatusPanel CS_RestoringData "" "" (psAviFile(Self))
-//            Send Start_StatusPanel to ghoStatusPanel
-//        End
-//
-//        Send Ignore_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE   // = 'File not open'
-//
-//        Repeat
-//            // Get next used table number
-//            Get_Attribute DF_FILE_NEXT_USED of iTableNum to iTableNum
-//            Get IsFileMasterAlias iTableNum aiFileIsMaster aiFileIsAlias to iFileAlias
-//            If (iTableNum and iFileAlias <> DF_FILE_IS_ALIAS) Begin
-//                // Count the tables
-//                Increment iNumTables
-//
-//                Send UpdateStatusBar of ghoStatusPanel
-//
-//               // Skip FlexErrs
-//                Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName
-//                If (Uppercase(Trim(sRootName)) <> "FLEXERRS") Begin
-//                    // Show table
-//                    Set Message_Text of ghoStatusPanel to (CS_RemovingRecords * sRootName)
-//
-//                    // Removes all data by deleting the whole data table (set).
-//                    // It will ensure that the RowID's of saved files will be the same.
-//                    Move (sBackupFolder + sDirSep + sRootname + ".dat") to sDatFile
-//                    Get vFilePathExists sDatFile to bExist
-//
-//                    If (bExist = False) Begin
-//                        If ghoStatusPanel Begin
-//                            Send Stop_StatusPanel of ghoStatusPanel
-//                        End
-//                        Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
-//                        Open iTableNum
-//                        Send Info_Box (CS_SelectedFolder + "\n" + String(sBackupFolder) + "\n" + CS_DatabaseMissing)
-//                        Procedure_Return
-//                    End
-//
-//                    If (bExist = True) Begin
-//                        Close iTableNum
-//                        Move (sPath + sDirSep + sRootname + ".*") to sCurrFiles
-//                        Get vDeleteFile sCurrFiles to iRetval
-//                        If (iRetval <> 0) Begin
-//                            If ghoStatusPanel Begin
-//                                Send Stop_StatusPanel of ghoStatusPanel
-//                            End
-//                            Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
-//                            Open iTableNum
-//                            Move (sPath + sDirSep + sRootname) to sDatFile
-//                            Send Info_Box (CS_The_Table + "\n" + String(sDatFile) + "\" + CS_Is_in_use)
-//                            Procedure_Return
-//                        End
-//                    End
-//
-//                    Set Message_Text of ghoStatusPanel to (CS_RestoringTable * sRootName)
-//                    // Copy data record by record:
-//                    Indicate Err False
-//                    Copy_db (sBackupFolder + sDirSep + sRootname) to sRootname Callback ghoValueObject
-//
-//                    If (Err = True) Begin
-//                        If ghoStatusPanel Begin
-//                            Send Stop_StatusPanel of ghoStatusPanel
-//                        End
-//                        Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
-//                        Open iTableNum
-//                        Send Info_Box (CS_SelectedFolder + "\n" + String(sBackupFolder) + "\n" + CS_DatabaseMissing)
-//                        Procedure_Return
-//                    End
-//
-//                    Send UpdateStatusBar of ghoStatusPanel
-//
-//                    Open iTableNum
-//                End
-//                Else Begin
-//                    Send Update_StatusPanel of ghoStatusPanel (CS_Skipping * sRootName)
-//                End
-//            End
-//
-//        Until (iTableNum = 0)
-//
-//        Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
-//
-//        // Stop progress messages
-//        If ghoStatusPanel Begin
-//            Send Stop_StatusPanel of ghoStatusPanel
-//        End
-//        Send Info_Box (CS_DatabaseRecreated * sBackupFolder)
-//    End_Procedure
+    Procedure SubBackupData Integer[] aiFileIsMaster Integer[] aiFileIsAlias
+        String sPath sToday sBackupFolder sRootName sDatFile sDateSep sDirSep
+        Integer iTableNum iNumTables iRetval iDateSep iFileAlias
+        Boolean bExist bSysfile
+        Handle hTempFile
 
-    // Stub message
-    Procedure DoSetAllMasterAndAlias
+        Get psDataPath of (phoWorkspace(ghoApplication)) to sPath
+        Sysdate sToday
+        Get_Attribute DF_DATE_SEPARATOR to iDateSep
+        Move (Character(iDateSep))      to sDateSep
+        // We cannot use "/" when creating the Backup folder name, it is an illegal
+        // character, so we convert the "/" date separators to dashes (-) for folder names.
+        Move (Replaces(sDateSep, sToday, "-"))  to sToday
+        Move (SysConf(SYSCONF_DIR_SEPARATOR))   to sDirSep
+        Move (sPath + sDirSep + "Backup" + String(sToday)) to sBackupFolder
+        Move False to Err
+
+        Get vFilePathExists sBackupFolder to bExist
+        If (bExist = True) Begin
+            Get YesNo_Box CS_Backup_Exists to iRetval
+            If (iRetval = MBR_No) Begin
+                Procedure_Return
+            End
+        End
+
+        Else If (bExist = False) Begin
+            Get vCreateDirectory sBackupFolder to iRetval
+            Move (iRetval <> 0) to Err
+            If (Err = True) Begin
+                Send Info_Box (CS_BackupFolderError + "\n" + CS_PleaseTryAgain)
+                Procedure_Return
+            End
+        End
+
+        Move 0 to iTableNum
+
+        // Start the status panel
+        If (ghoStatusPanel <> 0) Begin
+            Send Initialize_StatusPanel to ghoStatusPanel CS_BackupUpData "" "" (psAviFile(Self))
+            Send Start_StatusPanel to ghoStatusPanel
+        End
+
+        Repeat
+            // Get next used table number
+            Get_Attribute DF_FILE_NEXT_USED of iTableNum to iTableNum
+            Get IsFileMasterAlias iTableNum aiFileIsMaster aiFileIsAlias to iFileAlias
+            If (iTableNum and iFileAlias <> DF_FILE_IS_ALIAS) Begin
+                // Count the tables
+                Increment iNumTables
+
+                Send UpdateStatusBar of ghoStatusPanel
+
+               // Skip FlexErrs
+                Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName
+                If (Uppercase(Trim(sRootName)) <> "FLEXERRS") Begin
+
+                    // To use the copy_db command the table needs to be closed.
+                    Close iTableNum DF_TEMPORARY
+
+                    // Check if the file already has been backuped.
+                    // If true 'Zerofile' it first.
+                    Move (sBackupFolder + sDirSep + sRootname + ".dat") to sDatFile
+                    Get vFilePathExists sDatFile to bExist
+                    Move (False) to bSysfile
+                    If (bExist = True) Begin
+                        Get_Attribute DF_FILE_NEXT_EMPTY of hTempFile to hTempFile
+                        Open sDatFile as hTempFile      // If success, sets the Found flag=true.
+                        Get_Attribute DF_FILE_IS_SYSTEM_FILE of hTempFile to bSysfile
+//                        If (bSysfile = True) Begin
+                            ZeroFile hTempFile
+//                        End
+//                        Else If (bSysfile = False and Found = True) Begin
+//                            Set Message_Text of ghoStatusPanel to sRootName
+//                            Send Update_StatusPanel of ghoStatusPanel "Tar bort gamla backup-poster"
+//                            While (Found)
+//                                Vfind hTempFile 0 GT
+//                                If (Found) Delete hTempFile
+//                                Send UpdateStatusBar of ghoStatusPanel
+//                            Loop
+//                        End
+                        Close hTempFile
+                    End
+                    Else Begin
+                        Set Message_Text of ghoStatusPanel to (CS_BackingUpTable * sRootName)
+                        Send Update_StatusPanel of ghoStatusPanel CS_CopyingRecords
+                    End
+
+                    Copy_db sRootname to (sBackupFolder + sDirSep + sRootname) Callback ghoValueObject
+                    Send UpdateStatusBar of ghoStatusPanel
+
+                    Open iTableNum
+                End
+                Else Begin
+                    Send Update_StatusPanel of ghoStatusPanel (CS_Skipping * sRootName)
+                End
+            End
+
+        Until (iTableNum = 0)
+
+        // Stop progress messages
+        If ghoStatusPanel Begin
+            Send Stop_StatusPanel of ghoStatusPanel
+        End
+        If (Err = False) Begin
+            Send Info_Box (CS_BackupCreated + "\n" + sBackupFolder)
+        End
+        Else If (Err = True) Begin
+            Send Info_Box CS_BackupNotCreated
+        End
+    End_Procedure
+
+    Procedure SubRestoreData Integer[] aiFileIsMaster Integer[] aiFileIsAlias
+        String sPath sBackupFolder sRootName sDatFile sDirSep sRecordID sCurrFiles
+        Integer iTableNum iNumTables iField iCount iRetval iFileAlias
+        Boolean bExist
+        Handle hTempFile
+
+        Get psDataPath of (phoWorkspace(ghoApplication)) to sPath
+        Get CJBrowseForFolder sPath "" (ToANSI(CS_SelectBackupFolder)) True to sBackupFolder
+        If (Length(sBackupFolder) = 0) Begin
+            Procedure_Return
+        End
+
+        Move (SysConf(Sysconf_Dir_Separator)) to sDirSep
+        // Start the status panel
+        If ghoStatusPanel Begin
+            Send Initialize_StatusPanel to ghoStatusPanel CS_RestoringData "" "" (psAviFile(Self))
+            Send Start_StatusPanel to ghoStatusPanel
+        End
+
+        Send Ignore_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE   // = 'File not open'
+
+        Repeat
+            // Get next used table number
+            Get_Attribute DF_FILE_NEXT_USED of iTableNum to iTableNum
+            Get IsFileMasterAlias iTableNum aiFileIsMaster aiFileIsAlias to iFileAlias
+            If (iTableNum and iFileAlias <> DF_FILE_IS_ALIAS) Begin
+                // Count the tables
+                Increment iNumTables
+
+                Send UpdateStatusBar of ghoStatusPanel
+
+               // Skip FlexErrs
+                Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName
+                If (Uppercase(Trim(sRootName)) <> "FLEXERRS") Begin
+                    // Show table
+                    Set Message_Text of ghoStatusPanel to (CS_RemovingRecords * sRootName)
+
+                    // Removes all data by deleting the whole data table (set).
+                    // It will ensure that the RowID's of saved files will be the same.
+                    Move (sBackupFolder + sDirSep + sRootname + ".dat") to sDatFile
+                    Get vFilePathExists sDatFile to bExist
+
+                    If (bExist = False) Begin
+                        If ghoStatusPanel Begin
+                            Send Stop_StatusPanel of ghoStatusPanel
+                        End
+                        Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
+                        Open iTableNum
+                        Send Info_Box (CS_SelectedFolder + "\n" + String(sBackupFolder) + "\n" + CS_DatabaseMissing)
+                        Procedure_Return
+                    End
+
+                    If (bExist = True) Begin
+                        Close iTableNum
+                        Move (sPath + sDirSep + sRootname + ".*") to sCurrFiles
+                        Get vDeleteFile sCurrFiles to iRetval
+                        If (iRetval <> 0) Begin
+                            If ghoStatusPanel Begin
+                                Send Stop_StatusPanel of ghoStatusPanel
+                            End
+                            Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
+                            Open iTableNum
+                            Move (sPath + sDirSep + sRootname) to sDatFile
+                            Send Info_Box (CS_The_Table + "\n" + String(sDatFile) + "\" + CS_Is_in_use)
+                            Procedure_Return
+                        End
+                    End
+
+                    Set Message_Text of ghoStatusPanel to (CS_RestoringTable * sRootName)
+                    // Copy data record by record:
+                    Indicate Err False
+                    Copy_db (sBackupFolder + sDirSep + sRootname) to sRootname Callback ghoValueObject
+
+                    If (Err = True) Begin
+                        If ghoStatusPanel Begin
+                            Send Stop_StatusPanel of ghoStatusPanel
+                        End
+                        Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
+                        Open iTableNum
+                        Send Info_Box (CS_SelectedFolder + "\n" + String(sBackupFolder) + "\n" + CS_DatabaseMissing)
+                        Procedure_Return
+                    End
+
+                    Send UpdateStatusBar of ghoStatusPanel
+
+                    Open iTableNum
+                End
+                Else Begin
+                    Send Update_StatusPanel of ghoStatusPanel (CS_Skipping * sRootName)
+                End
+            End
+
+        Until (iTableNum = 0)
+
+        Send Trap_Error of Error_Object_Id DFERR_CANT_OPEN_DATA_FILE
+
+        // Stop progress messages
+        If ghoStatusPanel Begin
+            Send Stop_StatusPanel of ghoStatusPanel
+        End
+        Send Info_Box (CS_DatabaseRecreated * sBackupFolder)
+    End_Procedure
+
+    // Stub event message
+    Procedure OnSetAllMasterAndAlias
     End_Procedure
 
 End_Class
@@ -1344,4 +1403,7 @@ End_Class
 // Instantiation of the above class.
 Object oDatabaseFunctions is a cDatabaseFunctions
     Move Self to ghoDatabaseFunctions
+    Procedure OnSetAllMasterAndAlias
+        
+    End_Procedure
 End_Object

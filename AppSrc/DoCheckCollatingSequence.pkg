@@ -1,16 +1,4 @@
-﻿Use AutoReindex.dg
-
-// English:
-Define CS_DbErrorDetected for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-Define CS_StartRepairNow  for "OK?"
-Define CS_ElseQuitProgram for "If you press No, the program will be closed."
-
-// Swedish:
-//Define CS_DbErrorDetected for "Ett databasfel har upptäckts och databasen behöver omsorteras/repareras."
-//Define CS_StartRepairNow  for "Starta bearbetning av databasen nu?"
-//Define CS_ElseQuitProgram for "Om du väljer Nej, kommer programmet att avslutas."
-
-// Test to check that the 'correct' df_collate.cfg is used,
+﻿// Test to check that the 'correct' df_collate.cfg is used,
 // else reindex all tables prior to starting the program.
 //
 // The message DoCheckCollatingSequence needs to be send from cApplication object's
@@ -28,16 +16,18 @@ Define CS_ElseQuitProgram for "If you press No, the program will be closed."
 //
 // Object oApplication is a cApplication
 //
-//        Procedure DoOpenWorkspace String sWorkspace
+//        Procedure OnWorkspaceOpened
 //            String sParam
 //            Handle hoCmdLine
 //    
-//            Forward Send DoOpenWorkspace sWorkspace
+//            Forward Send OnWorkspaceOpened
 //            // Needs to be send right after the forward send...
 //            Send DoCheckCollatingSequence ManHdr.File_Number Field ManHdr.ManifestFileName // Pass file- & field-number for an ASCII field
 //        End_Procedure
 //    ...
 //
+Use cDataBaseFunctions.pkg
+
 Procedure DoCheckCollatingSequence Desktop Integer iFile Integer iField
     Integer iRetval iIndex iRecords
     Boolean bOpen
