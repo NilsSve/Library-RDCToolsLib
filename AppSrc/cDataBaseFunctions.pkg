@@ -43,7 +43,7 @@ Class cDatabaseFunctions is a cObject
         Get_Attribute DF_FIELD_INDEX of iFile iField to iIndex
         Move False to Found
     
-        Clear iFile
+        Clear iFile 
         Fill_Field iFile iField with DF_HIGH
     
         Vfind iFile iIndex LE                       // This table must always contain at least one record.
@@ -172,7 +172,7 @@ Class cDatabaseFunctions is a cObject
     // Returns: True if the process using this function should continue.
     // Note: Both CodeMast & CodeType are kept open at all times by the Studio.
     Function OpenCheckCodeFiles Returns Boolean
-        Boolean bContinue bReindexCodeFiles bErr bOK 
+        Boolean bContinue bReindexCodeFiles bErr bOK bOpen
         Integer iLastErr iErrLine iRetval
         
         Get pbReindexCodeFiles to bReindexCodeFiles
@@ -186,14 +186,15 @@ Class cDatabaseFunctions is a cObject
         Move LastErr to iLastErr
         Move ErrLine to iErrLine
         Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
-
-        Open CodeMast DF_EXCLUSIVE
+        
+        Open CodeMast Mode DF_EXCLUSIVE
+        Get_Attribute DF_FILE_OPENED of CodeMast.File_Number to bOpen
         If (Err = False) Begin
-            Open CodeType DF_EXCLUSIVE
+            Open CodeType Mode DF_EXCLUSIVE
         End
         Send Trap_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
 
-        If (Err = True) Begin
+        If (Err = True or bOpen = False) Begin
             If (ghoStatusPanel > 0) Begin
                 Send Stop_StatusPanel of ghoStatusPanel
             End
@@ -204,13 +205,13 @@ Class cDatabaseFunctions is a cObject
             If (bContinue = True) Begin
                 Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
                 Move False to Err
-                Open CodeMast DF_EXCLUSIVE
+                Open CodeMast Mode DF_EXCLUSIVE
                 If (Err = False) Begin
-                    Open CodeType DF_EXCLUSIVE
+                    Open CodeType Mode DF_EXCLUSIVE
                 End
                 Send Trap_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
                 If (Err = True) Begin
-                    Send Info_Box (CS_The_Table * "CodeMast" * String("(" + CS_number * "=" * String(CODEMAST.File_Number)) + ")" * "Could not be opened exclusively. The program will be closed.")
+                    Send Info_Box (CS_The_Table * "CodeMast" * String("(" + CS_number * "=" * String(CODEMAST.File_Number)) + ")" * "Could not be opened exclusively. The program will now restart.")
                     Move False to bContinue
                 End
             End
@@ -219,6 +220,8 @@ Class cDatabaseFunctions is a cObject
             End
         End   
         
+        Close CodeMast
+        Close CodeType
         Move bErr to Err
         Move iLastErr to LastErr
         Move iErrLine to ErrLine
@@ -420,7 +423,13 @@ Class cDatabaseFunctions is a cObject
         Move False to Err
         Get OpenCheckCodeFiles to bOK
         If (bOK = False) Begin
-            Procedure_Return
+//            Abort
+            Move (Module_Name(Desktop)) to sProgram 
+            #IFDEF Is$Win64
+                Append sProgram "64"
+            #ENDIF
+            // Restart program.
+            Runprogram (sProgram - ".exe")
         End
         Get pbReindexCodeFiles to bReindexCodeFiles
 
@@ -524,8 +533,10 @@ Class cDatabaseFunctions is a cObject
 
                             // Even if the head was repaired we still need to reindex
                             // Re-index all indexes for the table
+                            Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
                             Open iTableNum Mode DF_EXCLUSIVE
                             Sort iTableNum sSortString (DF_SORT_OPTION_BAD_DATA_FILE ior DF_SORT_OPTION_DUP_DATA_FILE) Self
+                            Send Trap_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
 
                             If (ghoStatusPanel <> 0) Begin
                                 Send UpdateStatusBar of ghoStatusPanel
