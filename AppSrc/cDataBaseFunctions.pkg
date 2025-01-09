@@ -12,576 +12,10 @@
 // $Rev History:
 //    2013-10-29  Module header created
 //****************************************************************************
-Use RDCStatusPanel.pkg
-Use LanguageText.pkg
+Use cDataBaseFunctions.inc
 
-// English
-#IFSame Language$Current = Language$English
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "does not contain necessary data to restore the database. Please select another backup-folder."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Dutch
-#IFSame Language$Current = Language$Nederlands
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Swedish
-#IFSame Language$Current = Language$Svenska
-    Define CS_DbErrorDetected     for "Ett databasfel har upptäckts och databasen behöver omsorteras/repareras."
-    Define CS_StartRepairNow      for "Starta bearbetning av databasen nu?"
-    Define CS_ElseQuitProgram     for "Om du väljer Nej, kommer programmet att avslutas."
-    Define CS_Reindex_Tables      for "Omsortering av data"
-    Define CS_Reindexing          for "Sorterar..."
-    Define CS_Sorting_Table       for "Sortererar tabell"
-    Define CS_The_Table           for "Tabellen"
-    Define CS_number              for "nummer"
-    Define CS_Is_in_use           for "används av ett annat program eller användare och kan därför ej omsorteras. Stäng det andra programmet och försök igen."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "Databasen har blivit reparerad/omsorterad."
-    Define CS_Problem_In_Use      for "Problem uppstod under reparationen. Stäng övriga program som använder de här dataregistren och försök igen."
-    Define CS_NoReindex_Read_Only for "Kunde ej sortera om databasen. Kanske är filattributet 'Read-Only' satt för *.dat filerna?"
-    Define CS_DuplicatesFound     for "Dublett-poster upptäcktes i"
-    Define CS_CheckForBadFiles    for "register. Var god kontrollera .BAD filer i programmets Data katalog."
-    Define CS_PressOKButton       for "Tryck på OK knappen för att starta om programmet."
-    Define CS_RepairCheck         for "Kontrollerar om filreparation är nödvändigt"
-    Define CS_FileRepair          for "Filreparation..."
-    Define CS_RepairingFile       for "Reparerar fil"
-    Define CS_Backup_Exists       for "En backup med dagens datum existerar redan. Skriv över den?"
-    Define CS_BackupFolderError   for "Kunde ej skapa backup-katalogen. Du saknar förmodligen rättigheter för att skapa kataloger under programmets Data katalog."
-    Define CS_PleaseTryAgain      for "Var vänlig åtgärda och försök igen."
-    Define CS_BackupUpData        for "Säkerhetskopierar data"
-    Define CS_BackingUpTable      for "Säkerhetskopierar data för tabell"
-    Define CS_CopyingRecords      for "Kopierar poster"
-    Define CS_Skipping            for "Hoppar över"
-    Define CS_BackupCreated       for "En backup-kopia av databasen har framgångsrikt skapats i katalogen"
-    Define CS_BackupNotCreated    for "Ett fel uppstod och databasen har EJ säkerhetskopierats korrekt."
-    Define CS_SelectBackupFolder  for "Välj en katalog vars namn startar med 'Backup' . följt av ett datum."
-    Define CS_RestoringData       for "Återställer backup-data"
-    Define CS_RemovingRecords     for "Tar bort nuvarande data ifrån tabell"
-    Define CS_SelectedFolder      for "Den valda katalogen:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Återställer data för tabell"
-    Define CS_DatabaseRecreated   for "Databasen har framgångsrikt återskapats ifrån backupen"
-#ENDIF
-
-// German
-#IFSame Language$Current = Language$Deutsch
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Danish
-#IFSame Language$Current = Language$Dansk
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Danish
-#IFSame Language$Current = Language$Dansk
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Portugues
-#IFSame Language$Current = Language$Portugues
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// French
-#IFSame Language$Current = Language$Francais
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Italic
-#IFSame Language$Current = Language$Italiano
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Spanish
-#IFSame Language$Current = Language$Espanol
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Norwegian
-#IFSame Language$Current = Language$Norsk
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Russian
-#IFSame Language$Current = Language$Russian
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Polish
-#IFSame Language$Current = Language$Polish
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-// Hungarian
-#IFSame Language$Current = Language$Hungarian
-    Define CS_DbErrorDetected     for "The database needs to be repaired/reindexed. This is probably caused by the usage of a different DF_Collate.cfg (collating sequence) file."
-    Define CS_StartRepairNow      for "OK?"
-    Define CS_ElseQuitProgram     for "If you press No, the program will be closed."
-    Define CS_ReindexAllTables    for "All tables will now be reindexed. Important! All other programs that uses the database must first be closed. Are all such programs closed?"
-    Define CS_Reindex_Tables      for "Reindexing of records"
-    Define CS_Reindexing          for "Sorting..."
-    Define CS_Sorting_Table       for "Sortering table"
-    Define CS_The_Table           for "The table"
-    Define CS_number              for "number"
-    Define CS_Is_in_use           for "is in use by another program or user and cannot be reindexed. Close the other program and try again."
-    Define CS_Is_in_use_by_Studio for "is in use. Probably by the Studio and cannot be reindexed. Close the Studio and try again."
-    Define CS_Database_Reindexed  for "The database has been reindexed."
-    Define CS_Problem_In_Use      for "Problem occured when repairing the database. Close other programs that might have these tables open and try again."
-    Define CS_NoReindex_Read_Only for "Failed to sort the database. Are the *.dat files set to 'Read-Only'?"
-    Define CS_DuplicatesFound     for "Duplicates found in"
-    Define CS_CheckForBadFiles    for "tables. Check for *.BAD files in the Data folder."
-    Define CS_PressOKButton       for "Press the OK button to restart the program."
-    Define CS_RepairCheck         for "Checking if repair is needed"
-    Define CS_FileRepair          for "File repair..."
-    Define CS_RepairingFile       for "Repairing file"
-    Define CS_Backup_Exists       for "A backup for the current date already exists. Overwrite?"
-    Define CS_BackupFolderError   for "Could not create the backup folder. You probably don't have enough rights for creating folders under the programs Data folder."
-    Define CS_PleaseTryAgain      for "Please ensure you have enough rights and try again."
-    Define CS_BackupUpData        for "Backing up data"
-    Define CS_BackingUpTable      for "Backing up data for table"
-    Define CS_CopyingRecords      for "Copying records"
-    Define CS_Skipping            for "Skipping"
-    Define CS_BackupCreated       for "A back-up copy was succesfully created in folder"
-    Define CS_BackupNotCreated    for "An error occured and the database was NOT backed up."
-    Define CS_SelectBackupFolder  for "Select a folder name that starts with 'Backup' - followed by a date."
-    Define CS_RestoringData       for "Restoring backup data"
-    Define CS_RemovingRecords     for "Removing records from data table"
-    Define CS_SelectedFolder      for "The selected folder:"
-    Define CS_DatabaseMissing     for "innehåller ej nödvändiga data för att återställa databasen. Var vänlig välj en annan backup-katalog."
-    Define CS_RestoringTable      for "Restoring data for table"
-    Define CS_DatabaseRecreated   for "The database was successfully recreated from the backup"
-#ENDIF
-
-#IFNDEF ghoDatabaseFunctions
-    Global_Variable Handle ghoDatabaseFunctions
-#ENDIF
-
-// Important: Only use _ONE_ instance of this object - it is using a global handle: ghoDatabaseFunctions
+// Important: Only use _ONE_ instance of this object,
+//            it is using a Global Handle: ghoDatabaseFunctions
 Class cDatabaseFunctions is a cObject
 
     Procedure Construct_Object
@@ -670,9 +104,10 @@ Class cDatabaseFunctions is a cObject
         Broadcast Recursive Send Refresh of (Client_ID(ghoCommandBars)) Mode_Find_or_Clear_Set
     End_Procedure
 
-    // *** Helper procedures/functions ***
+    // *** Helper procedures/functions ***           
+    //
 
-    // Find the given name in DFPath. If it exists, return the full name.
+    // Find the given name in DFPath. If it exists, returns the full name.
     Function FindFile String sFileName Returns String
         String  sFullName sPath sPathSep sDir sMessage
         Integer iSeparator iSepPos
@@ -730,34 +165,82 @@ Class cDatabaseFunctions is a cObject
 
         Function_Return sFullName
     End_Function
-    
+
+    // Checks that CodeMast & CodeType can be opened exclusively,
+    // and if not asks if user wants to close the Studio and try
+    // again.
+    // Returns: True if the process using this function should continue.
+    // Note: Both CodeMast & CodeType are kept open at all times by the Studio.
+    Function OpenCheckCodeFiles Returns Boolean
+        Boolean bContinue bReindexCodeFiles bErr bOK 
+        Integer iLastErr iErrLine
+        
+        Get pbReindexCodeFiles to bReindexCodeFiles
+        If (bReindexCodeFiles = False) Begin
+            Function_Return True
+        End
+        
+        Move True to bContinue
+        Move Err to bErr
+        Move False to Err
+        Move LastErr to iLastErr
+        Move ErrLine to iErrLine
+        Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
+
+        Open CodeMast DF_EXCLUSIVE
+        If (Err = False) Begin
+            Open CodeType DF_EXCLUSIVE
+        End
+        Send Trap_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
+
+        If (Err = True) Begin
+            If (ghoStatusPanel > 0) Begin
+                Send Stop_StatusPanel of ghoStatusPanel
+            End
+            Get YesNo_Box (CS_The_Table * "CodeMast" * String("(" + CS_number * "=" * String(CODEMAST.File_Number)) + ")" * CS_Is_in_use_by_Studio + CS_Is_Studio_Closed) to iRetval
+            If (iRetval <> MBR_Yes) Begin
+                Move False to bContinue
+            End
+            If (bContinue = True) Begin
+                Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
+                Move False to Err
+                Open CodeMast DF_EXCLUSIVE
+                If (Err = False) Begin
+                    Open CodeType DF_EXCLUSIVE
+                End
+                Send Trap_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
+                If (Err = True) Begin
+                    Send Info_Box (CS_The_Table * "CodeMast" * String("(" + CS_number * "=" * String(CODEMAST.File_Number)) + ")" * "Could not be opened exclusively. The program will be closed.")
+                    Move False to bContinue
+                End
+            End
+            If (ghoStatusPanel > 0 and bContinue = True) Begin
+                Send Start_StatusPanel of ghoStatusPanel
+            End
+        End   
+        
+        Move bErr to Err
+        Move iLastErr to LastErr
+        Move iErrLine to ErrLine
+
+        Function_Return bContinue    
+    End_Function
+            
     // Re-index all tables in the filelist.
     // *** Add test to exclusively open CodeMast/CodeType, and handle if not successful! ***
     //
     Procedure SubReindexAllFiles Integer[] aiFileIsMaster Integer[] aiFileIsAlias
         String sRootName sSortString sReadyMsg sLogicalName sProgram
         Integer iTableNum iNumTables iNumTablesAdjusted iRetval iFileAlias iRecords
-        Boolean bErrTables bBadExists bTableIsOpen bVerbose bReindexCodeFiles bOK bSystemTable
+        Boolean bErrTables bBadExists bTableIsOpen bVerbose bOK bIsSQL bIsAlias bReindexCodeFiles
 
         Move False to Err
-        // Should CodeMast & CodeType be reindexed?
-        // Note: They are kept open by the Studio, which creates problems if the program is run from there.
-        Get pbReindexCodeFiles to bReindexCodeFiles
-        If (bReindexCodeFiles = True) Begin
-            Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
-            Open CodeMast DF_EXCLUSIVE
-            If (Err = False) Begin
-                Open CodeType DF_EXCLUSIVE
-            End
-            Send Trap_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
-            If (Err = True) Begin
-                If (ghoStatusPanel > 0) Begin
-                    Send Stop_StatusPanel of ghoStatusPanel
-                End
-                Send Info_Box (CS_The_Table * "CodeMast" * String("(" + CS_number * "=" * String(CODEMAST.File_Number)) + ")" * CS_Is_in_use_by_Studio)
-                Procedure_Return
-            End
+        Get OpenCheckCodeFiles to bOK
+        If (bOK = False) Begin
+            Procedure_Return
         End
+        Get pbReindexCodeFiles to bReindexCodeFiles
+        
         // This will tell the error object to _not_ display
         // error numbers and source number lines, while reindexing.
         Get pbVerboseState of Error_Object_Id to bVerbose
@@ -765,7 +248,7 @@ Class cDatabaseFunctions is a cObject
 
         // Start the status panel
         If (ghoStatusPanel <> 0) Begin
-            Send Initialize_StatusPanel to ghoStatusPanel CS_Reindex_Tables CS_Reindexing "" "" //(psAviFile(Self))
+            Send Initialize_StatusPanel to ghoStatusPanel CS_Reindex_Tables CS_Reindexing "" ""
             Send Start_StatusPanel to ghoStatusPanel
             Set piPosition  of ghoProgressBarOverall to 0
             Set piAdvanceBy of ghoProgressBarOverall to 1
@@ -786,16 +269,15 @@ Class cDatabaseFunctions is a cObject
                 Increment iNumTables
                 Send DoAdvance of ghoProgressBarOverall
 
-               // Skip FlexErrs
+                // Skip SQL tables, FlexErrs & perhaps also CodeMast and CodeType
                 Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName 
-                Open iTableNum
-                Get_Attribute DF_FILE_IS_SYSTEM_FILE of iTableNum to bSystemTable
-                Move (Uppercase(Trim(sRootName)) <> "FLEXERRS" and bSystemTable = False) to bOK
+                Get IsSqlTable iTableNum to bIsSQL
+                Move (bIsSQL = False and Lowercase(Trim(sRootName)) <> "flexerrs") to bOK
                 If (bOK and bReindexCodeFiles = False) Begin
-                    Move (iTableNum <> 253 and iTableNum <> 254) to bOK    
+                    Move (Lowercase(Trim(sRootName)) <> "codemast" and (Lowercase(Trim(sRootName)) <> "codetype")) to bOK    
                 End
                 If (bOK = True) Begin
-                    If ghoStatusPanel Begin
+                    If (ghoStatusPanel <> 0) Begin
                         Set Title_Text of ghoStatusPanel to  (CS_Sorting_Table * sRootName)
                     End
 
@@ -811,9 +293,17 @@ Class cDatabaseFunctions is a cObject
                         Open iTableNum
                         Get_Attribute DF_FILE_LOGICAL_NAME of iTableNum to sLogicalName
                         Get IsFileMasterAlias iTableNum aiFileIsMaster aiFileIsAlias to iFileAlias
+                        // If the Master/Alias arrays have not been setup correctly, we make
+                        // another check, to make sure this is not an alias table.
+                        If (iFileAlias <> DF_FILE_IS_ALIAS) Begin
+                            Get IsAlias iTableNum to bIsAlias
+                            If (bIsAlias = True) Begin
+                                Move DF_FILE_IS_ALIAS to iFileAlias
+                            End
+                        End
                         If (iFileAlias = DF_FILE_IS_ALIAS) Begin
                             Close iTableNum
-                            Move (False) to Err
+                            Move False to Err
                             Move 0 to LastErr
                         End
                         Else Begin
@@ -822,6 +312,9 @@ Class cDatabaseFunctions is a cObject
                                 Send Stop_StatusPanel of ghoStatusPanel
                             End
                             Send Info_Box (CS_The_Table * sRootname * String("(" + CS_number * "=" * String(iTableNum)) + ")" * CS_Is_in_use)
+                            If (ghoStatusPanel > 0) Begin
+                                Send Start_StatusPanel of ghoStatusPanel
+                            End
                         End
                     End
 
@@ -843,6 +336,9 @@ Class cDatabaseFunctions is a cObject
                             Set piMaximum   of ghoProgressBar to iRecords
                             Sort iTableNum sSortString (DF_SORT_OPTION_BAD_DATA_FILE ior DF_SORT_OPTION_DUP_DATA_FILE)
 
+                            If (ghoStatusPanel <> 0) Begin
+                                Send UpdateStatusBar of ghoStatusPanel
+                            End
                             Close iTableNum
                             // Check for bad file: if it exists, something went wrong
                             Get vFilePathExists (sRootName + ".BAD") to bBadExists
@@ -856,9 +352,7 @@ Class cDatabaseFunctions is a cObject
         Until (iTableNum = 0)
 
         Set pbVerboseState of Error_Object_Id to bVerbose
-
-        // Stop progress messages
-        If ghoStatusPanel Begin
+        If (ghoStatusPanel <> 0) Begin
             Send Stop_StatusPanel of ghoStatusPanel
         End
 
@@ -874,12 +368,13 @@ Class cDatabaseFunctions is a cObject
                 Move CS_NoReindex_Read_Only to sReadyMsg
             End
         End
+
         If (bErrTables = True) Begin
             Move (Append(sReadyMsg, ("\n" + CS_DuplicatesFound * String(bErrTables) * CS_CheckForBadFiles))) to sReadyMsg
         End
         Move (sReadyMsg + "\n\n" + CS_PressOKButton) to sReadyMsg
-
         Send Info_Box sReadyMsg
+        
         Move (Module_Name(Desktop)) to sProgram 
         #IFDEF Is$Win64
             Append sProgram "64"
@@ -919,10 +414,15 @@ Class cDatabaseFunctions is a cObject
     // After the header has been repaired - also do a re-index.
     Procedure SubRepairAllFiles Integer[] aiFileIsMaster Integer[] aiFileIsAlias
         String sRootName sSortString sReadyMsg sRepair sLogicalName sProgram
-        Integer iTableNum iNumTables iNumTablesAdjusted iRetval iFileAlias
-        Boolean bErrTables bBadExists bTableIsOpen bVerbose bWasOpen
+        Integer iTableNum iNumTables iNumTablesAdjusted iRetval iFileAlias iRecords
+        Boolean bErrTables bBadExists bTableIsOpen bVerbose bOK bIsSQL bIsAlias bWasOpen bReindexCodeFiles
 
         Move False to Err
+        Get OpenCheckCodeFiles to bOK
+        If (bOK = False) Begin
+            Procedure_Return
+        End
+        Get pbReindexCodeFiles to bReindexCodeFiles
 
         // This will tell the error object to _not_ display
         // error numbers and source number lines.
@@ -930,9 +430,12 @@ Class cDatabaseFunctions is a cObject
         Set pbVerboseState of Error_Object_Id to False
 
         // Start the status panel
-        If ghoStatusPanel Begin
-            Send Initialize_StatusPanel to ghoStatusPanel CS_RepairCheck CS_FileRepair "" "" //(psAviFile(Self))
+        If (ghoStatusPanel <> 0) Begin
+            Send Initialize_StatusPanel to ghoStatusPanel CS_RepairCheck CS_FileRepair "" ""
             Send Start_StatusPanel to ghoStatusPanel
+            Set piPosition  of ghoProgressBarOverall to 0
+            Set piAdvanceBy of ghoProgressBarOverall to 1
+            Set piMaximum   of ghoProgressBarOverall to (SizeOfArray(aiFileIsMaster))
         End
 
         // Initialize table number; we will start searching the filelist at this number.
@@ -947,15 +450,21 @@ Class cDatabaseFunctions is a cObject
             If (iTableNum <> 0) Begin
                 // Count the tables
                 Increment iNumTables
+                Send DoAdvance of ghoProgressBarOverall
 
-               // Skip FlexErrs
-                Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName
-                If (Uppercase(Trim(sRootName)) <> "FLEXERRS") Begin
-                    If ghoStatusPanel Begin
+                // Skip SQL tables, FlexErrs & perhaps also CodeMast and CodeType
+                Get_Attribute DF_FILE_ROOT_NAME of iTableNum to sRootName 
+                Get IsSqlTable iTableNum to bIsSQL
+                Move (bIsSQL = False and Lowercase(Trim(sRootName)) <> "flexerrs") to bOK
+                If (bOK and bReindexCodeFiles = False) Begin
+                    Move (Lowercase(Trim(sRootName)) <> "codemast" and (Lowercase(Trim(sRootName)) <> "codetype")) to bOK    
+                End
+                If (bOK = True) Begin
+                    If (ghoStatusPanel <> 0) Begin
                         Set Title_Text of ghoStatusPanel to (CS_RepairingFile * sRootName)
                     End
-                    Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
 
+                    Send Ignore_Error of Error_Object_Id DFERR_FILE_ACCESS_VIOLATION
                     // Do not open table exclusively, the RepairNeeded message further down needs a normal open.
                     Open iTableNum
                     Get_Attribute DF_FILE_OPENED of iTableNum to bTableIsOpen
@@ -966,6 +475,14 @@ Class cDatabaseFunctions is a cObject
                         Open iTableNum
                         Get_Attribute DF_FILE_LOGICAL_NAME of iTableNum to sLogicalName
                         Get IsFileMasterAlias iTableNum aiFileIsMaster aiFileIsAlias to iFileAlias
+                        // If the Master/Alias arrays have not been setup correctly, we make
+                        // another check, to make sure this is not an alias table.
+                        If (iFileAlias <> DF_FILE_IS_ALIAS) Begin
+                            Get IsAlias iTableNum to bIsAlias
+                            If (bIsAlias = True) Begin
+                                Move DF_FILE_IS_ALIAS to iFileAlias
+                            End
+                        End
                         If (iFileAlias = DF_FILE_IS_ALIAS) Begin
                             Close iTableNum
                             Move (False) to FindErr
@@ -973,8 +490,13 @@ Class cDatabaseFunctions is a cObject
                         End
                         Else Begin
                             Move False to bTableIsOpen
+                            If (ghoStatusPanel > 0) Begin
+                                Send Stop_StatusPanel of ghoStatusPanel
+                            End
                             Send Info_Box (CS_The_Table * sRootname * String("(" + CS_number * "=" * String(iTableNum)) + ")" * CS_Is_in_use)
-                            Send Stop_StatusPanel of ghoStatusPanel
+                            If (ghoStatusPanel > 0) Begin
+                                Send Start_StatusPanel of ghoStatusPanel
+                            End
                         End
                     End
 
@@ -993,6 +515,10 @@ Class cDatabaseFunctions is a cObject
                             Get RepairNeeded iTableNum sRootName to sRepair
 
                             If (Uppercase(sRepair) <> "NONE") Begin
+                                Get_Attribute DF_FILE_RECORDS_USED of iTableNum to iRecords
+                                Set piPosition  of ghoProgressBar to 0
+                                Set piAdvanceBy of ghoProgressBar to 1
+                                Set piMaximum   of ghoProgressBar to iRecords
                                 Get RepairDataFlexTable sRootName to iRetval
                             End
 
@@ -1001,9 +527,10 @@ Class cDatabaseFunctions is a cObject
                             Open iTableNum Mode DF_EXCLUSIVE
                             Sort iTableNum sSortString (DF_SORT_OPTION_BAD_DATA_FILE ior DF_SORT_OPTION_DUP_DATA_FILE) Self
 
-                            Send UpdateStatusBar of ghoStatusPanel
+                            If (ghoStatusPanel <> 0) Begin
+                                Send UpdateStatusBar of ghoStatusPanel
+                            End
                             Close iTableNum
-
                             // Check for bad file: if it exists, something went wrong
                             Get vFilePathExists (sRootName + ".BAD") to bBadExists
                             If (bBadExists = True) Begin
@@ -1016,15 +543,14 @@ Class cDatabaseFunctions is a cObject
         Until (iTableNum = 0 or FindErr = True)
 
         Set pbVerboseState of Error_Object_Id to bVerbose
-
         // Stop progress messages
-        If ghoStatusPanel Begin
+        If (ghoStatusPanel <> 0) Begin
             Send Stop_StatusPanel of ghoStatusPanel
         End
 
         // Show message that we are ready
         If (Err = False) Begin
-            Move CS_Database_Reindexed to sReadyMsg
+            Move CS_Database_Repaired to sReadyMsg
         End
         Else Begin
             If (LastErr = DFERR_FILE_ACCESS_VIOLATION) Begin
@@ -1039,8 +565,12 @@ Class cDatabaseFunctions is a cObject
         End
         Move (sReadyMsg + "\n\n" + CS_PressOKButton) to sReadyMsg
         Send Info_Box sReadyMsg
-        Move (Module_Name(Desktop)) to sProgram
-        // Start program again.
+
+        Move (Module_Name(Desktop)) to sProgram 
+        #IFDEF Is$Win64
+            Append sProgram "64"
+        #ENDIF
+        // Restart program.
         Runprogram (sProgram - ".exe")
     End_Procedure
 
@@ -1298,7 +828,8 @@ Class cDatabaseFunctions is a cObject
         Handle hTempFile
 
         Get psDataPath of (phoWorkspace(ghoApplication)) to sPath
-        Get CJBrowseForFolder sPath "" (ToANSI(CS_SelectBackupFolder)) True to sBackupFolder
+        Get vSHBrowseForFolder to sBackupFolder
+//        Get CJBrowseForFolder sPath "" (ToANSI(CS_SelectBackupFolder)) True to sBackupFolder
         If (Length(sBackupFolder) = 0) Begin
             Procedure_Return
         End
@@ -1361,7 +892,7 @@ Class cDatabaseFunctions is a cObject
 
                     Set Message_Text of ghoStatusPanel to (CS_RestoringTable * sRootName)
                     // Copy data record by record:
-                    Indicate Err False
+                    Move False to Err
                     Copy_db (sBackupFolder + sDirSep + sRootname) to sRootname Callback Self
 
                     If (Err = True) Begin
@@ -1393,6 +924,52 @@ Class cDatabaseFunctions is a cObject
         End
         Send Info_Box (CS_DatabaseRecreated * sBackupFolder)
     End_Procedure
+
+    Function IsSQLTable Handle hTable Returns Boolean
+        Boolean bFound
+        String sRootName
+        Get_Attribute DF_FILE_ROOT_NAME of hTable to sRootName
+        Move (Lowercase(sRootName) contains ".int") to bFound
+        Function_Return bFound
+    End_Function
+
+    // This is used in place of the DF_FILE_OPENED table attribute, because
+    // the table then needs to be open, which takes time.
+    Function IsAlias Handle hTable Returns Boolean
+        Boolean bFound bIsIntTable
+        String sLogicalName sRootName sNoDriverRootname
+        
+        Get_Attribute DF_FILE_LOGICAL_NAME of hTable to sLogicalName
+        Get_Attribute DF_FILE_ROOT_NAME    of hTable to sRootName
+        Get _TableNameOnly sRootName to sNoDriverRootname
+        // Do we have an Alias table?
+        Move (Lowercase(sLogicalName) <> Lowercase(sNoDriverRootname)) to bFound
+        Function_Return bFound
+    End_Function
+    
+    Function TableNameOnly String sTableName Returns String
+        Integer iPos
+        Move (Pos(":", sTableName)) to iPos
+        If (iPos <> 0) Begin
+            Move (Mid(sTableName, Length(sTableName), (iPos +1))) to sTableName
+        End  
+        Move (Pos(".int", Lowercase(sTableName))) to iPos
+        If (iPos <> 0) Begin
+            Move (Left(sTableName, (iPos -1))) to sTableName
+        End  
+        Function_Return sTableName
+    End_Function
+
+    // Callback facility enabler. Pass the information to the status panel.
+    // Used from various places in the program by the status panel's trackbar.
+    Function Callback String CallbackMsg Integer CallbackType Returns Integer
+        If (CallbackType <> DF_MESSAGE_PROGRESS_VALUE) ;
+            Send Update_StatusPanel of ghoStatusPanel CallbackMsg
+        Else Begin
+            Send UpdateStatusBar   of ghoStatusPanel
+        End
+        Function_Return False
+    End_Function
 
     // Stub event message
     Procedure OnSetAllMasterAndAlias
