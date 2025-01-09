@@ -173,7 +173,7 @@ Class cDatabaseFunctions is a cObject
     // Note: Both CodeMast & CodeType are kept open at all times by the Studio.
     Function OpenCheckCodeFiles Returns Boolean
         Boolean bContinue bReindexCodeFiles bErr bOK 
-        Integer iLastErr iErrLine
+        Integer iLastErr iErrLine iRetval
         
         Get pbReindexCodeFiles to bReindexCodeFiles
         If (bReindexCodeFiles = False) Begin
