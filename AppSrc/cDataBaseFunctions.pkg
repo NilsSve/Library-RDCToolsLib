@@ -26,6 +26,10 @@ Class cDatabaseFunctions is a cObject
 
     // *** MAIN PROCEDURES ***
 
+    // To check collation for the embedded database (*.dat), when
+    // the program is started.
+    // Call it from Procedure OnWorkspaceOpened in the cApplication object
+    // Syntax: Send CheckCollatingSequence of ghoDatabaseFunctions File_Field MyTable.MyIndexedFieldName
     Procedure CheckCollatingSequence Integer iFile Integer iField
         Integer iRetval iIndex iRecords
         Boolean bOpen
