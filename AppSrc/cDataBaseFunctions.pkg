@@ -962,7 +962,7 @@ Class cDatabaseFunctions is a cObject
         Function_Return bFound
     End_Function
     
-    Function TableNameOnly String sTableName Returns String
+    Function _TableNameOnly String sTableName Returns String
         Integer iPos
         Move (Pos(":", sTableName)) to iPos
         If (iPos <> 0) Begin
