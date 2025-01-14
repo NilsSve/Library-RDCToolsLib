@@ -23,11 +23,13 @@ Use cSelectFolderDialog.pkg
     Define clProgramIconBg          for (RGB(43, 59, 83))       // HTML #2B3B53
 #ENDIF
 
+#IFNDEF cx_DbSelect_All    
 Enum_List
     Define cx_DbSelect_All
     Define cx_DbSelect_None
     Define cx_DbSelect_Invert
 End_Enum_List
+#ENDIF
 
 Register_Object oCheckbox_Col
 
