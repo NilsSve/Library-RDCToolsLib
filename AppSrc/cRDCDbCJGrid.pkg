@@ -1,4 +1,4 @@
-Use cDbCJGrid.pkg
+﻿Use cDbCJGrid.pkg
 Use cSelectFolderDialog.pkg
 #IF (!@ < 230)
     Use cRDCDbCJGridColumnHyperLink.pkg
