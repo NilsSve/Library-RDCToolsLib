@@ -1,0 +1,22 @@
+﻿Use cToolTipController.pkg
+Use Language_Current.inc
+
+Class cRDCTooltipController is a cToolTipController
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Move Self to ghoToolTipController
+        Set pbBalloonStyle to False
+        Set piIcon to TTI_INFO
+        Set psTitle to C_$Information
+        Set piMaxWidth to 400
+        Set piDurationPopup to 14000    // 14 seconds, needed for long tooltips.
+
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+End_Class
