@@ -11,7 +11,6 @@ Class cRDCTooltipController is a cToolTipController
         Set psTitle to C_$Information
         Set piMaxWidth to 400
         Set piDurationPopup to 14000    // 14 seconds, needed for long tooltips.
-
     End_Procedure
 
     Procedure End_Construct_Object
