@@ -19,16 +19,16 @@
 loginEncryptionkey.inc
 
 # Data
-**/data/**/*.log
-**/data/**/*.dat
-**/data/**/*.vld
-**/data/**/*.k*
-**/data/**/*.bad
-**/data/**/*.hdr
-**/data/**/*.cch
-**/data/**/*.cfg
-**/data/ScintillaEdit.ini
-**/data/DUFUpdateLog.txt
+#**/data/**/*.log
+#**/data/**/*.dat
+#**/data/**/*.vld
+#**/data/**/*.k*
+#**/data/**/*.bad
+#**/data/**/*.hdr
+#**/data/**/*.cch
+#**/data/**/*.cfg
+#**/data/ScintillaEdit.ini
+#**/data/DUFUpdateLog.txt
 
 # DDSrc
 **/ddsrc/**/*.def
