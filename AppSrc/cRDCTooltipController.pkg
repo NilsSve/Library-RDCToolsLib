@@ -1,5 +1,5 @@
 ﻿Use cToolTipController.pkg
-Use Language_Current.inc
+Use LanguageText.pkg
 
 Class cRDCTooltipController is a cToolTipController
     
