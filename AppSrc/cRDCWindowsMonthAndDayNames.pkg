@@ -1,4 +1,4 @@
-//****************************************************************************
+﻿//****************************************************************************
 // $Module type: Function Package
 // $Module name: WindowsMonthAndDayNames
 // $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
@@ -268,8 +268,8 @@ Function DayNameFromInteger Global Integer iDayNo Boolean bLongName Boolean bCap
             Case Break
     Case End
 
-   ZeroString 20 to sDayName
-   GetAddress of sDayName to lpsDayName
+   Move (ZeroString(20)) to sDayName
+   Move (AddressOf(sDayName)) to lpsDayName
    Move (GetLocaleInfo(LOCALE_USER_DEFAULT, iDay, lpsDayName, 20)) to iVoid
 
     Move (ToOEM(CString(sDayName))) to sDayName
