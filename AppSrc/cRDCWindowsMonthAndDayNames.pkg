@@ -177,8 +177,8 @@ Function MonthNameFromInteger Global Integer iMthNo Boolean bLongName Boolean bC
             Case Break
     Case End
 
-    ZeroString 20 to sMonthName
-    GetAddress of sMonthName to lpsMonthName
+    Move (ZeroString(20)) to sMonthName
+    Move (AddressOf(sMonthName)) to lpsMonthName
     Move (GetLocaleInfo(LOCALE_USER_DEFAULT, iMonth, lpsMonthName, 20)) to iVoid
    
     Move (ToOEM(CString(sMonthName))) to sMonthName
