@@ -636,8 +636,10 @@ Class cRDCDbCJGrid is a cDbCJGrid
         String sState sColor
 
         Get psGridRowBackgroundColor of ghoApplication to sColor
-        Set piSelectedRowBackColor to (Eval(sColor))
-        Set piHighlightBackColor   to (Eval(sColor))
+        If (sColor <> "") Begin
+            Set piSelectedRowBackColor to (Eval(sColor))
+            Set piHighlightBackColor   to (Eval(sColor))
+        End
         Send DoSetCheckboxFooterText
     End_Procedure
 

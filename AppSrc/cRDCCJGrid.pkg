@@ -282,8 +282,10 @@ Class cRDCCJGrid is a cCJGrid
         String sState sColor
 
         Get psGridRowBackgroundColor of ghoApplication to sColor
-        Set piSelectedRowBackColor to (Eval(sColor))
-        Set piHighlightBackColor   to (Eval(sColor))
+        If (sColor <> "") Begin
+            Set piSelectedRowBackColor to (Eval(sColor))
+            Set piHighlightBackColor   to (Eval(sColor))
+        End
 
 //        If (ghoProjectIniFile = 0) Begin
 //            Procedure_Return
