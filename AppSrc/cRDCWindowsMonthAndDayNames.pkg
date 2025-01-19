@@ -181,7 +181,7 @@ Function MonthNameFromInteger Global Integer iMthNo Boolean bLongName Boolean bC
     Move (AddressOf(sMonthName)) to lpsMonthName
     Move (GetLocaleInfo(LOCALE_USER_DEFAULT, iMonth, lpsMonthName, 20)) to iVoid
    
-    Move (ToOEM(CString(sMonthName))) to sMonthName
+//    Move (ToOEM(CString(sMonthName))) to sMonthName
     If (bCapsFirstLetter = True) Begin
         Get UppercaseFirstLetters of _oStringFunctions sMonthName to sMonthName
     End
@@ -272,7 +272,7 @@ Function DayNameFromInteger Global Integer iDayNo Boolean bLongName Boolean bCap
    Move (AddressOf(sDayName)) to lpsDayName
    Move (GetLocaleInfo(LOCALE_USER_DEFAULT, iDay, lpsDayName, 20)) to iVoid
 
-    Move (ToOEM(CString(sDayName))) to sDayName
+//    Move (ToOEM(CString(sDayName))) to sDayName
     If (bCapsFirstLetter = True) Begin
         Get UppercaseFirstLetters of _oStringFunctions sDayName to sDayName
     End
