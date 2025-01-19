@@ -10,9 +10,9 @@
 // $Rev History:
 //    2013-06-15  Module header created
 //****************************************************************************
-Use Windows
-Use Dll
-Use Dferror
+Use Windows.pkg
+Use Dll.pkg
+Use Dferror.pkg
 Use StringFunctions.pkg
 
 #IFNDEF get_GetLocaleInfo
