@@ -75,7 +75,7 @@ Class cRDCCJGridPromptList is a cCJGridPromptList
 
         On_Key Key_End                Send MoveToLastEnterableColumn
         On_Key Key_Home               Send MoveToFirstEnterableColumn
-        On_Key kCancel                Send CancelIfPopupObject
+        On_Key kCancel                Send Close_Panel // CancelIfPopupObject
     End_Procedure
 
     Procedure End_Construct_Object

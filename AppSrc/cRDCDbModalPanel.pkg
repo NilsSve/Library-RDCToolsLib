@@ -109,5 +109,6 @@ Class cRDCDbModalPanel is a dbModalPanel
        // Tell windows that we've handled the event.    
        Set Windows_Override_State to True    
     End_Procedure
-        
+    
+    On_Key kCancel Send Close_Panel        
 End_Class
