@@ -1,0 +1,121 @@
+﻿Use cDbCJGridPromptList.pkg
+
+#IFNDEF CS_Settings
+    Define CS_Settings                  for "Settings"
+#ENDIF
+#IFNDEF CS_GridFontSize
+    Define CS_GridFontSize              for "GridFontSize"
+#ENDIF
+
+#IFNDEF clGreenGrey
+    Define clGreenGrey              for (RGB(64, 84, 93))
+    Define clGreenGreyLight         for (RGB(7, 117, 104))
+    Define clDarkGreen              for (RGB(49, 60, 83)) 
+#ENDIF
+
+#IFNDEF clAlternateRowBgColor
+    Define clAlternateRowBgColor    for (RGB(216, 217, 227))    // HTML #D8D9E3
+    Define clStatusBarColor         for (RGB(45, 130, 149))     // HTML #2D8295
+    Define clEditorBackGround       for (RGB(36, 49, 68))       // HTML 243144
+    Define clBaseColor              for (RGB(239, 239, 239))    // HTML #EFEFEF  
+    Define clActiveRow              for (RGB(1, 82, 119))       // HTML #015277 
+    Define clProgramIconBg          for (RGB(43, 59, 83))       // HTML #2B3B53
+#ENDIF
+
+Class cRDCDbCJGridPromptList is a cDbCJGridPromptList
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // General settings
+        Set pbRestoreLayout to True
+        Set psLayoutSection to ((Object_Label(Parent(Self))) + "-" + (Object_Label(Self)))
+        Set psNoItemsText to "No data found..."
+        Set pbHeaderReorders to True
+        Set pbHeaderTogglesDirection to True
+        Set pbReadOnly to True
+        Set pbEditOnTyping to False
+        Set pbFocusSubItems to False
+        Set pbSelectionEnable to True
+        Set pbMultipleSelection to False
+        Set pbShowRowFocus to True
+        Set pbHotTracking to True
+        Set pbInitialSelectionEnable to False
+        Set pbShowFooter to False
+        Set pbGrayIfDisable to True
+        Set pbShadeSortColumn to True
+        Set pbSelectTextOnEdit to False
+        Set pbHeaderSelectsColumn to False
+        Set pbAutoOrdering to False
+        Set pbAutoSearch to False
+        Set pbAutoSeed to False
+        Set pbUseFocusCellRectangle to True
+        Set piTooltipMaxWidth to 400
+        Set peAnchors to anAll
+
+        #IF (!@ > 180)
+            #IF (!@ < 230)
+                Set peVisualTheme to xtpReportThemeExplorer
+            #ELSE
+                Set peVisualTheme to xtpGridThemeVisualStudio2012Light //xtpGridThemeVisualStudio2022 //xtpGridThemeExplorer
+            #ENDIF
+        #ENDIF
+
+        Set peBorderStyle to xtpBorderThemedFrame
+        //Set peHorizontalGridStyle to xtpGridSolid // SmallDots // Solid
+        // Colors
+        Set pbUseAlternateRowBackgroundColor to True  
+        Set piAlternateRowBackgroundColor    to clAlternateRowBgColor   
+        Set piSelectedRowBackColor           to clActiveRow
+        Set piSelectedRowForeColor           to clWhite
+        Set piHighlightBackColor             to clActiveRow  
+        Set piCaptionBackColor               to clProgramIconBg
+        Set piCaptionForeColor               to clWhite   
+
+        On_Key Key_End                Send MoveToLastEnterableColumn
+        On_Key Key_Home               Send MoveToFirstEnterableColumn
+        On_Key kCancel                Send CancelIfPopupObject
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+    Procedure ScaleFont Integer iDirection    // from control + mouse wheel in container object
+        Integer iSize jSize kSize iSup iInf iDef
+        Handle hoPaintManager hoFont
+        Variant vFont
+        Boolean blimite
+        
+        Move 3 to iInf      //max size
+        Move 18 to iSup     //min size
+        Move 8 to iDef      //default
+        Get phoReportPaintManager to hoPaintManager
+        If (IsComObjectCreated (hoPaintManager) = False) Begin
+            Procedure_Return
+        End
+        Get Create (RefClass(cComStdFont)) to hoFont
+        Get ComTextFont of hoPaintManager to vFont
+        Set pvComObject of hoFont to vFont
+        If (iDirection = 0) Begin
+            Set ComSize of hoFont to iDef
+        End
+        Else Begin
+           Get ComSize of hoFont to iSize
+           Move iSize to jSize
+           Repeat
+                Move (If(iDirection > 0, jSize + 1, jSize - 1)) to jSize
+                Move (If(iDirection > 0, If(jSize > iSup, True, False), If(jSize < iInf, True, False))) to blimite
+                If (not(blimite)) Begin       
+                   Set ComSize of hoFont to jSize
+                   Get ComSize of hoFont to kSize
+                End
+            Until (iSize <> kSize or blimite)
+        End
+        Send Destroy to hoFont 
+        Send ComRedraw  
+        Send WriteInteger of ghoApplication CS_Settings CS_GridFontSize iSize
+    End_Procedure 
+
+End_Class
