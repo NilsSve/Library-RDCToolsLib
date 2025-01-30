@@ -126,7 +126,8 @@ Object Status_Panel is a cProcessStatusPanel
         Set Size to 19 204
         Set Location to 18 9
         Set Auto_Size_State to False
-        Set Justification_Mode to JMode_Left
+        Set Justification_Mode  to jMode_Center
+//        Set Justification_Mode to JMode_Left
         Set Label to "This is the TableName Text"
     End_Object
 
@@ -134,7 +135,7 @@ Object Status_Panel is a cProcessStatusPanel
         Set Location to 39 9
         Set Size to 19 204
         Set Auto_Size_State to False
-        Set Justification_Mode to JMode_Left
+        Set Justification_Mode to jMode_Center
         Set Label to "This is the Message text"
     End_Object
 
@@ -147,10 +148,10 @@ Object Status_Panel is a cProcessStatusPanel
     End_Object
 
     Object oStopButton is a Button
-        Set Location to 120 82
+        Set Location to 123 82
         Set Label to C_$Cancel
 
-        Procedure OnClick
+        Procedure OnClick 
             Send Close_panel
         End_Procedure
 
@@ -163,8 +164,8 @@ Object Status_Panel is a cProcessStatusPanel
     End_Object
 
     Object oCopyRight is a TextBox
-        Set Location to 137 6
-        Set Size to 9 212
+        Set Location to 140 21
+        Set Size to 9 197
         Set FontPointHeight to 8
         Set Auto_Size_State to False
         Set Justification_Mode  to jMode_Center
@@ -187,14 +188,24 @@ Object Status_Panel is a cProcessStatusPanel
         Set Size to 10 179
         Set Location to 83 22
         Set pbVisible to True // default
-        Move Self to ghoProgressBar // this can be used throughout your application to access the progress bar
+        Move Self to ghoProgressBar // this can be used throughout the application to access the progress bar
     End_Object
+
+    Procedure Set Progress_Bar_Visible_State Boolean bVisible
+        Set pbVisible of ghoProgressBar to bVisible
+    End_Procedure
+
+    Function Progress_Bar_Visible_State Returns Boolean
+        Boolean bVisible
+        Get pbVisible of ghoProgressBar to bVisible
+        Function_Return (bVisible)
+    End_Function
 
     Object oProgressBarOverall is a cProgressBar
         Set Size to 10 179
-        Set Location to 104 22
+        Set Location to 107 22
         Set pbVisible to True // default
-        Move Self to ghoProgressBarOverall // this can be used throughout your application to access the progress bar
+        Move Self to ghoProgressBarOverall // this can be used throughout the application to access the progress bar
     End_Object
 
     Object oOverallProgress_tb is a TextBox
@@ -202,6 +213,16 @@ Object Status_Panel is a cProcessStatusPanel
         Set Location to 95 24
         Set Label to "Overall Progress"
     End_Object
+
+    Procedure Set Progress_Bar_Overall_Visible_State Boolean bVisible
+        Set pbVisible of ghoProgressBarOverall to bVisible
+    End_Procedure
+
+    Function Progress_Bar_Overall_Visible_State Returns Boolean
+        Boolean bVisible
+        Get pbVisible of ghoProgressBarOverall to bVisible
+        Function_Return (bVisible)
+    End_Function
 
     // These messages bind the standard cProcessStatusPanel interface to the actual
     // objects defined within this instance of the status panel.
