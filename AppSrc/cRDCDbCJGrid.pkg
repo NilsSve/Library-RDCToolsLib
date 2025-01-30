@@ -35,6 +35,13 @@ End_Enum_List
 #ENDIF
 
 Register_Object oCheckbox_Col
+Register_Function phoData_Col Returns Handle
+Register_Function pbDbShowAddFolderMenuItem Returns Boolean   
+Register_Function pbDbOpenContainingFolderMenuItem Returns Boolean
+Register_Function pbDbShowRemoveItemMenuItem Returns Boolean
+Register_Function pbDbShowInvertSelectionsMenuItem Returns Boolean
+Register_Function pbDbShowEditMenuItem Returns Boolean
+Register_Procedure Request_Edit
 
 // Classes used by the cRDCCJSelectionGrid
 Class cRDCDbCJToggleSelectMenuItem is a cCJMenuItem
@@ -118,8 +125,6 @@ Class cRDCDbCJAddFolderMenuItem is a cCJMenuItem
 
 End_Class
 
-Register_Function phoData_Col Returns Handle
-
 Class cRDCDbCJOpenContainingFolderMenuItem is a cCJMenuItem
     Procedure Construct_Object
         Forward Send Construct_Object
@@ -166,13 +171,6 @@ Class cRDCDbCJEditMenuItem is a cCJMenuItem
 
 End_Class
 
-Register_Function pbDbShowAddFolderMenuItem Returns Boolean   
-Register_Function pbDbOpenContainingFolderMenuItem Returns Boolean
-Register_Function pbDbShowRemoveItemMenuItem Returns Boolean
-Register_Function pbDbShowInvertSelectionsMenuItem Returns Boolean
-Register_Function pbDbShowEditMenuItem Returns Boolean
-Register_Procedure Request_Edit
-
 Class cDbGridContext_mnu is a cCJContextMenu
     Procedure Construct_Object
         Handle hoMenuItem
@@ -205,8 +203,6 @@ Class cDbGridContext_mnu is a cCJContextMenu
 
 End_Class
 
-Register_Object oCheckbox_Col
-
 Class cRDCDbCJGrid is a cDbCJGrid
 
     Procedure Construct_Object
@@ -218,8 +214,8 @@ Class cRDCDbCJGrid is a cDbCJGrid
         // If you quickly double-right-click, or quickly click around a cCJGrid
         // (using a combination of middle-clicks, right-clicks and left-clicks), the application can crash.
         // To guard against this see the augmented procedure OnComRowRClick below.
-        Property Handle phoCheckbox_Col
-        Property Handle phoData_Col
+        Property Handle phoCheckbox_Col -1
+        Property Handle phoData_Col -1
         Property Boolean pbRightClickProcessing False   
         Property Boolean pbDbShowAddFolderMenuItem False
         Property Boolean pbDbOpenContainingFolderMenuItem False
@@ -227,14 +223,6 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Property Boolean pbDbShowInvertSelectionsMenuItem False
         Property Boolean pbDbShowEditMenuItem False
         
-        #IF (!@ > 180)
-            #IF (!@ < 230)
-                Set peVisualTheme to xtpReportThemeExplorer
-            #ELSE
-                Set peVisualTheme to xtpGridThemeVisualStudio2012Light //xtpGridThemeVisualStudio2022 //xtpGridThemeExplorer
-            #ENDIF
-        #ENDIF
-
         // General settings
         Set pbRestoreLayout to True
         Set psLayoutSection to ((Object_Label(Parent(Self))) + "-" + (Object_Label(Self)))
@@ -255,7 +243,10 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set pbAllowAppendRow to False
         Set pbEditOnClick to False
         Set pbAutoAppend to False 
+        Set pbSelectTextOnEdit to False
+        Set pbShowNonActiveInPlaceButton to True
         Set piTooltipMaxWidth to 400
+        Set pbStaticData to False
         Set peAnchors to anAll
         
         // Colors
@@ -266,17 +257,20 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set piHighlightBackColor             to clActiveRow  
         Set piCaptionBackColor               to clProgramIconBg
         Set piCaptionForeColor               to clWhite   
+        Set piFocusCellForeColor             to clBlack
+        Set piFocusCellBackColor             to clDefault
+        Set peVisualTheme                    to xtpGridThemeOffice2003 //xtpGridThemeDefault
 
-        Set Status_Help to ""
-        
-        On_Key Key_End        Send MoveToLastEnterableColumn
-        On_Key Key_Home       Send MoveToFirstEnterableColumn
-        On_Key Key_Delete     Send Request_Delete
-        On_Key Key_Insert     Send BrowseForFolder
-        On_Key Key_Space      Send ToggleCurrentItem 
-        On_Key Key_Ctrl+Key_A send SelectAll
-        On_Key Key_Ctrl+Key_N send SelectNone
-        On_Key Key_Ctrl+Key_I Send SelectInvert
+        On_Key Key_End         Send MoveToLastEnterableColumn
+        On_Key Key_Home        Send MoveToFirstEnterableColumn
+        On_Key Key_Right_Arrow Send Next
+        On_Key Key_Left_Arrow  Send Previous
+        On_Key Key_Delete      Send Request_Delete
+        On_Key Key_Insert      Send BrowseForFolder
+        On_Key Key_Space       Send ToggleCurrentItem 
+        On_Key Key_Ctrl+Key_A  Send SelectAll
+        On_Key Key_Ctrl+Key_N  Send SelectNone
+        On_Key Key_Ctrl+Key_I  Send SelectInvert
     End_Procedure 
     
     Procedure Set peGridvisualTheme Integer eGridTheme
@@ -304,9 +298,9 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set SelectItems to cx_DbSelect_Invert
     End_Procedure
 
-    { EnumList="cx_dbSelect_All, cx_dbSelect_None, cx_dbSelect_Invert" }
     // Set checkbox column to selected state. 
     // Note that the pbStaticData needs to be True for this to work.
+    { EnumList="cx_dbSelect_All, cx_dbSelect_None, cx_dbSelect_Invert" }
     Procedure Set SelectItems Integer iState
         Integer iCount iSize iCheckbox_Col iData_Col iSelectedRow
         Boolean bChecked
@@ -316,8 +310,11 @@ Class cRDCDbCJGrid is a cDbCJGrid
         
         Get Server to hoDD
         Get phoCheckbox_Col to hoCheckBox_Col
-        Get phoData_Col     to hoData_Col
-        If (hoCheckBox_Col = 0) Begin
+        If (hoCheckBox_Col = -1) Begin
+            Procedure_Return
+        End                 
+        Get phoData_Col to hoData_Col
+        If (hoData_Col = -1) Begin
             Procedure_Return
         End                 
         
@@ -375,14 +372,14 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Boolean bChecked
 
         Get phoData_Col to hoData_Col
-        If (hoData_Col = 0) Begin
+        If (hoData_Col = -1) Begin
             Move 1 to iData_Col
         End                    
         Else Begin
             Get piColumnId of hoData_Col to iData_Col
         End                                          
         Get phoCheckbox_Col to hoCheckBox_Col
-        If (hoCheckBox_Col = 0) Begin
+        If (hoCheckBox_Col = -1) Begin
             Function_Return sDataArray
         End                           
         Else Begin
@@ -481,10 +478,11 @@ Class cRDCDbCJGrid is a cDbCJGrid
         
         Move 0 to iRetval
         Get phoCheckbox_Col to hoCheckbox_Col
-        If (hoCheckbox_Col = 0) Begin
+        If (hoCheckbox_Col = -1) Begin
             Procedure_Return
         End
         Get piColumnId of hoCheckbox_Col to iCheckbox_Col
+        
         Get phoDataSource to hoDataSource
         Get DataSource of hoDataSource to TheData
         Move (SizeOfArray(TheData)) to iItems
@@ -507,7 +505,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Handle hoCol hoCheckbox_Col hoDD
 
         Get phoCheckbox_Col to hoCheckbox_Col
-        If (hoCheckbox_Col = 0) Begin
+        If (hoCheckbox_Col = -1) Begin
             Procedure_Return
         End
         Get piColumnId of hoCheckbox_Col to iCol
@@ -526,7 +524,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Handle hoCol hoCheckbox_Col hoData_Col
         
         Get phoData_Col to hoData_Col
-        If (hoData_Col = 0) Begin
+        If (hoData_Col = -1) Begin
             Move 0 to iCol
         End
         Else Begin
@@ -540,7 +538,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
 
         Get phoCheckbox_Col to hoCheckbox_Col
-        If (hoCheckbox_Col <> 0) Begin
+        If (hoCheckbox_Col <> -1) Begin
             Get piColumnId of hoCheckbox_Col to iCol
             Get ColumnObject iCol to hoCol
             Set psFooterText of hoCol  to ("#" * String(iSelected))
@@ -570,6 +568,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
 
         Get phoReportPaintManager to hoPaintManager
+        
         Get Create (RefClass(cComStdFont)) to hoFont  // Create a font object
         Get ComTextFont of hoPaintManager to vFont    // Bind the font object to the Grid's text font
         Set pvComObject of hoFont to vFont            // Connect DataFlex object with com object
@@ -590,7 +589,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
 
         // This is the programs global tooltip control defined at desktop level.
         If (ghoToolTipController > 0) Begin
-            Get piIcon of ghoToolTipController    to iIcon
+            Get piIcon of ghoToolTipController to iIcon
             // The global tooltip controller allows the icons to be
             // from 0-5, but the tooltip context class only allows
             // the tooltip icon to be between 0-3.
@@ -616,10 +615,6 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set ComMaxTipWidth of hoTooltip to iWidth
     End_Procedure    
     
-    Procedure OnComGetToolTipInfo Variant lltoolTipInfo
-        Forward Send OnComGetToolTipInfo lltoolTipInfo
-    End_Procedure
-
     // When changing to new row, update the form 'No of Rows'
     Procedure OnRowChanged Integer iOldRow Integer iNewSelectedRow
         Forward Send OnRowChanged iOldRow iNewSelectedRow
@@ -714,28 +709,29 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
     End_Procedure
 
+    // Should be in parent container object. Aka, dbview or modalpanel.
     // To enable Ctrl+MouseWheel in the grid to change font size.
-    Procedure OnWmMouseWheel Integer wParam Integer lParam
-       Integer iKeys iClicks iX iY iCONTROL
-       Short iDelta     // Short signed integer
-       Boolean bok 
-       
-       Move 0 to iDelta
-       Move (Low(wParam)) to iKeys           // any keys down when pressed
-       Move (MemCopy(AddressOf(iDelta),AddressOf(wParam)+2,2)) to bok
-       // C_WHEELDATA is 120 as defined by MS as the delta to react to. Once click is usually 120
-       Move (iDelta/C_WHEELDELTA) to iClicks // Number of clicks to react to
-       Move (Low(lParam)) to iX  // cursor position
-       Move (Hi(lParam)) to iY   
-
-       Move (iKeys iand MK_CONTROL ) to iCONTROL  //$008
-       If (iCONTROL) Begin
-            Broadcast Recursive Send ScaleFont iClicks
-       End
-
-       // Tell windows that we've handled the event.    
-       Set Windows_Override_State to True    
-    End_Procedure
+//    Procedure OnWmMouseWheel Integer wParam Integer lParam
+//       Integer iKeys iClicks iX iY iCONTROL
+//       Short iDelta     // Short signed integer
+//       Boolean bok 
+//       
+//       Move 0 to iDelta
+//       Move (Low(wParam)) to iKeys           // any keys down when pressed
+//       Move (MemCopy(AddressOf(iDelta),AddressOf(wParam)+2,2)) to bok
+//       // C_WHEELDATA is 120 as defined by MS as the delta to react to. Once click is usually 120
+//       Move (iDelta/C_WHEELDELTA) to iClicks // Number of clicks to react to
+//       Move (Low(lParam)) to iX  // cursor position
+//       Move (Hi(lParam)) to iY   
+//
+//       Move (iKeys iand MK_CONTROL ) to iCONTROL  //$008
+//       If (iCONTROL) Begin
+//            Broadcast Recursive Send ScaleFont iClicks
+//       End
+//
+//       // Tell windows that we've handled the event.    
+//       Set Windows_Override_State to True    
+//    End_Procedure
         
     Procedure ScaleFont Integer iDirection    // from control + mouse wheel in container object
         Integer iSize jSize kSize iSup iInf iDef
@@ -766,7 +762,8 @@ Class cRDCDbCJGrid is a cDbCJGrid
                    Set ComSize of hoFont to jSize
                    Get ComSize of hoFont to kSize
                 End
-            Until (iSize <> kSize or blimite)
+           Until (iSize <> kSize or blimite)    
+           Move kSize to iSize
         End
         Send Destroy to hoFont 
         Send ComRedraw  
