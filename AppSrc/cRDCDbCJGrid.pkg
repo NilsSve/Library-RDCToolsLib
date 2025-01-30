@@ -236,20 +236,21 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set pbSelectionEnable to True
         Set pbUseFocusCellRectangle to True
         Set pbShadeSortColumn to False
-        Set peBorderStyle to xtpBorderThemedFrame
-        Set peHorizontalGridStyle to xtpGridSolid // SmallDots // Solid
         Set pbAllowDeleteRow to False
         Set pbAllowInsertRow to False
         Set pbAllowAppendRow to False
         Set pbEditOnClick to False
         Set pbAutoAppend to False 
         Set pbSelectTextOnEdit to False
-        Set pbShowNonActiveInPlaceButton to True
+        Set pbShowNonActiveInPlaceButton to False
+        Set pbDrawGridForEmptySpace to False
         Set piTooltipMaxWidth to 400
         Set pbStaticData to False
         Set peAnchors to anAll
         
-        // Colors
+        // Visual
+        Set peBorderStyle                    to xtpBorderThemedFrame
+        Set peHorizontalGridStyle            to xtpGridSolid // SmallDots // Solid
         Set pbUseAlternateRowBackgroundColor to True  
         Set piAlternateRowBackgroundColor    to clAlternateRowBgColor   
         Set piSelectedRowBackColor           to clActiveRow
