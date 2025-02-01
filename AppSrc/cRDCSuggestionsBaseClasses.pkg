@@ -2,44 +2,43 @@ Use Windows.pkg
 Use cDbCJGridColumnSuggestion.pkg
 Use cRDCDbSuggestionForm.pkg
 
-// 2024-12-18 NOTE: This class doesn't seem to be used anywhere!
 Class cShowSuggestions is a Mixin
-    Procedure ShowSuggestions
-        Integer isize ilen iLines ipoints iFIXED_PITCH ilen1 i
-        String sTypeface sSearch
-        tSuggestion[] aResults
-        tWinTextMetric twtm
-
-        //Forward Send ShowSuggestions
-        Get pSearchResults to aResults
-        Get Value to sSearch
-        Send Delete_Data of ghoSuggestionList
-        Move (SizeOfArray(aResults) -1) to iLines
-        For i from 0 to iLines
-            Send ShowSuggestion aResults[i] sSearch
-            Get LineLength of ghoSuggestionList -1 to ilen1
-            If (ilen1 > ilen) Begin
-                Move ilen1 to ilen
-            End
-            If ((iLines - 1) <> i) Begin
-                Send AppendTextLn of ghoSuggestionList ""
-            End
-        Loop
-        Send AdjustSuggestionListSize iLines
-        If (iLines) Begin
-            Get GuiSize of ghoSuggestionList to isize
-            Get psTypeFace of ghoSuggestionList to sTypeface
-            Get FontPointHeight of ghoSuggestionList to ipoints
-            Get TypeFaceWinTextMetric sTypeface ipoints to twtm
-            Move (1 - (twtm.tmPitchAndFamily iand 1)) to iFIXED_PITCH
-            If (iFIXED_PITCH) Begin
-               Set GuiSize of ghoSuggestionList to (Hi(isize)) ((twtm.tmAveCharWidth * ilen + 20) max (Low(isize)))
-            End
-            Else Begin
-               Set GuiSize of ghoSuggestionList to (Hi(isize)) (((twtm.tmAveCharWidth + 0.5) * ilen + 20) max (Low(isize)))
-            End
-        End
-    End_Procedure
+//    Procedure ShowSuggestions
+//        Integer isize ilen iLines ipoints iFIXED_PITCH ilen1 i
+//        String sTypeface sSearch
+//        tSuggestion[] aResults
+//        tWinTextMetric twtm
+//
+//        //Forward Send ShowSuggestions
+//        Get pSearchResults to aResults
+//        Get Value to sSearch
+//        Send Delete_Data of ghoSuggestionList
+//        Move (SizeOfArray(aResults) -1) to iLines
+//        For i from 0 to iLines
+//            Send ShowSuggestion aResults[i] sSearch
+//            Get LineLength of ghoSuggestionList -1 to ilen1
+//            If (ilen1 > ilen) Begin
+//                Move ilen1 to ilen
+//            End
+//            If ((iLines - 1) <> i) Begin
+//                Send AppendTextLn of ghoSuggestionList ""
+//            End
+//        Loop
+//        Send AdjustSuggestionListSize iLines
+//        If (iLines) Begin
+//            Get GuiSize of ghoSuggestionList to isize
+//            Get psTypeFace of ghoSuggestionList to sTypeface
+//            Get FontPointHeight of ghoSuggestionList to ipoints
+//            Get TypeFaceWinTextMetric sTypeface ipoints to twtm
+//            Move (1 - (twtm.tmPitchAndFamily iand 1)) to iFIXED_PITCH
+//            If (iFIXED_PITCH) Begin
+//               Set GuiSize of ghoSuggestionList to (Hi(isize)) ((twtm.tmAveCharWidth * ilen + 20) max (Low(isize)))
+//            End
+//            Else Begin
+//               Set GuiSize of ghoSuggestionList to (Hi(isize)) (((twtm.tmAveCharWidth + 0.5) * ilen + 20) max (Low(isize)))
+//            End
+//        End
+//    End_Procedure
 
     // This is a copy of DF Function PointSizeToPhysicalFontSize, but returning all information of the typeface
     Function TypeFaceWinTextMetric WString wTypeFace Integer iPointSize Returns tWinTextMetric
@@ -81,7 +80,7 @@ End_Class
 
 Class cShowSuggestion is a Mixin
     Procedure Define_cShowSuggestion_Mixin
-        Property String psTypeFace "Lucida Console"
+        Property String psTypeFace "Cascadia Code"
     End_Procedure
 
     Procedure ShowSuggestion tSuggestion SuggestionData String sSearch
@@ -101,7 +100,12 @@ Class cShowSuggestion is a Mixin
 End_Class
 
 Class cDbCJGridColumnSuggestionEditX is a cDbCJGridColumnSuggestionEdit
-    Import_Class_Protocol cShowSuggestions
+//    Import_Class_Protocol cShowSuggestions
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        On_Key kCancel Send CancelEditIfGrid  
+    End_Procedure
 End_Class
 
 Class cDbCJGridColumnSuggestionNew is a cDbCJGridColumnSuggestion
