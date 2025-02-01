@@ -82,6 +82,76 @@ Class cRDCDbCJGridPromptList is a cDbCJGridPromptList
 
     End_Procedure
 
+    Procedure OnCreateGridControl
+        Forward Send OnCreateGridControl
+        Send DoChangeTooltipStyle
+    End_Procedure    
+    
+    // The grid must have been paged first in order to change the font size.
+    Procedure Activating
+        Send DoChangeFontSize      
+    End_Procedure    
+
+    Procedure DoChangeFontSize
+        Handle hoFont hoPaintManager
+        Variant vFont
+        String sFont sFontSize
+        Boolean bCreated
+        Integer iVal
+
+        Get IsComObjectCreated to bCreated  // When program is started, grid object isn't created yet.
+        If (bCreated = False) Begin
+            Procedure_Return
+        End
+
+        Get phoReportPaintManager to hoPaintManager
+        
+        Get Create (RefClass(cComStdFont)) to hoFont  // Create a font object
+        Get ComTextFont of hoPaintManager to vFont    // Bind the font object to the Grid's text font
+        Set pvComObject of hoFont to vFont            // Connect DataFlex object with com object
+
+        Get ReadInteger of ghoApplication CS_Settings CS_GridFontSize 8 to iVal
+        Set ComSize of hoFont to iVal
+        Send ComRedraw
+        Send Destroy to hoFont                        // Destroy the font object (releases memory)
+    End_Procedure
+
+    { MethodType=Method }
+    Procedure DoChangeTooltipStyle
+        Handle  hoTooltip
+        Integer iIcon iStyle iWidth
+        Boolean bBaloon
+
+        Get phoToolTipContext to hoTooltip
+
+        // This is the programs global tooltip control defined at desktop level.
+        If (ghoToolTipController > 0) Begin
+            Get piIcon of ghoToolTipController to iIcon
+            // The global tooltip controller allows the icons to be
+            // from 0-5, but the tooltip context class only allows
+            // the tooltip icon to be between 0-3.
+            If (iIcon > 3) Begin
+                Move xtpToolTipIconInfo to iIcon
+            End
+            Get piMaxWidth of ghoToolTipController to iWidth
+            Get pbBalloonStyle of ghoToolTipController to bBaloon
+            If (bBaloon = True) Begin
+                Move xtpToolTipBalloon to iStyle
+            End
+            Else Begin
+                Move xtpToolTipOffice2007 to iStyle
+            End
+        End
+        Else Begin
+            Move xtpToolTipIconInfo   to iIcon
+            Move xtpToolTipOffice2007 to iStyle
+            Move 400                  to iWidth
+        End
+
+        Set ComStyle of hoTooltip to iStyle
+        Set ComMaxTipWidth of hoTooltip to iWidth
+    End_Procedure    
+    
     Procedure ScaleFont Integer iDirection    // from control + mouse wheel in container object
         Integer iSize jSize kSize iSup iInf iDef
         Handle hoPaintManager hoFont
