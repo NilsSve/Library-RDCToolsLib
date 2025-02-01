@@ -710,8 +710,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
     End_Procedure
 
-    // Should be in parent container object. Aka, dbview or modalpanel.
-    // To enable Ctrl+MouseWheel in the grid to change font size.
+//    This must be defined in the container object, aka view or modalpanel
 //    Procedure OnWmMouseWheel Integer wParam Integer lParam
 //       Integer iKeys iClicks iX iY iCONTROL
 //       Short iDelta     // Short signed integer
