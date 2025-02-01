@@ -128,9 +128,6 @@ Class cRDCCJGrid is a cCJGrid
     Procedure BrowseForFolder
         String sFolderName sHome sHeader
         Handle ho
-        If (pbDbShowAddFolderMenuItem(Self) = False) Begin
-            Procedure_Return
-        End
         Move "Select Folder to Add" to sHeader
         Move False to Err
         Send Ignore_Error of ghoErrorHandler DFERR_BAD_MESSAGE
