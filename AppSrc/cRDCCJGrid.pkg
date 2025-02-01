@@ -16,13 +16,14 @@
 // in the help folder for more details.
 //
 Use cCJGrid.pkg
+Use cSelectFolderDialog.pkg
 Use cRDCProjectIniFile.pkg
 
 #IFNDEF CS_Settings
-    Define CS_Settings                  for "Settings"
+    Define CS_Settings              for "Settings"
 #ENDIF
 #IFNDEF CS_GridFontSize
-    Define CS_GridFontSize              for "GridFontSize"
+    Define CS_GridFontSize          for "GridFontSize"
 #ENDIF
 
 #IFNDEF clGreenGrey
@@ -125,12 +126,34 @@ Class cRDCCJGrid is a cCJGrid
     End_Procedure
 
     Procedure BrowseForFolder
-        String sFolderName
-        Get vSHBrowseForFolder "Select Folder to Add" to sFolderName
+        String sFolderName sHome sHeader
+        Handle ho
+        If (pbDbShowAddFolderMenuItem(Self) = False) Begin
+            Procedure_Return
+        End
+        Move "Select Folder to Add" to sHeader
+        Move False to Err
+        Send Ignore_Error of ghoErrorHandler DFERR_BAD_MESSAGE
+        Get psHomePath of ghoApplication to sHome
+        Send Trap_Error of ghoErrorHandler DFERR_BAD_MESSAGE
+        If (Err = True) Begin
+            Get psHome of (phoWorkspace(ghoApplication)) to sHome
+        End
+        Get Create (RefClass(cSelectFolderDialog)) to ho
+        Get SelectFolder of ho sHeader sHome to sFolderName
+        Send Destroy of ho
         If (sFolderName <> "") Begin
             Send AddItem sFolderName
         End
     End_Procedure
+
+//    Procedure BrowseForFolder
+//        String sFolderName
+//        Get vSHBrowseForFolder "Select Folder to Add" to sFolderName
+//        If (sFolderName <> "") Begin
+//            Send AddItem sFolderName
+//        End
+//    End_Procedure
 
     Procedure CancelIfPopupObject
         Boolean bIsInPopupObject

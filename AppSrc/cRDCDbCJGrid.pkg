@@ -445,11 +445,13 @@ Class cRDCDbCJGrid is a cDbCJGrid
             Procedure_Return
         End
         Move "Select Folder to Add" to sHeader
-#IFDEF psHomePath
+        Move False to Err
+        Send Ignore_Error of ghoErrorHandler DFERR_BAD_MESSAGE
         Get psHomePath of ghoApplication to sHome
-#ELSE
-        Get psHome of ghoApplication to sHome
-#ENDIF
+        Send Trap_Error of ghoErrorHandler DFERR_BAD_MESSAGE
+        If (Err = True) Begin
+            Get psHome of (phoWorkspace(ghoApplication)) to sHome
+        End
         Get Create (RefClass(cSelectFolderDialog)) to ho
         Get SelectFolder of ho sHeader sHome to sFolderName
         Send Destroy of ho
