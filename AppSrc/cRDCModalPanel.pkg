@@ -1,4 +1,4 @@
-//****************************************************************************
+﻿//****************************************************************************
 // $Module type: Class
 // $Module name: cRDCModalPanel
 // $Author     : Nils Svedmyr, RDC Tools International
@@ -19,6 +19,17 @@ Use Windows.pkg
 Use cCJCommandBarSystem.pkg
 Use cCJSkinFramework.pkg
 
+Register_Procedure ScaleFont Integer iClicks
+
+{ DDOHost=False }
+{ DataAware=False }
+{ DesignerClass=cDTModalPanel }
+{ OverrideProperty=Column_Offset DesignTime=True }
+{ OverrideProperty=Row_Offset DesignTime=True }
+{ OverrideProperty=StatusBar_Id DesignTime=True }
+{ OverrideProperty=ToolBar_Id DesignTime=True }
+{ ComponentType=SLClass }
+{ HelpTopic=ModalPanel }
 Class cRDCModalPanel is a ModalPanel
 
     Procedure Construct_Object
@@ -31,6 +42,8 @@ Class cRDCModalPanel is a ModalPanel
 
         Property String Private_Icon
         Property Handle phoDialogCommandbar
+
+        On_Key kCancel Send Close_Panel
     End_Procedure
 
     Procedure Set Icon String sIcon
@@ -44,6 +57,8 @@ Class cRDCModalPanel is a ModalPanel
         Function_Return sIcon
     End_Function
 
+    // Due to a bug in DF we need to set the
+    // panel icon here.
     Procedure Page Integer iPageObject
         String sIcon
         Integer hWnd
@@ -85,12 +100,38 @@ Class cRDCModalPanel is a ModalPanel
             Set Size to (Hi(iSize) + iOffset) (Low(iSize))
             Set piMinSize to (Hi(iSize) + iOffset) (Low(iSize))
         End
-
     End_Procedure
+    // ToDo:*** CONTINUE WITH View and dbView classes! ***
+    Procedure Set StatusText String sText
+        Set psText of (oStatusIdle(phoDialogCommandbar(Self))) to sText
+    End_Procedure                          
 
     Procedure Popup
         Set Statusbar_Id to (phoDialogCommandbar(Self))
         Forward Send Popup
+    End_Procedure
+
+    // To enable Ctrl+MouseWheel in the grid to change font size.
+    Procedure OnWmMouseWheel Integer wParam Integer lParam
+       Integer iKeys iClicks iX iY iCONTROL
+       Short iDelta     // Short signed integer
+       Boolean bok 
+       
+       Move 0 to iDelta
+       Move (Low(wParam)) to iKeys           // any keys down when pressed
+       Move (MemCopy(AddressOf(iDelta),AddressOf(wParam)+2,2)) to bok
+       // C_WHEELDATA is 120 as defined by MS as the delta to react to. Once click is usually 120
+       Move (iDelta/C_WHEELDELTA) to iClicks // Number of clicks to react to
+       Move (Low(lParam)) to iX  // cursor position
+       Move (Hi(lParam)) to iY   
+
+       Move (iKeys iand MK_CONTROL ) to iCONTROL  //$008
+       If (iCONTROL) Begin
+            Broadcast Recursive Send ScaleFont iClicks
+       End
+
+       // Tell windows that we've handled the event.    
+       Set Windows_Override_State to True    
     End_Procedure
 
 End_Class

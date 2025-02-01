@@ -18,9 +18,10 @@ Class cRDCDbModalPanel is a dbModalPanel
     Procedure Construct_Object
         Forward Send Construct_Object
 
-        Set Border_Style to Border_Thick
         Set Locate_Mode to Center_On_Parent
+        Set Border_Style to Border_Thick
         Set Minimize_Icon to False
+        Set Maximize_Icon to True
 
         Property String Private_Icon
         Property Handle phoDialogCommandbar
@@ -40,17 +41,24 @@ Class cRDCDbModalPanel is a dbModalPanel
         Function_Return sIcon
     End_Function
 
-    // Due to a bug in VDF we need to set the
+    // Due to a bug in DF we need to set the
     // panel icon here.
     Procedure Page Integer iPageObject
         String sIcon
+        Integer hWnd
 
+        Forward Send Page iPageObject
         Get Private_Icon to sIcon
         If (sIcon <> "") Begin
             Set Icon to sIcon
         End
 
-        Forward Send Page iPageObject
+        Get Window_Handle to hWnd
+
+        If ((ghoSkinFramework <> 0) and (hWnd <> 0)) Begin
+            Send ComRemoveWindow to ghoSkinFramework hWnd
+            Send ComApplyWindow  to ghoSkinFramework hWnd
+        End
     End_Procedure
 
     // Put a status bar at the bottom of the panel, which makes

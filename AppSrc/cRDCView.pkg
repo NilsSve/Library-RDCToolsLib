@@ -1,0 +1,40 @@
+﻿Use Dfadlg.pkg
+
+Register_Procedure ScaleFont Integer iClicks
+
+Class cRDCView is a View
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+    // To enable Ctrl+MouseWheel in the grid to change font size.
+    Procedure OnWmMouseWheel Integer wParam Integer lParam
+       Integer iKeys iClicks iX iY iCONTROL
+       Short iDelta     // Short signed integer
+       Boolean bok 
+       
+       Move 0 to iDelta
+       Move (Low(wParam)) to iKeys           // any keys down when pressed
+       Move (MemCopy(AddressOf(iDelta),AddressOf(wParam)+2,2)) to bok
+       // C_WHEELDATA is 120 as defined by MS as the delta to react to. Once click is usually 120
+       Move (iDelta/C_WHEELDELTA) to iClicks // Number of clicks to react to
+       Move (Low(lParam)) to iX  // cursor position
+       Move (Hi(lParam)) to iY   
+
+       Move (iKeys iand MK_CONTROL ) to iCONTROL  //$008
+       If (iCONTROL) Begin
+            Broadcast Recursive Send ScaleFont iClicks
+       End
+
+       // Tell windows that we've handled the event.    
+       Set Windows_Override_State to True    
+    End_Procedure
+    
+End_Class
