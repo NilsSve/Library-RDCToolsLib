@@ -401,7 +401,7 @@ Class cRDCCJGrid is a cCJGrid
         Integer iSize jSize kSize iSup iInf iDef
         Handle hoPaintManager hoFont
         Variant vFont
-        Boolean blimite
+        Boolean bLimit
         
         Move 3 to iInf      //max size
         Move 18 to iSup     //min size
@@ -421,12 +421,12 @@ Class cRDCCJGrid is a cCJGrid
            Move iSize to jSize
            Repeat
                 Move (If(iDirection > 0, jSize + 1, jSize - 1)) to jSize
-                Move (If(iDirection > 0, If(jSize > iSup, True, False), If(jSize < iInf, True, False))) to blimite
-                If (not(blimite)) Begin       
+                Move (If(iDirection > 0, If(jSize > iSup, True, False), If(jSize < iInf, True, False))) to bLimit
+                If (not(bLimit)) Begin       
                    Set ComSize of hoFont to jSize
                    Get ComSize of hoFont to kSize
                 End
-            Until (iSize <> kSize or blimite)
+            Until (iSize <> kSize or bLimit)
         End
         Send Destroy to hoFont 
         Send ComRedraw  

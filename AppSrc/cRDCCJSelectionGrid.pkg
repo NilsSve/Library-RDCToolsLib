@@ -510,11 +510,11 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Integer iSize jSize kSize iSup iInf iDef
         Handle hoPaintManager hoFont
         Variant vFont
+        Boolean bLimit
         
         Move 3 to iInf      //max size
         Move 18 to iSup     //min size
         Move 8 to iDef      //default
-        Boolean blimite
         Get phoReportPaintManager to hoPaintManager
         If (IsComObjectCreated (hoPaintManager) = False) Begin
             Procedure_Return
@@ -530,12 +530,12 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
            Move iSize to jSize
            Repeat
                 Move (If(iDirection > 0, jSize + 1, jSize - 1)) to jSize
-                Move (If(iDirection > 0, If(jSize > iSup, True, False), If(jSize < iInf, True, False))) to blimite
-                If (not(blimite)) Begin       
+                Move (If(iDirection > 0, If(jSize > iSup, True, False), If(jSize < iInf, True, False))) to bLimit
+                If (not(bLimit)) Begin       
                    Set ComSize of hoFont to jSize
                    Get ComSize of hoFont to kSize
                 End
-            Until (iSize <> kSize or blimite)
+            Until (iSize <> kSize or bLimit)
         End
         Send Destroy to hoFont 
         Send ComRedraw  
