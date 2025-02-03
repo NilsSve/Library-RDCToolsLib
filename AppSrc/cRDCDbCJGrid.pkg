@@ -446,7 +446,6 @@ Class cRDCDbCJGrid is a cDbCJGrid
             Procedure_Return
         End
         Move "Select Folder to Add" to sHeader
-        Move False to Err
         Get psHomePath of ghoApplication to sHome
         If (sHome = "") Begin
             Get psHome of (phoWorkspace(ghoApplication)) to sHome

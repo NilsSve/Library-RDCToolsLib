@@ -15,7 +15,7 @@ Class cRDCView is a View
     End_Procedure
 
     // To enable Ctrl+MouseWheel in the grid to change font size.
-    Procedure OnWmMouseWheel Integer wParam Integer lParam
+    Procedure OnWMMouseWheel Integer wParam Integer lParam
        Integer iKeys iClicks iX iY iCONTROL
        Short iDelta     // Short signed integer
        Boolean bok 
