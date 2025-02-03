@@ -53,6 +53,8 @@ Struct tsSearchResult
 End_Struct
 #ENDIF
 
+Register_Function psHomePath Returns String
+
 Class cRDCCJGrid is a cCJGrid
 
     Procedure Construct_Object
@@ -129,11 +131,8 @@ Class cRDCCJGrid is a cCJGrid
         String sFolderName sHome sHeader
         Handle ho
         Move "Select Folder to Add" to sHeader
-        Move False to Err
-        Send Ignore_Error of ghoErrorHandler DFERR_BAD_MESSAGE
         Get psHomePath of ghoApplication to sHome
-        Send Trap_Error of ghoErrorHandler DFERR_BAD_MESSAGE
-        If (Err = True) Begin
+        If (sHome = "") Begin
             Get psHome of (phoWorkspace(ghoApplication)) to sHome
         End
         Get Create (RefClass(cSelectFolderDialog)) to ho

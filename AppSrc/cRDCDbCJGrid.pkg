@@ -42,6 +42,7 @@ Register_Function pbDbShowRemoveItemMenuItem Returns Boolean
 Register_Function pbDbShowInvertSelectionsMenuItem Returns Boolean
 Register_Function pbDbShowEditMenuItem Returns Boolean
 Register_Procedure Request_Edit
+Register_Function psHomePath Returns String
 
 // Classes used by the cRDCCJSelectionGrid
 Class cRDCDbCJToggleSelectMenuItem is a cCJMenuItem
@@ -446,10 +447,8 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
         Move "Select Folder to Add" to sHeader
         Move False to Err
-        Send Ignore_Error of ghoErrorHandler DFERR_BAD_MESSAGE
         Get psHomePath of ghoApplication to sHome
-        Send Trap_Error of ghoErrorHandler DFERR_BAD_MESSAGE
-        If (Err = True) Begin
+        If (sHome = "") Begin
             Get psHome of (phoWorkspace(ghoApplication)) to sHome
         End
         Get Create (RefClass(cSelectFolderDialog)) to ho
