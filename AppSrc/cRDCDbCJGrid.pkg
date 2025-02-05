@@ -275,49 +275,49 @@ Class cRDCDbCJGrid is a cDbCJGrid
         On_Key Key_Ctrl+Key_I  Send SelectInvert
     End_Procedure 
                   
-    Procedure MoveToLastEnterableColumn
-        Boolean bInEdit
-        Get IsEditMode to bInEdit
-        If (bInEdit = False) Begin
-            Forward Send MoveToLastEnterableColumn
-        End
-        Else Begin
-            Send Default_Action
-        End
-    End_Procedure
-    
-    Procedure MoveToFirstEnterableColumn
-        Boolean bInEdit
-        Get IsEditMode to bInEdit
-        If (bInEdit = False) Begin
-            Forward Send MoveToFirstEnterableColumn
-        End
-        Else Begin
-            Send Default_Action
-        End
-    End_Procedure
-    
-    Procedure Next
-        Boolean bInEdit
-        Get IsEditMode to bInEdit
-        If (bInEdit = False) Begin
-            Forward Send Next
-        End
-        Else Begin
-            Send Default_Action
-        End
-    End_Procedure
-    
-    Procedure Previous
-        Boolean bInEdit
-        Get IsEditMode to bInEdit
-        If (bInEdit = False) Begin
-            Forward Send Previous
-        End
-        Else Begin
-            Send Default_Key
-        End
-    End_Procedure
+//    Procedure MoveToLastEnterableColumn
+//        Boolean bInEdit
+//        Get IsEditMode to bInEdit
+//        If (bInEdit = False) Begin
+//            Forward Send MoveToLastEnterableColumn
+//        End
+//        Else Begin
+//            Send Default_Action
+//        End
+//    End_Procedure
+//    
+//    Procedure MoveToFirstEnterableColumn
+//        Boolean bInEdit
+//        Get IsEditMode to bInEdit
+//        If (bInEdit = False) Begin
+//            Forward Send MoveToFirstEnterableColumn
+//        End
+//        Else Begin
+//            Send Default_Action
+//        End
+//    End_Procedure
+//    
+//    Procedure Next
+//        Boolean bInEdit
+//        Get IsEditMode to bInEdit
+//        If (bInEdit = False) Begin
+//            Forward Send Next
+//        End
+//        Else Begin
+//            Send Default_Action
+//        End
+//    End_Procedure
+//    
+//    Procedure Previous
+//        Boolean bInEdit
+//        Get IsEditMode to bInEdit
+//        If (bInEdit = False) Begin
+//            Forward Send Previous
+//        End
+//        Else Begin
+//            Send Default_Key
+//        End
+//    End_Procedure
     
     Procedure Set peGridvisualTheme Integer eGridTheme
         Set peVisualTheme to eGridTheme 
