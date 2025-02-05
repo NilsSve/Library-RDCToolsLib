@@ -118,8 +118,8 @@ Class cRDCCJGrid is a cCJGrid
         Set piCaptionBackColor               to clProgramIconBg
         Set piCaptionForeColor               to clWhite   
 
-        On_Key Key_End                Send MoveToLastEnterableColumn
-        On_Key Key_Home               Send MoveToFirstEnterableColumn
+//        On_Key Key_End                Send MoveToLastEnterableColumn
+//        On_Key Key_Home               Send MoveToFirstEnterableColumn
         On_Key Key_Delete             Send Request_Delete
         On_Key Key_Insert             Send BrowseForFolder
         On_Key kCancel                Send CancelIfPopupObject

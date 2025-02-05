@@ -263,17 +263,61 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set piFocusCellBackColor             to clDefault
         Set peVisualTheme                    to xtpGridThemeOffice2003 //xtpGridThemeDefault
 
-        On_Key Key_End         Send MoveToLastEnterableColumn
-        On_Key Key_Home        Send MoveToFirstEnterableColumn
-        On_Key Key_Right_Arrow Send Next
-        On_Key Key_Left_Arrow  Send Previous
+//        On_Key Key_End         Send MoveToLastEnterableColumn
+//        On_Key Key_Home        Send MoveToFirstEnterableColumn
+//        On_Key Key_Right_Arrow Send Next
+//        On_Key Key_Left_Arrow  Send Previous
+         
         On_Key Key_Delete      Send Request_Delete
         On_Key Key_Insert      Send BrowseForFolder
-        On_Key Key_Space       Send ToggleCurrentItem 
         On_Key Key_Ctrl+Key_A  Send SelectAll
         On_Key Key_Ctrl+Key_N  Send SelectNone
         On_Key Key_Ctrl+Key_I  Send SelectInvert
     End_Procedure 
+                  
+    Procedure MoveToLastEnterableColumn
+        Boolean bInEdit
+        Get IsEditMode to bInEdit
+        If (bInEdit = False) Begin
+            Forward Send MoveToLastEnterableColumn
+        End
+        Else Begin
+            Send Default_Action
+        End
+    End_Procedure
+    
+    Procedure MoveToFirstEnterableColumn
+        Boolean bInEdit
+        Get IsEditMode to bInEdit
+        If (bInEdit = False) Begin
+            Forward Send MoveToFirstEnterableColumn
+        End
+        Else Begin
+            Send Default_Action
+        End
+    End_Procedure
+    
+    Procedure Next
+        Boolean bInEdit
+        Get IsEditMode to bInEdit
+        If (bInEdit = False) Begin
+            Forward Send Next
+        End
+        Else Begin
+            Send Default_Action
+        End
+    End_Procedure
+    
+    Procedure Previous
+        Boolean bInEdit
+        Get IsEditMode to bInEdit
+        If (bInEdit = False) Begin
+            Forward Send Previous
+        End
+        Else Begin
+            Send Default_Key
+        End
+    End_Procedure
     
     Procedure Set peGridvisualTheme Integer eGridTheme
         Set peVisualTheme to eGridTheme 
@@ -501,10 +545,14 @@ Class cRDCDbCJGrid is a cDbCJGrid
 
     // Toggles the current row on/off (the checkbox)
     Procedure ToggleCurrentItem
-        Boolean bChecked
+        Boolean bChecked bInEdit
         Integer iCol
         Handle hoCol hoCheckbox_Col hoDD
 
+        Get IsEditMode to bInEdit
+        If (bInEdit = True) Begin
+            Send Default_Action
+        End
         Get phoCheckbox_Col to hoCheckbox_Col
         If (hoCheckbox_Col = -1) Begin
             Procedure_Return

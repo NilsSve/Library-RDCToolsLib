@@ -6,12 +6,16 @@ Class cRDCDbView is a dbView
     
     Procedure Construct_Object
         Forward Send Construct_Object
-
+    
+        On_Key kCancel Send None
     End_Procedure
 
     Procedure End_Construct_Object
         Forward Send End_Construct_Object
 
+    End_Procedure
+    
+    Procedure Close_Panel
     End_Procedure
 
     // To enable Ctrl+MouseWheel in the grid to change font size.
