@@ -62,7 +62,7 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
 
         Move 24 to iSize
         Send ComSetIconSize of hoPaintManager iSize iSize   // Set icon size for Tab-workspace.
-        Send ComSetPopupIconSize of hoOptions 24 24
+        Send ComSetPopupIconSize of hoOptions iSize iSize
         // To show or not to show tab-page icons...
         Set ComShowIcons    of hoPaintManager to True
         
@@ -73,8 +73,7 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
         //Set ComDrawTextPathEllipsis of hoPaintManager to True
 
         Move 32 to iSize
-        Send ComSetIconSize     of hoOptions False iSize iSize  // Set icon size for Toolbar buttons.
-        //Set piToolbarIconSize to iSize
+        Set piToolbarIconSize to iSize
         Set ComToolTipBehaviour of hoPaintManager to xtpTabToolTipAlways // We _must_ have this for tooltips to show on tab-pages (views)
     End_Procedure
 
@@ -114,6 +113,22 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
         If (phoStatusBar(ghoCommandBars)) Begin
             Send DoChangeToolTipFormat of (phoStatusBar(Self))
         End
+    End_Procedure
+
+    Procedure Set piToolbarIconSize Integer iSize
+        Handle hoOptions
+
+        If (not(IsComObjectCreated(Self))) Begin
+            Procedure_Return
+        End
+
+        If (iSize < 16) Begin
+            Move 32 to iSize
+        End
+        Set pbLargeIcons to (iSize = 32)
+        Get OptionsObject to hoOptions
+        Send ComSetIconSize of hoOptions False iSize iSize  // Set icon size for Toolbar buttons.
+        Send ComRecalcLayout
     End_Procedure
 
 End_Class
