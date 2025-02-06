@@ -18,14 +18,14 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
     End_Procedure
 
     Procedure End_Construct_Object
+        Boolean bTabbedWorkspaces
         Forward Send End_Construct_Object
+        Get pbTabbedWorkspaces to bTabbedWorkspaces
+        Set pbTabbedWorkspaces to bTabbedWorkspaces
     End_Procedure
 
     Procedure OnCreateCommandBars
         Handle hoOptions
-        Boolean bTabbedWorkspaces
-        Get pbTabbedWorkspaces to bTabbedWorkspaces
-        Set pbTabbedWorkspaces to bTabbedWorkspaces
         Send DoChangeToolTipFormat
         Get OptionsObject to hoOptions
         Send DisplayTabWorkspace
