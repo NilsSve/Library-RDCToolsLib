@@ -1,4 +1,5 @@
-﻿Use cCJCommandBarSystem.pkg
+﻿Use cCJStandardCommandBarSystem.pkg
+Use cCJCommandBarSystem.pkg
 
 Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
     
