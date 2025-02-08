@@ -1,28 +1,32 @@
-Use Windows.pkg
+﻿Use Windows.pkg
 Use Datadict.pkg
 
 // Mixin class to auto-create a unique ID value - without the need to use a system file to
 // autoincrement new ID's.
+// This is how to use the mixin class:
+//  Class cCustomerDataDictionary is a DataDictionary
 //
-// Best is to include into your DataDictionanary subclass.
-// Syntax:
-//   Get AutoCreateNewID File_Field MyFile.MyField True/False to iRetval
-//   Use it within Procedure Creating in a DD - after Forward Send Creating.
+//      Import_Class_Protocol cRDCAutoCreateNewIDMixin
+//    
+//      Procedure Construct_Object
+//
+//
 // Note:
 //   A unique index for the field that is to be auto-incremented must exist,
 //   and it must have been set as the main index for that field.
 //   You may omit the third boolean parameter, but it is crucial that you include the
 //   keyword "File_Field"!
-// Sample:
+//
+// Sample Usage:
 //   Procedure Creating
 //     Integer iID
 //     Forward Send Creating
 //     Get AutoCreateNewID File_Field Customer.Customer_No True to iID
-//     Showln "The new ID is :" iID
 //  End_Procedure
 //
 // Returns:
 //   The new unique ID.
+//
 Class cRDCAutoCreateNewIDMixin is a Mixin
     Function AutoCreateNewID Integer iFile Integer iField Boolean bEntryUpdate Returns Integer
         Integer iID iIndex
