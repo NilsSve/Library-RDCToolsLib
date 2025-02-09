@@ -574,14 +574,16 @@ Class cRDCDbCJGrid is a cDbCJGrid
         
         Get phoData_Col to hoData_Col
         If (hoData_Col = -1) Begin
-            Move 0 to iCol
+            Move -1 to iCol
         End
         Else Begin
             Get piColumnId of hoData_Col to iCol
         End
         Get ItemCount to iItems
-        Get CheckedItems to iSelected
-        Get ColumnObject iCol to hoCol
+        Get CheckedItems to iSelected 
+        If (iCol <> -1) Begin
+            Get ColumnObject iCol to hoCol
+        End
         If (hoCol <> 0) Begin
             Set psFooterText of hoCol  to ("Selected:" * String(iSelected) * "of" * String(iItems))            
         End
