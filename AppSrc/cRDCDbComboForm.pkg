@@ -1,4 +1,4 @@
-//****************************************************************************
+﻿//****************************************************************************
 // $Module type: Package
 // $Module name: cRDCDbComboform.pkg
 //
@@ -38,13 +38,6 @@ Define UISF_ACTIVE      For |CI$4
 Class cDbComboFormIdleHandler is a cIdleHandler
     Procedure Construct_Object
         Forward Send Construct_Object
-
-        Set Label_Row_Offset to 0
-        Set Label_Col_Offset to 2
-        Set Label_Justification_Mode to jMode_Right
-        Set Combo_Sort_State to False
-        Set Entry_State to False
-
     End_Procedure
 
     Procedure OnIdle
@@ -74,6 +67,12 @@ Class cRDCDbComboForm is a dbComboForm
         Property Boolean pbEnabled True
         Set Label_Justification_Mode to JMode_Right
         Property Handle phoIdleHandler (Create(Self, RefClass(cDbComboFormIdleHandler)))
+
+        Set Label_Row_Offset to 0
+        Set Label_Col_Offset to 2
+        Set Label_Justification_Mode to jMode_Right
+        Set Combo_Sort_State to False
+        Set Entry_State to False
 
         On_Key Key_Ctrl+Key_S Send Request_Save
         On_Key kCancel Send None
@@ -117,7 +116,11 @@ Class cRDCDbComboForm is a dbComboForm
         Boolean bEnabled
         Get pbEnabled to bEnabled
         Function_Return bEnabled
-    End_Function
+    End_Function 
+    
+    Procedure Set Code_Display_Mode Integer eValue
+        Forward Set Code_Display_Mode to eValue
+    End_Procedure
 
     // Enable the idle handler timer when the object is activated
     Procedure Activating
