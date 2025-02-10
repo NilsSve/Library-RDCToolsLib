@@ -327,9 +327,11 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Handle hoContextMenu
         Integer eGridTheme
         
-        Forward Send End_Construct_Object
-        Get Create (RefClass(cDbGridContext_mnu)) to hoContextMenu
-        Set phoContextMenu to hoContextMenu
+        Forward Send End_Construct_Object 
+        If (phoCheckbox_Col(Self) <> -1 or phoData_Col(Self) <> -1) Begin
+            Get Create (RefClass(cDbGridContext_mnu)) to hoContextMenu
+            Set phoContextMenu to hoContextMenu
+        End
     End_Procedure
 
     Procedure SelectAll
