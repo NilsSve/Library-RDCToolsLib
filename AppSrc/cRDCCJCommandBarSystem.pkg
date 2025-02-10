@@ -18,19 +18,17 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
     End_Procedure
 
     Procedure End_Construct_Object
-        Boolean bTabbedWorkspaces
         Forward Send End_Construct_Object
-        Get pbTabbedWorkspaces to bTabbedWorkspaces
-        Set pbTabbedWorkspaces to bTabbedWorkspaces
+
     End_Procedure
 
     Procedure OnCreateCommandBars
         Handle hoOptions
         Send DoChangeToolTipFormat
-        Get OptionsObject to hoOptions
+        Get OptionsObject to hoOptions 
         Send DisplayTabWorkspace
     End_Procedure
-
+    
     Procedure DisplayTabWorkspace
         Variant vTab vPaintManager
         Handle hoTab hoPaintManager hoOptions
@@ -69,17 +67,19 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
         Move 24 to iSize
         Send ComSetPopupIconSize of hoOptions iSize iSize
         // To show or not to show tab-page icons...
-        Set ComShowIcons    of hoPaintManager to True
+        Set ComShowIcons of hoPaintManager to True
         
         // Sets the tab-pages to display on the left side, instead of at the top:
-        Set ComPosition     of hoPaintManager to xtpTabPositionTop //xtpTabPositionLeft
+        Set ComPosition of hoPaintManager to xtpTabPositionTop //xtpTabPositionLeft
 
         // This will truncate the middle part of long items
         //Set ComDrawTextPathEllipsis of hoPaintManager to True
 
         Move 32 to iSize
-        Set piToolbarIconSize to iSize
-        Set ComToolTipBehaviour of hoPaintManager to xtpTabToolTipAlways // We _must_ have this for tooltips to show on tab-pages (views)
+        Set piToolbarIconSize to iSize                                   
+        // We _must_ have this for tooltips to show on tab-pages (views)
+        Set ComToolTipBehaviour of hoPaintManager to xtpTabToolTipAlways 
+        Send OnCreateTabbedWorkspace hoTab hoPaintManager
     End_Procedure
 
     // Toolbar tooltip settings:
