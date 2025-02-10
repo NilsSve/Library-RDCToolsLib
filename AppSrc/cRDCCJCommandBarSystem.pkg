@@ -57,12 +57,16 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
         Get ComPaintManager of hoTab          to vPaintManager
         Set pvComObject     of hoPaintManager to vPaintManager
         
+        // Set theme for the tab-control headers
+        Set ComColor of hoPaintManager to xtpTabColorVisualStudio2022
+        // Set size for tab-control header icons
+        Send ComSetIconSize of hoPaintManager 16 16   
+        
         // Don't show the tab-pages "close" and next/prev buttons. 
         Set ComFlags of hoTab to xtpWorkspaceHideAll
         Send ComEnableGroups of hoTab
 
         Move 24 to iSize
-        Send ComSetIconSize of hoPaintManager iSize iSize   // Set icon size for Tab-workspace.
         Send ComSetPopupIconSize of hoOptions iSize iSize
         // To show or not to show tab-page icons...
         Set ComShowIcons    of hoPaintManager to True
