@@ -94,7 +94,11 @@ Class cRDCButton is a Button
 
     // Disable the idle handler when the button is deactivated
     Procedure Deactivating
-        Set pbEnabled of (phoIdleHandler(Self)) to False
+        // When exiting the program it can happen that the idle handler
+        // already has been destroyed.      
+        If (Object_id(phoIdleHandler(Self)) <> 0) Begin
+            Set pbEnabled of (phoIdleHandler(Self)) to False
+        End
         Forward Send Deactivating
     End_Procedure
 
