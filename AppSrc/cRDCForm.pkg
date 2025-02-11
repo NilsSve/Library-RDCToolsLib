@@ -1,4 +1,4 @@
-//****************************************************************************
+﻿//****************************************************************************
 // $Module type: Class
 // $Module name: cForm
 // $Author     : Nils Svedmyr, RDC Tools International
@@ -36,7 +36,7 @@ Class cRDCForm is a Form
 
         { MethodType=Property InitialValue=False }
         { Category=Appearance }
-        Property Boolean pbAutoEnable False
+        Property Boolean pbAutoEnable True
 
         { Visibility=Private }
         Property Boolean pbEnabled True
@@ -53,7 +53,6 @@ Class cRDCForm is a Form
 
         Forward Send End_Construct_Object
 
-#IF (Required_FMAC_Version > 15)
         Get psToolTip   to sTooltip
         Get Status_Help to sStatus_Help
         If (sTooltip = "" and sStatus_Help <> "") Begin
@@ -62,7 +61,6 @@ Class cRDCForm is a Form
         Else If (sTooltip <> "" and sStatus_Help = "") Begin
             Set Status_Help to sTooltip
         End
-#ENDIF
         Set pbEnabled of (phoIdleHandler(Self)) to (pbAutoEnable(Self))
     End_Procedure
 
