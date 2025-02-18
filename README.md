@@ -1,7 +1,8 @@
 # RDCToolsLib
- RDC Tools Base Library
-Common Library used by other RDC Tools projects. A series DataFlex standard classes that has been subclassed.
+RDC Tools Base Library
 
-This is a library used by projects on this site (not by libraries)! It is being installed automatically when selecting to clone one of the main projects/repositories.
+This common library is utilized by other RDC Tools projects and consists of a series of DataFlex standard classes that have been subclassed.
 
-This library gives all applications on the NilsSve repo a unified interface.
+It is important to note that this library is used exclusively by projects on this site, not by other libraries. It is automatically installed when you choose to clone one of the main projects or repositories.
+
+The library provides a unified interface for all applications within the NilsSve repository.
