@@ -6,3 +6,4 @@ ConfigFile=.\Programs\Config.ws
 Is$WebApp=False
 [Preferences]
 DefaultFormHeight=12
+Project0=Dummy.src

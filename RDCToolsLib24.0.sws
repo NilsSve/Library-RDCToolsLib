@@ -2,12 +2,10 @@
 Version=24.0
 [WorkspacePaths]
 ConfigFile=.\Programs\Config.ws
-[TestProjects]
-TestWindowsProject=Test.src
 [Conditionals]
 Is$WebApp=False
 Is$Win64=True
 [Preferences]
 DefaultFormHeight=12
 [Projects]
-Project0=Test.src
+Project0=Dummy.src
