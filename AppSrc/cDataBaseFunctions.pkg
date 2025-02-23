@@ -12,7 +12,7 @@
 // $Rev History:
 //    2013-10-29  Module header created
 //****************************************************************************
-Use cDataBaseFunctions.inc
+Use cDataBaseFunctions.h.pkg
 
 // Important: Only use _ONE_ instance of this object,
 //            it is using a Global Handle: ghoDatabaseFunctions

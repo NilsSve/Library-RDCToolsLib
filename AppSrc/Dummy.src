@@ -2,6 +2,7 @@
 Use cHtmlHelp.pkg
 Use cApplication.pkg
 Use cConnection.pkg
+Use cDataBaseFunctions.h.pkg
 
 Object oHtmlHelp is a cHtmlHelp
 End_Object
