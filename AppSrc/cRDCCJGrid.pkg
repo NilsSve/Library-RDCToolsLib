@@ -61,7 +61,7 @@ Class cRDCCJGrid is a cCJGrid
             #IF (!@ < 230)
                 Set peVisualTheme to xtpReportThemeExplorer
             #ELSE
-                Set peVisualTheme to xtpGridThemeVisualStudio2012Light //xtpGridThemeVisualStudio2017 //xtpGridThemeExplorer //xtpGridThemeVisualStudio2022
+                Set peVisualTheme to xtpGridThemeVisualStudio2022 //xtpGridThemeVisualStudio2012Light //xtpGridThemeVisualStudio2017 //xtpGridThemeExplorer //xtpGridThemeVisualStudio2022
             #ENDIF
         #ENDIF
 

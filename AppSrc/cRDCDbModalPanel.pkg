@@ -18,10 +18,10 @@ Class cRDCDbModalPanel is a dbModalPanel
     Procedure Construct_Object
         Forward Send Construct_Object
 
-        Set Locate_Mode to Center_On_Parent
         Set Border_Style to Border_Thick
         Set Minimize_Icon to False
         Set Maximize_Icon to True
+        Set Locate_Mode to CENTER_ON_PANEL // Center_On_Parent
 
         Property String Private_Icon
         Property Handle phoDialogCommandbar
