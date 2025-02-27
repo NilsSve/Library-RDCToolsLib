@@ -1,0 +1,81 @@
+﻿Use cApplication.pkg
+
+#IFNDEF CS_Settings
+    Define CS_Settings for "Settings"
+#ENDIF
+#IFNDEF CS_GridRowBackgroundColor
+    Define CS_GridRowBackgroundColor for "GridRowBackgroundColor"
+#ENDIF
+#IFNDEF clAlternateRowBgColor
+    Define clAlternateRowBgColor     for (RGB(216, 217, 227))    // HTML #D8D9E3
+#ENDIF
+#IFNDEF clStatusBarColor
+    Define clStatusBarColor          for (RGB(45, 130, 149))     // HTML #2D8295
+#ENDIF
+#IFNDEF clEditorBackGround
+    Define clEditorBackGround        for (RGB(36, 49, 68))       // HTML 243144
+#ENDIF
+#IFNDEF clBaseColor
+    Define clBaseColor               for (RGB(239, 239, 239))    // HTML #EFEFEF  
+#ENDIF
+#IFNDEF clActiveRow
+    Define clActiveRow               for (RGB(1, 82, 119))       // HTML #015277 
+#ENDIF
+#IFNDEF clProgramIconBg
+    Define clProgramIconBg           for (RGB(43, 59, 83))       // HTML #2B3B53
+#ENDIF
+
+Class cRDCApplication is a cApplication
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set peHelpType to htHtmlHelp
+        Set psVersion to (String(piVersionMajor(phoVersionInfo(Self))) + "." + String(piVersionMinor(phoVersionInfo(Self))))
+
+        {Visibility=Private}
+        Property String private.psGridRowBackgroundColor 0
+    
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+    // Removes any trailing backslash from a path.
+    Function RemoveTrailingBackslash String sPath Returns String    
+        If (Right(sPath, 1) ="\") Begin
+            Move (Left(sPath, Length(sPath) -1)) to sPath
+        End
+        Function_Return sPath
+    End_Function
+
+    { MethodType=Property }
+    Procedure Set psGridRowBackgroundColor String sColor
+        Set private.psGridRowBackgroundColor to sColor
+        Send WriteString CS_Settings CS_GridRowBackgroundColor sColor
+        Broadcast Recursive Set piSelectedRowBackColor of (Client_Id(phoMainPanel(ghoApplication))) to sColor
+        Broadcast Recursive Set piHighlightBackColor   of (Client_Id(phoMainPanel(ghoApplication))) to sColor
+    End_Procedure
+
+    { MethodType=Property }
+    Function psGridRowBackgroundColor Returns String
+        String sColor
+        Get private.psGridRowBackgroundColor to sColor
+        If (sColor = "0") Begin
+            Get ReadString CS_Settings CS_GridRowBackgroundColor clActiveRow to sColor
+            If (sColor contains "clBlueGrey") Begin
+                Move (Replace("clBlueGrey", sColor, "clStatusBarColor")) to sColor
+            End
+            Set private.psGridRowBackgroundColor to sColor
+        End
+        Function_Return sColor
+    End_Function
+
+    // Used by cCJGrid type objects to scale the font with the mouse-wheel.
+    Procedure ScaleFont Integer iClicks    
+        Broadcast Recursive Send ScaleFont of (Client_Id(phoMainPanel(Self))) iClicks
+    End_Procedure
+    
+End_Class

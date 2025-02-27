@@ -111,7 +111,7 @@ Class cRDCDbModalPanel is a dbModalPanel
 
        Move (iKeys iand MK_CONTROL ) to iCONTROL  //$008
        If (iCONTROL) Begin
-            Broadcast Recursive Send ScaleFont iClicks
+            Send ScaleFont of ghoApplication iClicks
        End
 
        // Tell windows that we've handled the event.    
