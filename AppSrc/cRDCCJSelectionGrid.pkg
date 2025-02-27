@@ -18,6 +18,7 @@
 // in the help folder for more details.
 //
 //****************************************************************************
+Use cRDCApplication.pkg
 Use cCJGrid.pkg
 Use cCJGridColumn.pkg
 Use cCJGridColumnRowIndicator.pkg

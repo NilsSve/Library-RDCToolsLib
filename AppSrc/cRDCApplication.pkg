@@ -1,8 +1,14 @@
 ﻿Use cApplication.pkg
 
+// Grid font size constants:
 #IFNDEF CS_Settings
     Define CS_Settings for "Settings"
 #ENDIF
+#IFNDEF CS_GridFontSize
+    Define CS_GridFontSize for "GridFontSize"
+#ENDIF
+
+// Color definition constants:
 #IFNDEF CS_GridRowBackgroundColor
     Define CS_GridRowBackgroundColor for "GridRowBackgroundColor"
 #ENDIF
@@ -23,6 +29,15 @@
 #ENDIF
 #IFNDEF clProgramIconBg
     Define clProgramIconBg           for (RGB(43, 59, 83))       // HTML #2B3B53
+#ENDIF
+#IFNDEF clGreenGrey
+    Define clGreenGrey              for (RGB(64, 84, 93))
+#ENDIF
+#IFNDEF clGreenGreyLight
+    Define clGreenGreyLight         for (RGB(7, 117, 104))
+#ENDIF
+#IFNDEF clDarkGreen
+    Define clDarkGreen              for (RGB(49, 60, 83)) 
 #ENDIF
 
 Class cRDCApplication is a cApplication
