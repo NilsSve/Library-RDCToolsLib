@@ -311,16 +311,17 @@ Class cRDCCJGrid is a cCJGrid
     // this will redisplay the records with the same iOffset.
     // If both finds fail the grid will not be updated so we need to clear it.
     Procedure RefreshGrid
-        Send Find to (Server(Self)) GE (Ordering(Self))   // to refresh grid
-        If (not(Found)) Begin
-            If (pbDescendingIndexInUse(Self) = True or pbReverseOrdering(Self) = True) Begin
-                Send Find to (Server(Self)) FIRST_RECORD (Ordering(Self))
-            End
-            Else If (pbDescendingIndexInUse(Self) = False or pbReverseOrdering(Self) = False) Begin
-                Send Find to (Server(Self)) LAST_RECORD (Ordering(Self))
-            End
-        End
-        If (not(Found) and IsComObjectCreated(Self)) Begin
+//        Send Find to (Server(Self)) GE (Ordering(Self))   // to refresh grid
+//        If (not(Found)) Begin
+//            If (pbDescendingIndexInUse(Self) = True or pbReverseOrdering(Self) = True) Begin
+//                Send Find to (Server(Self)) FIRST_RECORD (Ordering(Self))
+//            End
+//            Else If (pbDescendingIndexInUse(Self) = False or pbReverseOrdering(Self) = False) Begin
+//                Send Find to (Server(Self)) LAST_RECORD (Ordering(Self))
+//            End
+//        End
+//        If (not(Found) and IsComObjectCreated(Self)) Begin
+        If (IsComObjectCreated(Self)) Begin
             Send ResetGrid
         End
     End_Procedure
