@@ -1,4 +1,5 @@
 ﻿Use cApplication.pkg
+Use cCJGrid.pkg
 
 // Grid font size constants:
 #IFNDEF CS_Settings
@@ -70,8 +71,10 @@ Class cRDCApplication is a cApplication
     Procedure Set psGridRowBackgroundColor String sColor
         Set private.psGridRowBackgroundColor to sColor
         Send WriteString CS_Settings CS_GridRowBackgroundColor sColor
-        Broadcast Recursive Set piSelectedRowBackColor of (Client_Id(phoMainPanel(ghoApplication))) to sColor
-        Broadcast Recursive Set piHighlightBackColor   of (Client_Id(phoMainPanel(ghoApplication))) to sColor
+        If (Client_Id(phoMainPanel(ghoApplication)) <> 0) Begin
+            Broadcast Recursive Set piSelectedRowBackColor of (Client_Id(phoMainPanel(ghoApplication))) to sColor
+            Broadcast Recursive Set piHighlightBackColor   of (Client_Id(phoMainPanel(ghoApplication))) to sColor
+        End
     End_Procedure
 
     { MethodType=Property }
