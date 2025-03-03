@@ -252,6 +252,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         On_Key Key_Ctrl+Key_A  Send SelectAll
         On_Key Key_Ctrl+Key_N  Send SelectNone
         On_Key Key_Ctrl+Key_I  Send SelectInvert
+        On_Key Key_Space       Send ToggleCurrentItem
     End_Procedure 
                   
 //    Procedure MoveToLastEnterableColumn
