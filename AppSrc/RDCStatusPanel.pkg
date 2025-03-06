@@ -172,12 +172,12 @@ Object Status_Panel is a cProcessStatusPanel
         Set Label to "Copyright 2001-xxxx RDC Tools International"
         Procedure Page Integer iPageObject
             Integer iYear
+            DateTime dtDate
             String sLabel
-            Handle ho
             
             Forward Send Page iPageObject
-            Get phoVersionInfo of ghoApplication to ho
-            Get piVersionMajor of ho to iYear
+            Move (CurrentDateTime()) to dtDate
+            Move (DateGetYear(dtDate)) to iYear
             Get Label to sLabel
             Move (Replace("xxxx", sLabel, String(iYear))) to sLabel
             Set Label to sLabel
