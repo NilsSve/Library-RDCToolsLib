@@ -95,5 +95,26 @@ Class cRDCApplication is a cApplication
     Procedure ScaleFont Integer iClicks    
         Broadcast Recursive Send ScaleFont of (Client_Id(phoMainPanel(Self))) iClicks
     End_Procedure
+
+    Function StringType Integer iType Returns String
+        String sType
+        
+        Case Begin
+            Case (iType = xtpTabPositionTop)
+                Move "xtpTabPositionTop" to sType
+                Case Break 
+            Case (iType = xtpTabPositionLeft)
+                Move "xtpTabPositionLeft" to sType
+                Case Break 
+            Case (iType = xtpTabPositionBottom)
+                Move "xtpTabPositionBottom" to sType
+                Case Break 
+            Case (iType = xtpTabPositionRight)
+                Move "xtpTabPositionRight" to sType
+                Case Break 
+        Case End
+        
+        Function_Return sType
+    End_Function
     
 End_Class

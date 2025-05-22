@@ -1,6 +1,13 @@
 ﻿Use cCJStandardCommandBarSystem.pkg
 Use cCJCommandBarSystem.pkg
 
+#IFNDEF Define CS_Settings
+    Define CS_Settings for "Settings"
+#ENDIF
+#IFNDEF CS_TabPosition
+    Define CS_TabPosition for "TabPosition"
+#ENDIF
+
 Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
     
     Procedure Construct_Object
@@ -20,7 +27,6 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
 
     Procedure End_Construct_Object
         Forward Send End_Construct_Object
-
     End_Procedure
 
     Procedure OnCreateCommandBars
@@ -33,7 +39,7 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
     Procedure DisplayTabWorkspace
         Variant vTab vPaintManager
         Handle hoTab hoPaintManager hoOptions
-        Integer iSize
+        Integer iSize iType
         Boolean bTabbedWorkspaces
 
         If (not(IsComObjectCreated(Self))) Begin
@@ -74,7 +80,8 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
             Set ComShowIcons of hoPaintManager to True
             
             // Sets the tab-pages to display on the left side, instead of at the top:
-            Set ComPosition of hoPaintManager to xtpTabPositionTop //xtpTabPositionLeft
+            Get ReadInteger of ghoApplication CS_Settings CS_TabPosition xtpTabPositionTop to iType
+            Set ComPosition of hoPaintManager to iType
     
             // This will truncate the middle part of long items
             //Set ComDrawTextPathEllipsis of hoPaintManager to True
