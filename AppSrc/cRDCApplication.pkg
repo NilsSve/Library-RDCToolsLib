@@ -1,6 +1,12 @@
 ﻿Use cApplication.pkg
 Use cCJGrid.pkg
 
+// BOOL GetUserNameW(
+//  [out]     LPWSTR  lpBuffer,
+//  [in, out] LPDWORD pcbBuffer
+//);
+External_Function WinAPI_GetUserName "GetUserNameW" Advapi32.dll Pointer lpBuffer Pointer pcbBuffer Returns Boolean
+
 // Grid font size constants:
 #IFNDEF CS_Settings
     Define CS_Settings for "Settings"
@@ -117,4 +123,19 @@ Class cRDCApplication is a cApplication
         Function_Return sType
     End_Function
     
+    Function WindowsUserName Returns String
+        WString sBuffer
+        DWord iSize
+        Boolean bRes
+        
+        Move 256 to iSize
+        Move (Repeat(" ", 256)) to sBuffer
+        Move (WinAPI_GetUserName(AddressOf(sBuffer),AddressOf(iSize))) to bRes
+        
+        If (bRes) ;
+            Function_Return (CString(sBuffer))
+        
+        Function_Return ""
+    End_Function
+
 End_Class
