@@ -19,7 +19,7 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
         Set pbAutoResizeIcons to True
         Set pbLargeIcons to True
         #IF (!@ > 240)
-            Set peVisualTheme to xtpThemeNativeWindows11 
+            Set peVisualTheme to xtpThemeVisualStudio2022Light //xtpThemeNativeWindows11 
         #ELSE
             Set peVisualTheme to xtpThemeOffice2016Word
         #ENDIF
