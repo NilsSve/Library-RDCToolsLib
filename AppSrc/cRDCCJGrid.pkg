@@ -18,6 +18,7 @@
 Use cRDCApplication.pkg
 Use cCJGrid.pkg
 Use cSelectFolderDialog.pkg
+Use vWin32fh.pkg
 Use cRDCProjectIniFile.pkg
 
 #IFNDEF _struct_tsSearchResult
