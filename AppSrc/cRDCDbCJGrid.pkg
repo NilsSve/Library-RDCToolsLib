@@ -1,6 +1,7 @@
 ﻿Use cRDCApplication.pkg
 Use cDbCJGrid.pkg
-Use cSelectFolderDialog.pkg
+Use cSelectFolderDialog.pkg 
+Use vWin32fh.pkg
 #IF (!@ < 230)
     Use cRDCDbCJGridColumnHyperLink.pkg
 #ENDIF    
