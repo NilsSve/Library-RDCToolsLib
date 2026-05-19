@@ -34,7 +34,7 @@ Enum_List
 End_Enum_List
 #ENDIF
 
-#IFNDEF struct_tFolderData
+#IFNDEF _STRUCT_tFolderData
 Struct tFolderData
     String sFolderName
     Boolean bSelected
