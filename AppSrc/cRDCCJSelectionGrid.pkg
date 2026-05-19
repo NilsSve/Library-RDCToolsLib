@@ -26,16 +26,20 @@ Use cRDCCJGrid.pkg
 Use Cursor.pkg
 Use vWin32fh.pkg
 
+#IFNDEF cx_Select_All
 Enum_List
     Define cx_Select_All
     Define cx_Select_None
     Define cx_Select_Invert
 End_Enum_List
+#ENDIF
 
+#IFNDEF struct_tFolderData
 Struct tFolderData
     String sFolderName
     Boolean bSelected
 End_Struct
+#ENDIF
 
 // Classes used by the cRDCCJSelectionGrid
 Class cRDCCJToggleSelectMenuItem is a cCJMenuItem
