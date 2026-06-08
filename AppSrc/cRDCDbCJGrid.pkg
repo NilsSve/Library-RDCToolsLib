@@ -155,7 +155,9 @@ End_Class
 Class cDbGridContext_mnu is a cCJContextMenu
     Procedure Construct_Object
         Handle hoMenuItem
-        Forward Send Construct_Object
+        Forward Send Construct_Object  
+        
+        Property Handle Server
 
         Get Create (RefClass(cRDCDbCJToggleSelectMenuItem)) to hoMenuItem
         Get Create (RefClass(cRDCDbCJSelectAllMenuItem))    to hoMenuItem
@@ -313,6 +315,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         If (phoCheckbox_Col(Self) <> -1 or phoData_Col(Self) <> -1) Begin
             Get Create (RefClass(cDbGridContext_mnu)) to hoContextMenu
             Set phoContextMenu to hoContextMenu
+            Set Server of hoContextMenu to Self
         End
     End_Procedure
 
