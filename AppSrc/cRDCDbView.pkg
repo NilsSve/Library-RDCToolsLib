@@ -15,8 +15,8 @@ Class cRDCDbView is a dbView
 
     End_Procedure
     
-    Procedure Close_Panel
-    End_Procedure
+//    Procedure Close_Panel
+//    End_Procedure
 
     // To enable Ctrl+MouseWheel in the grid to change font size.
     Procedure OnWmMouseWheel Integer wParam Integer lParam
