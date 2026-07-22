@@ -1,8 +1,28 @@
-﻿Use Windows.pkg
+﻿//****************************************************************************
+// $Module type: Program (library smoke test)
+// $Module name: Dummy.src
+// $Author     : Nils Svedmyr, RDC Tools International
+//
+// Description : Compile canary for RDCToolsLib. This library ships no application of its own,
+//               so nothing here ever got compiled in isolation - breakage only surfaced later,
+//               inside whichever consumer workspace happened to Use the broken package.
+//
+//               This program Uses every publishable package in the library. It is not meant to
+//               DO anything; the point is that it COMPILES. If it does, the library stands on
+//               its own feet: no missing dependency, no broken Use chain, no duplicate class.
+//
+//               Requires vwin32fh on the workspace library list - see README.md. That is a real
+//               dependency of the library (cRDCCJGrid, cRDCLogFile and 8 more Use vWin32fh.pkg),
+//               not of this test.
+//
+// $Rev History:
+//    2026-07-22  Turned from the Studio "Basic Project" stub into a real compile canary.
+//****************************************************************************
+Use Windows.pkg
 Use cHtmlHelp.pkg
 Use cApplication.pkg
 Use cConnection.pkg
-Use cDataBaseFunctions.h.pkg
+Use Datadict.pkg
 
 Object oHtmlHelp is a cHtmlHelp
 End_Object
@@ -16,4 +36,146 @@ Object oApplication is a cApplication
 
 End_Object
 
-Send Info_Box "Hello World" "DataFlex Basic Project"
+// ---------------------------------------------------------------------------
+// The library surface under test.
+//
+// THESE MUST STAY BELOW THE cApplication OBJECT. Several packages here depend on
+// an application object already existing - cRDCProjectIniFile, for one, reads
+// psProgramPath(phoWorkspace(ghoApplication)) while constructing its global
+// oRDCProjectIniFile instance. Hoisting the Use lines up to the top of the file,
+// which is where they conventionally live and where they started, breaks the
+// compile. Resist tidying them back.
+//
+// Within the block the order is alphabetical and carries no meaning - each
+// package Uses whatever else it needs itself.
+// ---------------------------------------------------------------------------
+Use Base64Functions.pkg
+Use CJBrowseForFolder.pkg
+Use CaptureWindow.pkg
+Use RDCStatusPanel.pkg
+Use ShellExecute.pkg
+Use ShellExecuteErrors.pkg
+Use StartProg.pkg
+Use Working.pkg
+Use cDataBaseFunctions.pkg
+Use cRDCApplication.pkg
+Use cRDCAutoCreateNewID.pkg
+Use cRDCBitmapContainer.pkg
+Use cRDCButton.pkg
+Use cRDCButtonDPI.pkg
+//Use cRDCCJChangeColorMenuItem.pkg
+Use cRDCCJCommandBarSystem.pkg
+Use cRDCCJGrid.pkg
+Use cRDCCJGridColumnButton.pkg
+Use cRDCCJGridColumnHyperLink.pkg
+Use cRDCCJGridColumnSuggestion.pkg
+Use cRDCCJGridPromptList.pkg
+Use cRDCCJSelectionGrid.pkg
+Use cRDCCJTextEditMenuItem.pkg
+Use cRDCCheckBoxGrid.pkg
+Use cRDCCheckbox.pkg
+Use cRDCComboForm.pkg
+Use cRDCComboFormAux.pkg
+Use cRDCCommandLinkButton.pkg
+Use cRDCDbCJGrid.pkg
+Use cRDCDbCJGridColumn.pkg
+Use cRDCDbCJGridColumnHyperLink.pkg
+Use cRDCDbCJGridPromptList.pkg
+Use cRDCDbCheckbox.pkg
+Use cRDCDbComboForm.pkg
+Use cRDCDbForm.pkg
+Use cRDCDbFormOrDbSuggestionForm.pkg
+Use cRDCDbFormShadowTxt.pkg
+Use cRDCDbGroup.pkg
+Use cRDCDbHeaderGroup.pkg
+Use cRDCDbModalPanel.pkg
+Use cRDCDbReadOnlyForm.pkg
+Use cRDCDbRichEdit.pkg
+//Use cRDCDbRichEditor.pkg
+Use cRDCDbSpinForm.pkg
+Use cRDCDbSuggestionForm.pkg
+Use cRDCDbView.pkg
+Use cRDCExternalProgramResult.pkg
+Use cRDCFontDialog.pkg
+Use cRDCForm.pkg
+Use cRDCFormFileName.pkg
+Use cRDCGroup.pkg
+Use cRDCHeaderDbGroup.pkg
+Use cRDCHeaderGroup.pkg
+Use cRDCIconPanel.pkg
+//Use cRDCIconView.pkg
+Use cRDCIniFileCheckbox.pkg
+Use cRDCIniFileForm.pkg
+Use cRDCLogFile.pkg
+Use cRDCModalPanel.pkg
+Use cRDCProjectIniFile.pkg
+Use cRDCRadio.pkg
+Use cRDCReadDirComboform.pkg
+Use cRDCReadDirValidationTable.pkg
+Use cRDCReadOnlyForm.pkg
+Use cRDCRegKeyForm.pkg
+Use cRDCRichEditor.pkg
+Use cRDCSlideButton.pkg
+Use cRDCSliderOffOn.pkg
+Use cRDCSpinForm.pkg
+Use cRDCSplitterContainerMixin.pkg
+Use cRDCSuggestionIniForm.pkg
+Use cRDCSuggestionsBaseClasses.pkg
+Use cRDCTextBoxLineControl.pkg
+Use cRDCTextbox.pkg
+Use cRDCTooltipController.pkg
+Use cRDCView.pkg
+Use cRDCWinSuggestionMultiColumn.pkg
+Use cSelectFolderDialog.pkg
+Use cSkinComboBoxCJMenuItem.pkg
+
+// ---------------------------------------------------------------------------
+// DELIBERATELY EXCLUDED - nine packages, none of which has a consumer anywhere in
+// RDCToolsLib, DUF or DFRefactor. Keeping the reasons visible matters: every one
+// of these was invisible until the library was compiled on its own.
+//
+// (a) Name collisions - two packages declaring the same class:
+//
+//   cRDSlideOffOn.pkg               These two and cRDCSliderOffOn.pkg (included
+//   cRDCSlideOffOn.pkg              above) ALL declare "Class cRDCSliderOffOn is a
+//                                   cCommandLinkButton". Using more than one is a
+//                                   duplicate-class error. The two excluded names
+//                                   look like typo'd copies; none of the three has
+//                                   a consumer, so the canonical one is a guess -
+//                                   cRDCSliderOffOn.pkg, whose filename matches the
+//                                   class it declares.
+//
+//   cRDCSkinComboBoxCJMenuItem.pkg  Declares the same "Class cSkinComboBoxCJMenuItem"
+//                                   as cSkinComboBoxCJMenuItem.pkg. The latter is the
+//                                   live one (DUFTestProgram.src Uses it).
+//
+// (b) Reference files that no longer exist - these fail with 4313:
+//
+//   cRDCIconView.pkg                Uses cIconPanel.pkg, which is in neither this
+//                                   library nor the DataFlex Pkg folder. Note the
+//                                   library does have cRDCIconPanel.pkg - this looks
+//                                   like a name left behind by a rename.
+//
+//   cRDCDbRichEditor.pkg            Uses oRichEditFind.dg and oRichEditFindReplace.dg.
+//                                   Neither exists here or in the DataFlex Pkg folder.
+//
+//   cRDCCJChangeColorMenuItem.pkg   The whole file is commented out under the header
+//                                   "Obsolete code:" - it declares nothing at all. Its
+//                                   base, cCJRTFMenuItem.pkg, is gone from DataFlex.
+//
+// (c) Needs software that is not part of a base DataFlex install:
+//
+//   cRDCCrystalDbAutoConnect.pkg    "Class cCrystalDbAutoConnect is a cCrystal" - needs
+//                                   the Crystal Reports package.
+//
+// (d) Superseded:
+//
+//   RDCStatpnl.pkg                  Superseded by RDCStatusPanel.pkg.
+//
+// Every package in this list is a deletion candidate. Deleting the dead ones is a
+// better answer than this comment; group (b) in particular is broken, not merely
+// unused, and cannot be fixed without files nobody appears to still have.
+// ---------------------------------------------------------------------------
+
+
+Send Info_Box "RDCToolsLib compiled clean." "Library smoke test"

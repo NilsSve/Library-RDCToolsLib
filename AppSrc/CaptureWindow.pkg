@@ -1,10 +1,12 @@
-Use CaptureWindow.h
-Use vWin32fh.pkg
-Use cApplication.pkg
+﻿Use cApplication.pkg
+Use cCJStandardCommandBarSystem.pkg
+Use GlobalFunctionsProcedures.pkg
 Use cIniFile.pkg
+Use CaptureWindow.h
 
 Define CS_CaptureSection for "Capture"
 Define CS_CaptureFolder  for "Capture Folder"
+Define vCSIDL_MYPICTURES for |CI$0027 // IE5+ The file system directory that serves as a common repository for image files. A typical path is C:\Documents and Settings\username\My Documents\My Pictures
 
 //   Declare Function GetActiveWindow% Lib "User" ()
 #IFNDEF Get_GetActiveWindow
@@ -186,6 +188,45 @@ External_Function CloseHandle "CloseHandle" kernel32.dll ;
     External_Function DeleteObject "DeleteObject" Gdi32.dll ;
         Handle hObject Returns Boolean
 #ENDIF
+
+// --- Shell folder lookup. DataFlex ships no wrapper for this (verified against the DF25 and
+// DF26 Pkg folders), so declare it here as this package already does for its GDI/User32 calls.
+// SHGetFolderPathW is the compatibility entry point in SHFolder.dll. It is superseded by
+// SHGetKnownFolderPath, but that returns a COM-allocated string needing CoTaskMemFree - not
+// worth it for one lookup.
+#IFNDEF Get_CW_SHGetFolderPath
+External_Function CW_SHGetFolderPath "SHGetFolderPathW" SHFolder.Dll ;
+    Pointer hWnd ;
+    Integer nFolder ;
+    Pointer hToken ;
+    DWord   dwFlags ;
+    Pointer lpszPath ;
+    Returns Integer
+#ENDIF
+
+Define CW_MAX_PATH          for 260
+Define CW_CSIDL_MYPICTURES  for |CI$0027   // 39 - the user's Pictures folder
+
+Function cwShellFolderPath Global Integer eFolder Returns String
+    Integer iVoid
+    Handle  hWnd
+    WString wFolder
+
+    Move (Window_Handle(Focus(Desktop)))     to hWnd
+    Move (Repeat(Character(0), CW_MAX_PATH)) to wFolder
+    Move (CW_SHGetFolderPath(hWnd, eFolder, 0, 0, AddressOf(wFolder))) to iVoid
+    Function_Return (CString(wFolder))
+End_Function
+
+Function cwFolderFormat Global String sFolderName Returns String
+    String sDirSep
+    Move (SysConf(SYSCONF_DIR_SEPARATOR)) to sDirSep
+    Move (Trim(sFolderName)) to sFolderName
+    If (Right(sFolderName, 1) <> sDirSep) Begin
+        Move (sFolderName + sDirSep) to sFolderName
+    End
+    Function_Return sFolderName
+End_Function
 
 // Check if focus is what you search or a child of it
 Function Find_Parent Global Handle hofocus Handle hofind Returns Boolean
@@ -390,10 +431,10 @@ Function SnapShotFolder Global Returns String
         Move (sHome + sPath) to sPath
     End
 
-    Get vFolderExists sPath to bExist
+    Get IsDirectory sPath to bExist
     If (bExist = False) Begin
         If (sPath = "") Begin
-            Get vSHGetFolderPath vCSIDL_MYPICTURES to sPath  // E.g. "C:\Documents and Settings\username\My Documents\My Pictures"
+            Get cwShellFolderPath vCSIDL_MYPICTURES to sPath  // E.g. "C:\Documents and Settings\username\My Documents\My Pictures"
         End
         Else Begin
             Get vCreateDirectory sPath to iRetval

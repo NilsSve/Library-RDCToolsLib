@@ -14,7 +14,10 @@
 // $Rev History:
 //    2012-07-22  Module header created
 //****************************************************************************
-Use cSigCJCommonDialog.pkg
+//Define UseSigClasses
+#IFDEF UseSigClasses
+    Use cSigCJCommonDialog.pkg
+#ENDIF
 Use GlobalFunctionsProcedures.pkg
 
 Function CJBrowseForFolder Global String sInitDir String sFilter String sDialogTitleText Boolean bShowNewFolderButton Returns String
@@ -22,6 +25,9 @@ Function CJBrowseForFolder Global String sInitDir String sFilter String sDialogT
     Integer iRetval
     String sFileName
 
+#IFNDEF UseSigClasses
+    Send Info_Box "To use the CJBrowseForFolder function, you will need to add cSig-classes as a library, *and* uncomment the line 'Define UseSigClasses' in CJBrowseForFolder.pkg."
+#ELSE    
     Get Create (RefClass(cSigCJCommonDialog)) to ho
     If (sInitDir <> "") Begin
         Move (ToANSI(sInitDir)) to sInitDir
@@ -53,5 +59,6 @@ Function CJBrowseForFolder Global String sInitDir String sFilter String sDialogT
     End
 
     Send Destroy of ho
+#ENDIF    
     Function_Return sFileName
 End_Function

@@ -67,7 +67,7 @@ Class cCJGridColumnButton is a cCJGridColumn
         Property Integer piHeightButton 18
         Property Integer piSizeWidth 0
         Property Integer piSizeHigh  0
-        Property Integer piAlignmentButton xtpReportItemControlUnknown //xtpReportItemControlRight xtpReportItemControlLeft
+        Property Integer piAlignmentButton xtpGridItemControlUnknown //xtpReportItemControlRight xtpReportItemControlLeft
         Property Boolean pbThemedButton True // False
         Property Boolean pbEnableButton True // False
         Property String  psIconButton "" //All states set.
@@ -82,8 +82,8 @@ Class cCJGridColumnButton is a cCJGridColumn
         Property Integer piFontSizeButton 8
         Property Integer piFontWeightButton 10
         Property Handle phoFont (Create(Self,RefClass(cComStdFont)))
-        Property Handle phoReportItemButton (Create(Self,RefClass(cCJReportItemButton)))
-        Property Handle phoReportItemControls (Create(Self,RefClass(cCJReportItemControls)))
+        Property Handle phoReportItemButton (Create(Self,RefClass(cCJGridItemButton)))
+        Property Handle phoReportItemControls (Create(Self,RefClass(cCJGridItemControls)))
         If (not(ghoReleaseMouse)) Begin
             Get Create of Desktop (RefClass(cReleaseMouse)) to ghoReleaseMouse
         End
@@ -159,19 +159,19 @@ Class cCJGridColumnButton is a cCJGridColumn
             Set ComEnable of hoReportItemButton to (pbEnableButton(Self))
             // You can set caption and icon in the button ... I suggest only use one of them
             If (piIconButton(Self)>-1) Begin
-                Send ComSetIconIndex of hoReportItemButton xtpReportItemButtonStateAll (piIconButton(Self))
+                Send ComSetIconIndex of hoReportItemButton xtpGridItemButtonStateAll (piIconButton(Self))
             End
             If (piIconButtonNormal(Self)>-1) Begin
-                Send ComSetIconIndex of hoReportItemButton xtpReportItemButtonStateNormal (piIconButtonNormal(Self))
+                Send ComSetIconIndex of hoReportItemButton xtpGridItemButtonStateNormal (piIconButtonNormal(Self))
             End
             If (piIconButtonHot(Self)>-1) Begin
-                Send ComSetIconIndex of hoReportItemButton xtpReportItemButtonStateHot (piIconButtonHot(Self))
+                Send ComSetIconIndex of hoReportItemButton xtpGridItemButtonStateHot (piIconButtonHot(Self))
             End
             If (piIconButtonPressed(Self)>-1) Begin
-                Send ComSetIconIndex of hoReportItemButton xtpReportItemButtonStatePressed (piIconButtonPressed(Self))
+                Send ComSetIconIndex of hoReportItemButton xtpGridItemButtonStatePressed (piIconButtonPressed(Self))
             End
             If (piIconButtonDisabled(Self)>-1) Begin
-                Send ComSetIconIndex of hoReportItemButton xtpReportItemButtonStateDisabled (piIconButtonDisabled(Self))
+                Send ComSetIconIndex of hoReportItemButton xtpGridItemButtonStateDisabled (piIconButtonDisabled(Self))
             End
             Set ComCaption of hoReportItemButton to (psCaptionButton(Self))
             Set ComCaptionColor of hoReportItemButton to (piCaptionColorButton(Self))
@@ -184,7 +184,7 @@ Class cCJGridColumnButton is a cCJGridColumn
                 Set ComWeight of hofont to (piFontWeightButton(Self))
                 Set ComFont of hoReportItemButton to vFont
             End
-            //Get ComType of hoReportItemButton to xtpReportItemControlTypeButton
+            //Get ComType of hoReportItemButton to xtpGridItemControlTypeButton
             If (piSizeHigh(Self)>0 and piSizeWidth(Self)>0) Begin
                 Send ComSetSize of hoReportItemButton (piSizeWidth(Self)) (piSizeHigh(Self))
             End
@@ -244,7 +244,7 @@ Procedure OnComMouseDown For cCJGrid Short llButton Short llShift Integer llx In
         End
         Move itotal to columnas[icIndex]
     Loop
-    Get Create (RefClass(cCJReportHitTestInfo)) to hoHitTest
+    Get Create (RefClass(cCJGridHitTestInfo)) to hoHitTest
     Get ComHitTest llx lly to vHit
     Set pvComObject of hoHitTest to vHit
     Get ComItem of hoHitTest to vItem
@@ -253,16 +253,16 @@ Procedure OnComMouseDown For cCJGrid Short llButton Short llShift Integer llx In
         Set pvComObject of hoItem to vItem
         Get ComItemControls of hoItem to vItemControls
         If (not(IsNullComObject(vItemControls))) Begin
-            Get Create (RefClass(cCJReportItemControls)) to hoReportItemControls
+            Get Create (RefClass(cCJGridItemControls)) to hoReportItemControls
             Set pvComObject of hoReportItemControls to vItemControls
             Get ComCount of hoReportItemControls to icontrols
             If icontrols Begin
                 Get ComItem of hoReportItemControls 0 to vItemControl
-                Get Create (RefClass(cCJReportItemButton)) to hoItemControl
+                Get Create (RefClass(cCJGridItemButton)) to hoItemControl
                 Set pvComObject of hoItemControl to vItemControl
                 Get ComType of hoItemControl to iType
                 Get ComEnable of hoItemControl to bEnable
-                If (bEnable and iType=xtpReportItemControlTypeButton) Begin
+                If (bEnable and iType=xtpGridItemControlTypeButton) Begin
                     Get ComRow of hoHitTest to vRow
                     Get phoReportRow to hoReportRow
                     Set pvComObject of hoReportRow to vRow
@@ -289,11 +289,11 @@ Procedure OnComMouseDown For cCJGrid Short llButton Short llShift Integer llx In
                         End
                     End
                     Else If (pbEnableButton(hoCols[iCol])) Begin
-                        If ( (iAlign=xtpReportItemControlRight and llx>(columnas[iCol]-icon_width)) ;
+                        If ( (iAlign=xtpGridItemControlRight and llx>(columnas[iCol]-icon_width)) ;
                             or ;
-                            (iAlign=xtpReportItemControlLeft and llx<=(columnas[iCol]-iwidth+icon_width)) ;
+                            (iAlign=xtpGridItemControlLeft and llx<=(columnas[iCol]-iwidth+icon_width)) ;
                             or ;
-                            (iAlign=xtpReportItemControlUnknown and llx<=(columnas[iCol]-iwidth+icon_width))) ;
+                            (iAlign=xtpGridItemControlUnknown and llx<=(columnas[iCol]-iwidth+icon_width))) ;
                             Begin
                             Send MoveToRow iRow
                             Send ButtonAction to hoCols[iCol] iRow iCol llButton llShift

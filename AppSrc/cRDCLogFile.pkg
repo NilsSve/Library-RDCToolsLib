@@ -95,10 +95,10 @@ Class cLogTextFile is a cObject
 
         Direct_Input channel iCh ("Binary: "+ sFile)
             Get_Channel_Size iCh to iSize
-            Get_Argument_Size to iArg
-            If (iSize > iArg) Begin
-                Set_Argument_Size (iSize + 10)
-            End
+//            Get_Argument_Size to iArg
+//            If (iSize > iArg) Begin
+//                Set_Argument_Size (iSize + 10)
+//            End
             Read_Block channel iCh sData iSize
         Close_Input channel iCh
 
@@ -108,7 +108,7 @@ Class cLogTextFile is a cObject
         Close_Output  channel iCh
 
         Send Seq_Release_Channel iCh
-        Set_Argument_Size iArg
+//        Set_Argument_Size iArg
 
     End_Procedure
 

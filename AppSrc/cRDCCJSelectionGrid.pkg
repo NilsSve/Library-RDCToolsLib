@@ -559,7 +559,11 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         If (not(IsComObjectCreated(Self))) Begin
             Move False to bAutoSaveSelections // Can't save
         End
+#IFDEF psWorkspaceHomePath
         Get psWorkspaceHomePath of ghoApplication to sHomePath
+#ELSE
+        Get psHome of (phoWorkspace(ghoApplication)) to sHomePath
+#ENDIF                
         If (sHomePath = "") Begin
             Move False to bAutoSaveSelections // Can't save
         End

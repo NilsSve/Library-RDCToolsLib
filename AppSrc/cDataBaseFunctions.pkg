@@ -12,6 +12,7 @@
 // $Rev History:
 //    2013-10-29  Module header created
 //****************************************************************************
+Use cWindowsErrorHandler.pkg
 Use cDataBaseFunctions.h.pkg
 
 // Important: Only use _ONE_ instance of this object,

@@ -1,4 +1,4 @@
-//
+﻿//
 
 Use Windows.pkg
 Use tWinStructs.pkg
@@ -16,10 +16,13 @@ Define     WH_MOUSE for 7
 Define     WH_KEYBOARD for 2
 
 // suggestion lists use a global timer and a global suggestion list
-Global_Variable Handle ghoSuggestionList
+#IFNDEF ghoSuggestionList
+    Global_Variable Handle ghoSuggestionList
+#ENDIF
 Move 0 to ghoSuggestionList
 
-Global_Variable Handle ghoSuggestionTimer
+#IFNDEF ghoSuggestionTimer
+    Global_Variable Handle ghoSuggestionTimer
 Move 0 to ghoSuggestionTimer
 
 // this will get created the first time it is needed.
@@ -899,4 +902,5 @@ Class cSuggestionControl_mixin is a Mixin
     End_Procedure
 
 End_Class
+#ENDIF
 

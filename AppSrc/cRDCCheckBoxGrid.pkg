@@ -1,4 +1,4 @@
-//****************************************************************************
+﻿//****************************************************************************
 // $Module type: Package
 // $Module name: cCheckBoxGrid.pkg
 //
@@ -19,10 +19,9 @@
 //               http://www.VDF-Guidance.com/ContribPage.asp?Page=SOFTGENMANIFESTS&ContribRecId=131
 //
 // Purpose:      Please read the ManifestSideBySideManagerHelp.rtf in the Help folder.
-// Compatibility:Visual DataFlex 16.0 and up. The tool was developed with VDF 17,
-//               but is backwards-compatable with VDF 16 and up.
+// Compatibility:Visual DataFlex 25.0 and up.
 //               However, there is no reason you can't use the program to generate manifest files
-//               and embed the manifest data into older VDF programs than 16.0. In fact the program
+//               and embed the manifest data into older DF programs than 16.0. In fact the program
 //               can be used to create and embed manifest data into any executable that uses
 //               COM components!
 //               For the main view DbMergerView.vw and ManHds.sl the newer CodeJock grids are used.
@@ -37,15 +36,13 @@
 //******************************************************************************
 Use Windows.pkg
 Use cCJCommandBarSystem.pkg
-Use Symdef.pkg
-Use cManifestIniFile.pkg
-Use cManifestFunctionLibrary.pkg
-Use vWin32fh.pkg
+// cRDCProjectIniFile is the library's own ini-file class - and the base that COM Manifest
+// Studio's cManifestIniFile derives from. It supplies everything this grid needs: IniFileValue,
+// the ghoProjectIniFile instance, and the CS_ setting names. The grid used to call these through
+// ghoManifestIniFile, i.e. a library class reaching into an application's package for methods
+// its own base class already provided.
+Use cRDCProjectIniFile.pkg
 
-Register_Procedure DoOpenCurrentGridItem
-Register_Procedure DoOpenFragmentLibrary
-Register_Procedure DoOpenProgramsFolder
-Register_Procedure DoOpenCOMFolder
 Register_Procedure Activate_Setup_Dialog
 Register_Procedure RefreshGrid
 Register_Procedure ToggleCurrentItem
@@ -111,14 +108,6 @@ Class cCheckBoxGrid is a Grid
 
         Object oGridMenuObject is a cCJContextMenu
 
-            Object oOpenCurrentGridItem_MenuItem is a cCJCheckBoxGridMenuItem
-                Set psCaption to "Edit File Under Cursor"
-                Set psDescription to "Opens the file under the cursor in the Editor"
-                Set psImage to "EditDocument.ico"
-                Set psShortcut to "Double-Click"
-                Set phmMessage to msg_DoOpenCurrentGridItem
-            End_Object
-
             Object oToggleGridItem_MenuItem is a cCJCheckBoxGridMenuItem
                 Set psCaption to "Toggle Current Item"
                 Set psDescription to "Toggles the item under the cursor on/off"
@@ -153,31 +142,6 @@ Class cCheckBoxGrid is a Grid
                 Set phmMessage to msg_SelectInvert
             End_Object
 
-            Object oOpenProgramsFolder_MenuItem is a cCJCheckBoxGridMenuItem
-                Set psCaption to "&Open Programs Folder"
-                Set psDescription to "Open the manifest file's Programs folder in Windows Explorer"
-                Set psImage to "OpenProgramsFolder.ico"
-                Set psShortcut to "Ctrl+O"
-                Set pbControlBeginGroup to True
-                Set phmMessage to msg_DoOpenProgramsFolder
-            End_Object
-
-//            Object oOpenFragmentLibrary_MenuItem is a cCJCheckBoxGridMenuItem
-//                Set psCaption to "Open Manifest Fragment &Library"
-//                Set psDescription to "Open the local Manifest Fragment Library in Windows Explorer"
-//                Set psImage to "OpenFragmentLibrary.ico"
-//                Set psShortcut to "Ctrl+L"
-//                Set phmMessage to msg_DoOpenFragmentLibrary
-//            End_Object
-
-//           Object oOpenCOMLibrary_MenuItem is a cCJCheckBoxGridMenuItem
-//               Set psCaption to "Open Common COM Li&brary"
-//                Set psDescription to "Open the local Common COM Library in Windows Explorer"
-//                Set psImage to "OpenCOMLibrary.ico"
-//                Set psShortcut to "Ctrl+B"
-//                Set phmMessage to msg_DoOpenCOMFolder
-//            End_Object
-
             Object oRefreshGrid_MenuItem is a cCJCheckBoxGridMenuItem
                 Set psCaption to "Refresh Grid"
                 Set psDescription to "Refresh the grid"
@@ -196,9 +160,6 @@ Class cCheckBoxGrid is a Grid
         On_Key Key_Ctrl+Key_A Send SelectAll
         On_Key Key_Ctrl+Key_N Send SelectNone
         On_Key Key_Ctrl+Key_I Send SelectInvert
-        On_Key Key_Ctrl+Key_L Send OpenFragmentLibrary
-        On_Key Key_Ctrl+Key_O Send OpenProgramsFolder
-        On_Key Key_Ctrl+Key_Y Send DoOpenCOMFolder
         On_Key Key_F5         Send RefreshGrid
         On_Key Key_Home       Send Beginning_of_Data
         On_Key Key_End        Send End_of_Data
@@ -282,34 +243,16 @@ Class cCheckBoxGrid is a Grid
         End
     End_Procedure
 
+    // ToDo: 
+    Procedure OpenCurrentGridItem
+    End_Procedure
+    
     // Opens the current pointed to file name in an editor,
     // when row is double-clicked.
     Procedure Mouse_Click Integer iWindowNumber Integer iPosition
         Send OpenCurrentGridItem
     End_Procedure
 
-    // Opens the current pointed to file name in an editor
-    Procedure DoOpenCurrentGridItem
-        Integer iItem iCol
-        String  sFileName sEditor sEditorParams sPath
-        Get Current_Item to iItem
-        Get Current_Col  to iCol
-        If (iItem >= 0) Begin
-            Get Value item (iItem - iCol +1) to sFileName
-            If (sFileName contains ".txt") Begin
-//                Get psManifestFragmentLibrary of ghoManifestFunctionLibrary to sPath
-                Get vFolderFormat sPath to sPath
-//                Get psManifestFileEditor of ghoManifestIniFile to sEditor
-//                Get psManifestFileEditorParams of ghoManifestIniFile to sEditorParams
-//                If (sEditorParams <> "") Begin
-//                    Runprogram Background sEditor ('"' + sEditorParams + '"' * '"' + sPath + "\" + sFileName + '"')
-//                End
-//                Else Begin
-//                    Runprogram Background sEditor ('"' + sPath + "\" + sFileName + '"')
-//                End
-            End
-        End
-    End_Procedure
 
     // Toggles the current item on/off
     Procedure ToggleCurrentItem
@@ -336,33 +279,12 @@ Class cCheckBoxGrid is a Grid
         Set SelectItems to cx_Select_Invert
     End_Procedure
 
-    // Opens the 'Manifest Fragment Library' with Windows Explorer
-    Procedure DoOpenFragmentLibrary
-        String sPath sManifestFragmentLibrary
-//        Get psManifestFragmentLibrary of ghoManifestFunctionLibrary to sManifestFragmentLibrary
-        Get vFolderFormat sManifestFragmentLibrary to sManifestFragmentLibrary
-//        Get IniFileValue of ghoManifestIniFile CS_SectionName CS_ManifestFolder sManifestFragmentLibrary to sPath
-        Send vShellExecute "open" "Explorer.exe" sPath ""
-    End_Procedure
-
-    Procedure DoOpenProgramsFolder
-        String sPath
-//        Get psTargetPath of ghoManifestFunctionLibrary to sPath
-        Send vShellExecute "open" "Explorer.exe" sPath ""
-    End_Procedure
-
-    Procedure DoOpenCOMFolder
-        String sPath
-//        Get psCommonCOMLibraryPath of ghoManifestFunctionLibrary to sPath
-        Send vShellExecute "open" "Explorer.exe" sPath ""
-    End_Procedure
-
     Procedure DoFillGrid
         String sYes sColor
 
         Send Delete_Data
-        Get IniFileValue of ghoManifestIniFile CS_SectionName CS_UseHighlightstateText CS_BooleanYes to sYes
-        Get IniFileValue of ghoManifestIniFile CS_SectionName CS_HighlightColorText clAqua to sColor
+        Get IniFileValue of ghoProjectIniFile CS_SectionName CS_UseHighlightstateText CS_BooleanYes to sYes
+        Get IniFileValue of ghoProjectIniFile CS_SectionName CS_HighlightColorText clAqua to sColor
         If (CS_BooleanYes = sYes) Begin
             Set Highlight_Row_State  to True
             If (Eval(sColor) = clDefault) Begin

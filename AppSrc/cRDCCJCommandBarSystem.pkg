@@ -84,8 +84,12 @@ Class cRDCCJCommandBarSystem is a cCJCommandBarSystem
             // This will truncate the middle part of long items
             //Set ComDrawTextPathEllipsis of hoPaintManager to True
     
+#IFDEF piToolbarIconSize
             Get piToolbarIconSize of ghoApplication to iSize
-            Set piToolbarIconSize to iSize                                   
+#ELSE
+            Move 24 to iSize
+#ENDIF            
+            Set piToolbarIconSize to iSize
             // We _must_ have this for tooltips to show on tab-pages (views)
             Set ComToolTipBehaviour of hoPaintManager to xtpTabToolTipAlways 
             Send OnCreateTabbedWorkspace hoTab hoPaintManager

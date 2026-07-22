@@ -1,4 +1,4 @@
-// Written by Peter Bragg.
+﻿// Written by Peter Bragg.
 // Subclass for using hyperlinks in cCJGrid column objects.
 //
 // Set pbHyperLink to True and it will call the Function "IsHyperLink" passing the Row Index.
@@ -61,7 +61,7 @@ Class cCJGridColumnHyperLink is a cCJGridColumn
         End
 
         Get ComHyperlinks of hoItem to vHyperLinks
-        Get Create (RefClass(cCJReportHyperlinks)) to hoHyperLinks
+        Get Create (RefClass(cCJGridHyperlinks)) to hoHyperLinks
         Set pvComObject of hoHyperLinks to vHyperLinks
         Get ComCount of hoHyperLinks to iLinks
         If (bIsHyperlink) Begin
@@ -84,9 +84,9 @@ Class cCJGridColumnHyperLink is a cCJGridColumn
         Forward Send OnCreateColumn
         Get phoReportPaintManager to hoPaintManager
         Get ComHyperlinkStyle of hoPaintManager to vHyperLinkStyle
-        Get Create (RefClass(cCJReportHyperlinkStyle)) to hoHyperLinkStyle
+        Get Create (RefClass(cCJGridHyperlinkStyle)) to hoHyperLinkStyle
         Set pvComObject of hoHyperLinkStyle to vHyperLinkStyle
-        Set ComTextDecoration of hoHyperLinkStyle to xtpReportTextDecorationUnderline
+        Set ComTextDecoration of hoHyperLinkStyle to xtpGridTextDecorationUnderline
         Send Destroy of hoHyperLinkStyle
     End_Procedure
 
