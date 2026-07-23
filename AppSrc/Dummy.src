@@ -11,12 +11,15 @@
 //               DO anything; the point is that it COMPILES. If it does, the library stands on
 //               its own feet: no missing dependency, no broken Use chain, no duplicate class.
 //
-//               Requires vwin32fh on the workspace library list - see README.md. That is a real
-//               dependency of the library (cRDCCJGrid, cRDCLogFile and 8 more Use vWin32fh.pkg),
-//               not of this test.
+//               Compile it from RDCToolsLibDev25.0.sws (or 26.0), the maintainer workspace that
+//               wires in vwin32fh as the sibling ..\vwin32fh. The consumer-facing
+//               RDCToolsLibLibrary*.sws declares no libraries and does not build this - see
+//               README.md. vwin32fh is a real dependency of the library (cRDCCJGrid, cRDCLogFile
+//               and 8 more Use vWin32fh.pkg), not of this test.
 //
 // $Rev History:
 //    2026-07-22  Turned from the Studio "Basic Project" stub into a real compile canary.
+//    2026-07-23  Moved to RDCToolsLibDev*.sws; RDCToolsLibLibrary*.sws is now the pure entry.
 //****************************************************************************
 Use Windows.pkg
 Use cHtmlHelp.pkg
