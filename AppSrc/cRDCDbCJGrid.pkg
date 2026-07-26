@@ -668,7 +668,14 @@ Class cRDCDbCJGrid is a cDbCJGrid
     Procedure DoSetCurrentRow
         String sState sColor
 
-        Get psGridRowBackgroundColor of ghoApplication to sColor
+        // Grid row colour read straight from the registry (same Settings\GridRowBackgroundColor
+        // key the application writes), so the grid no longer depends on ghoApplication being a
+        // cRDCApplication - it works under any cApplication. This mirrors how the grid already
+        // reads/writes CS_GridFontSize via the base ReadString/WriteInteger.
+        Get ReadString of ghoApplication CS_Settings CS_GridRowBackgroundColor clActiveRow to sColor
+        If (sColor contains "clBlueGrey") Begin
+            Move (Replace("clBlueGrey", sColor, "clStatusBarColor")) to sColor
+        End
         If (sColor <> "") Begin
             Set piSelectedRowBackColor to (Eval(sColor))
             Set piHighlightBackColor   to (Eval(sColor))
