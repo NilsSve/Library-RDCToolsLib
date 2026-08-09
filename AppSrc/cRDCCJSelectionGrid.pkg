@@ -428,21 +428,53 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Function_Return iRetval
     End_Function
 
-    // Toggles the current row on/off (the checkbox)
+    // Toggles the checkbox on every selected row - or on the current row when nothing
+    // is multi-selected.
     Procedure ToggleCurrentItem
-        Boolean bChecked
-        Integer iCol
-        Handle hoCol hoCheckbox_Col
+        Boolean bChecked bMulti
+        Integer iCol iCount iSize iRow iSelectedRow
+        Handle hoCheckbox_Col hoDataSource
+        Integer[] Rows
+        tDataSourceRow[] TheData
 
         Get phoCheckbox_Col to hoCheckbox_Col
         If (hoCheckbox_Col = 0) Begin
             Procedure_Return
         End
-        Get piColumnId of hoCheckbox_Col to iCol
-        Get ColumnObject iCol   to hoCol
-        Get SelectedRowValue    of hoCol to bChecked
-        Send UpdateCurrentValue of hoCol (not(bChecked))
-        Send Request_Save
+        Get phoDataSource to hoDataSource
+        If (hoDataSource = 0) Begin
+            Procedure_Return
+        End
+
+        Get piColumnId of hoCheckbox_Col  to iCol
+        Get DataSource of hoDataSource    to TheData
+        Get piSelectedRow of hoDataSource to iSelectedRow
+
+        // Which rows - the only decision in here. A multiple selection of two or more IS
+        // the list; anything else (multi-select off, or on with a single row highlighted)
+        // is the row the user is standing on. A one-row "selection" deliberately falls
+        // through to the current row: it is the same thing, and treating it as a special
+        // case is what produces two code paths that then drift apart.
+        Get pbMultipleSelection to bMulti
+        If (bMulti = True) Begin
+            Get GetIndexesForSelectedRows to Rows
+            Move (SizeOfArray(Rows) > 1) to bMulti
+        End
+        If (bMulti = False) Begin
+            Move (ResizeArray(Rows, 0)) to Rows
+            Move iSelectedRow to Rows[0]
+        End
+
+        Move (SizeOfArray(Rows) - 1) to iSize
+        For iCount from 0 to iSize
+            Move Rows[iCount] to iRow
+            Move TheData[iRow].sValue[iCol] to bChecked
+            Move (not(bChecked)) to TheData[iRow].sValue[iCol]
+        Loop
+
+        // Not DDO-bound: the array IS the store, so hand it back. Selections are kept,
+        // so the user can toggle the same set again without re-picking it.
+        Send ReInitializeData TheData True
         Send DoSetCheckboxFooterText
     End_Procedure
 
