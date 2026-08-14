@@ -101,7 +101,7 @@ Class cRDCModalPanel is a ModalPanel
             Set piMinSize to (Hi(iSize) + iOffset) (Low(iSize))
         End
     End_Procedure
-    // ToDo:*** CONTINUE WITH View and dbView classes! ***
+
     Procedure Set StatusText String sText
         Set psText of (oStatusIdle(phoDialogCommandbar(Self))) to sText
     End_Procedure                          

@@ -14,8 +14,6 @@ External_Function WinAPI_GetUserName "GetUserNameW" Advapi32.dll Pointer lpBuffe
 #IFNDEF CS_GridFontSize
     Define CS_GridFontSize for "GridFontSize"
 #ENDIF
-
-// Color definition constants:
 #IFNDEF CS_GridRowBackgroundColor
     Define CS_GridRowBackgroundColor for "GridRowBackgroundColor"
 #ENDIF

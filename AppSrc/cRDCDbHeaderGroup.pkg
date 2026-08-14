@@ -249,8 +249,6 @@ Class cRDCDbHeaderGroup is a _cRDCDbHeaderGroup
             Get Size to iSize
         End_Object
 
-        // ToDo: The positioning logic for placing the info image to the right of the header text is flawed.
-        // How can it be improved?
         Get pbCreateTooltipItem to bCreateTooltipItem
         If (bCreateTooltipItem = True and private.psToolTip(Self) <> "") Begin
             Get private.psLabel to sLabel
