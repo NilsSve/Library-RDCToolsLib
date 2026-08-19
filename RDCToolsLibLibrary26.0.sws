@@ -1,8 +1,13 @@
-[Properties]
-Version=26.0
-[WorkspacePaths]
-ConfigFile=.\Programs\Config.ws
-[Conditionals]
-Is$Win64=True
-[Preferences]
-DefaultFormHeight=12
+{
+    "description": "RDC Tools base library: subclassed DataFlex standard classes shared by the RDC Tools projects.",
+    "df": 26.0,
+    "package": {
+        "df-min": 26.0,
+        "icon": "RDC-Mark.svg",
+        "version": "1.0.0"
+    },
+    "studio": {
+        "DefaultFormHeight": 12
+    },
+    "workspaceName": "RDCToolsLib"
+}
