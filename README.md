@@ -44,13 +44,16 @@ https://github.com/NilsSve/Library-RDCToolsLib.git/RDCToolsLibLibrary26.0.sws
 DataFlex 25 or 26, Windows desktop. The grid and CodeJock classes need the CodeJock controls that
 ship with DataFlex.
 
-**RDCToolsLib also requires [vwin32fh](https://github.com/NilsSve/Library-vwin32fh)**, which a
-number of its packages use for Windows file handling. Declare **both** in your application — as
-siblings, not one through the other:
+RDCToolsLib uses [vwin32fh](https://github.com/NilsSve/Library-vwin32fh) for Windows file handling.
+
+**On DataFlex 26 you do not need to do anything about it** — it is declared as a dependency of this
+package, so installing RDCToolsLib brings vwin32fh in with it.
+
+**On DataFlex 25** there is no package manager, so add both to your workspace yourself, as siblings:
 
 ```
-Lib1=Libraries\RDCToolsLib\RDCToolsLibLibrary26.0.sws
-Lib2=Libraries\vwin32fh\StudioLibrary\vWin32fh-Library-DF26.0.sws
+Lib1=Libraries\RDCToolsLib\RDCToolsLibLibrary25.0.sws
+Lib2=Libraries\vwin32fh\StudioLibrary\vWin32fh-Library-DF25.0.sws
 ```
 
 If vwin32fh is missing, the compile fails with error 4313 on `vWin32fh.pkg`, reported from a grid
