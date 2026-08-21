@@ -1,50 +1,61 @@
 # RDCToolsLib
-RDC Tools Base Library
 
-This common library is utilized by other RDC Tools projects and consists of a series of DataFlex standard classes that have been subclassed.
+A base class library for DataFlex Windows desktop applications: around 85 packages of subclassed
+standard and CodeJock classes, so an application starts from controls that already behave
+consistently instead of configuring each one by hand.
 
-It is important to note that this library is used exclusively by projects on this site, not by other libraries. It is automatically installed when you choose to clone one of the main projects or repositories.
+## What it gives you
 
-The library provides a unified interface for all applications within the NilsSve repository.
+**Data-aware and plain controls** — form, combo form, checkbox, radio, spin form, read-only form,
+text box, rich edit and suggestion forms, each in a `cRDC…` and a `cRDCDb…` variant, plus views,
+groups, header groups, modal panels and icon views.
 
-## Two workspace files, named for their role
+**CodeJock grids** — `cRDCCJGrid` and `cRDCDbCJGrid` with column types for buttons, hyperlinks,
+prompt lists and suggestions, a check-box grid, and a selection grid.
 
-| File | Role | `[Libraries]` |
-|---|---|---|
-| `RDCToolsLibLibrary25.0.sws` / `26.0` | A consumer **references** this | none — deliberately empty |
-| `RDCToolsLibDev25.0.sws` / `26.0` | Open this to **test-compile** the library | `..\vwin32fh` |
+**Settings that persist themselves** — `cRDCIniFileForm`, `cRDCIniFileCheckbox`,
+`cRDCSuggestionIniForm` and `cRDCRegKeyForm` read and write their own value to an INI file or the
+registry, so a settings dialog needs no load-and-save code.
 
-There is no plain `RDCToolsLib25.0.sws`. The library ships no application of its own, so
-`RDCToolsLibLibrary*.sws` is a pure reference entry with no libraries and no projects. The
-canary lives in `RDCToolsLibDev*.sws`, which is a maintainer tool, not something a consumer ever
-references.
+**Application plumbing** — `cRDCApplication`, `cRDCLogFile`, `cRDCProjectIniFile`,
+`cRDCAutoCreateNewID` for allocating record IDs, and `cDataBaseFunctions` for database utilities.
 
-## Dependencies
+**Windows and shell helpers** — `ShellExecute`, `StartProg` and `cRDCExternalProgramResult` for
+launching programs and reading back their output, `CaptureWindow` for screenshots,
+`cSelectFolderDialog` and `CJBrowseForFolder` for folder pickers, `Base64Functions`, and a status
+panel and *Working…* indicator for long operations.
 
-RDCToolsLib requires **vwin32fh**. Ten packages `Use vWin32fh.pkg` directly, among them
-`cRDCCJGrid.pkg`, `cRDCLogFile.pkg`, `cRDCCheckBoxGrid.pkg`, `cRDCProjectIniFile.pkg` and
-`CaptureWindow.pkg`.
+**Interface touches** — a tooltip controller, a font dialog, slide on/off switches, command-link
+buttons, splitter support, and CodeJock menu items for changing colours, skins and text-edit
+options.
 
-`RDCToolsLibLibrary*.sws` does **not** declare vwin32fh — the consuming application declares
-both RDCToolsLib and vwin32fh as a flat sibling list in its own `[Libraries]`. The reason is
-that DataFlex resolves the compiler search path first-match-wins, with no version arbitration: a
-library reached from two *different* checkouts is resolved silently, and wrongly, by list order
-alone. One flat set, declared by the application, is the only arrangement that cannot drift.
+## Installing
 
-Declaring only RDCToolsLib and forgetting vwin32fh fails with error 4313 on `vWin32fh.pkg`,
-raised from a grid class, for no obvious reason.
+**DataFlex 26 and later** — add it as a package:
 
-## Compiling it on its own
+```
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDCToolsLibLibrary26.0.sws
+```
 
-Open **`RDCToolsLibDev25.0.sws`** and build `Dummy.src`. That `.sws` is the only place vwin32fh
-is wired in (as the sibling `..\vwin32fh`), which resolves to the same vwin32fh the surrounding
-application uses — so nothing is duplicated. If you are working on RDCToolsLib standalone, run
-`setup.bat` first; it clones vwin32fh as a sibling.
+**DataFlex 25** — add `RDCToolsLibLibrary25.0.sws` as a library in your workspace.
 
-`Dummy.src` is a compile canary: it `Use`s every publishable package in the library and does
-nothing else. If it compiles, the library stands on its own feet - no missing dependency, no
-broken `Use` chain, no duplicate class.
+## Requirements
 
-Nine packages are excluded from it, each with the reason written in place. Most are duplicate
-class declarations or references to files that no longer exist - all of which had gone unnoticed
-precisely because nothing here was ever compiled in isolation.
+DataFlex 25 or 26, Windows desktop. The grid and CodeJock classes need the CodeJock controls that
+ship with DataFlex.
+
+**RDCToolsLib also requires [vwin32fh](https://github.com/NilsSve/Library-vwin32fh)**, which a
+number of its packages use for Windows file handling. Declare **both** in your application — as
+siblings, not one through the other:
+
+```
+Lib1=Libraries\RDCToolsLib\RDCToolsLibLibrary26.0.sws
+Lib2=Libraries\vwin32fh\StudioLibrary\vWin32fh-Library-DF26.0.sws
+```
+
+If vwin32fh is missing, the compile fails with error 4313 on `vWin32fh.pkg`, reported from a grid
+class — which does not obviously point at the real cause.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
