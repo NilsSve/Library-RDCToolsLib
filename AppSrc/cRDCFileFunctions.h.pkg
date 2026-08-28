@@ -1,0 +1,145 @@
+//****************************************************************************
+// $Module type: Include file - constants, structs & external function declarations
+// $Module name: cRDCFileFunctions.h.pkg
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+//
+// Description : Declarations for cRDCFileFunctions.pkg - generic file helpers:
+//               WinAPI file times, resource-to-disk extraction and the
+//               application path. Extracted 2026-08-28 from the retired
+//               DigitalCert library's cDigitalSoftwareCertificate class so the
+//               generic pieces outlive the signing machinery.
+//
+//               This header can also be used on its own by packages that only
+//               need the tWinFileTimeDC/tSystemTime structs and the WinAPI
+//               declarations (e.g. code that carries its own file-time
+//               methods).
+//****************************************************************************
+
+#IFNDEF CI_SimpleNullMember
+    Define CI_SimpleNullMember for 0
+#ENDIF
+
+#IFNDEF CI_Generic_Read
+    Define CI_Generic_Read for            |CI$80000000
+#ENDIF
+#IFNDEF CI_Generic_Write
+    Define CI_Generic_Write for           |CI$40000000
+#ENDIF
+#IFNDEF CI_Generic_Random
+    Define CI_Generic_Random for          (CI_Generic_Read + CI_Generic_Write)
+#ENDIF
+#IFNDEF CI_Open_Existing
+    Define CI_Open_Existing for           |CI$00000003
+#ENDIF
+#IFNDEF CI_Open_Always
+    Define CI_Open_Always for             |CI$00000004
+#ENDIF
+#IFNDEF CI_File_Attribute_Normal
+    Define CI_File_Attribute_Normal for   |CI$00000080
+#ENDIF
+#IFNDEF CI_File_Share_Read
+    Define CI_File_Share_Read for         |CI$1
+#ENDIF
+#IFNDEF CI_File_Share_Write
+    Define CI_File_Share_Write for        |CI$2
+#ENDIF
+#IFNDEF CI_File_Share_Random
+    Define CI_File_Share_Random for      (CI_File_Share_Read + CI_File_Share_Write)
+#ENDIF
+#IFNDEF CI_FNull
+    Define CI_FNull for                   |CI$0
+#ENDIF
+
+#IFNDEF INVALID_HANDLE_VALUE
+    Define INVALID_HANDLE_VALUE for -1
+#ENDIF
+
+#IFNDEF Locale_User_Default
+    Define Locale_User_Default for |CI$0400
+#ENDIF
+
+// Structure to store the WinAPI file time.
+#IFNDEF _struct_tWinFileTimeDC
+    Struct tWinFileTimeDC
+       Integer dwLowDateTime
+       Integer dwHighDateTime
+       Integer iError
+    End_Struct
+#ENDIF
+
+// Structure to store the systemtime
+#IFNDEF _struct_tSystemTime
+    Struct tSystemTime
+       UShort wYear
+       UShort wMonth
+       UShort wDayOfWeek
+       UShort wDay
+       UShort wHour
+       UShort wMinute
+       UShort wSecond
+       UShort wMilliseconds
+    End_Struct
+#ENDIF
+
+// ***** EXTERNAL FUNCTION DECLARATIONS *****
+//
+#IFNDEF get_fGetFileTime
+    External_Function fGetFileTime "GetFileTime" Kernel32.dll;
+        Pointer lpFileName Pointer lpFileCreationTime Pointer lpFileAccessTime Pointer lpFileWriteTime Returns Integer
+#ENDIF
+
+#IFNDEF get_fSetFileTime
+    External_Function fSetFileTime "SetFileTime" Kernel32.dll;
+        Pointer lpFileName Pointer lpFileCreationTime Pointer lpFileAccessTime Pointer lpFileWriteTime Returns Integer
+#ENDIF
+
+#IFNDEF get_fCloseHandle
+    External_Function fCloseHandle "CloseHandle" kernel32.dll ;
+        Handle hObject ;      // Handle to object
+        Returns Integer
+#ENDIF
+
+#IFNDEF get_fCreatefile
+    External_Function fCreatefile "CreateFileA" kernel32.dll ;
+        Pointer lpFile ;      // Filename
+        DWord dwDesAccess ;   // access mode
+        DWord dwShare ;       // share mode
+        Pointer lpSecAtt ;    // SD
+        DWord dwCrDisp ;      // how to create
+        DWord dwFlags ;       // file attributes
+        Handle hTempFile ;    // handle to template file
+        Returns Integer       // Returns handle that can be used to access the object
+#ENDIF
+
+#IFNDEF get_FileTimeToSystemTime
+    External_Function FileTimeToSystemTime "FileTimeToSystemTime" Kernel32.Dll ;
+        Pointer lpFileTime ;     // Pointer to file time to convert
+        Pointer lpSystemTime ;   // Pointer to structure to receive system time
+        Returns Integer
+#ENDIF
+
+#IFNDEF get_FileTimeToLocalFileTime
+    External_Function FileTimeToLocalFileTime "FileTimeToLocalFileTime" Kernel32.Dll ;
+        Pointer lpFileTime Pointer lpSystemTime Returns Integer
+#ENDIF
+
+#IFNDEF get_GetTimeFormat
+    External_Function GetTimeFormat "GetTimeFormatA" Kernel32.Dll ;
+        DWord LCID DWord dwFlags Pointer lpsSystemTime Pointer lpFormat Pointer lpTimeStr Integer cchTime Returns Integer
+#ENDIF
+
+#IFNDEF get_GetDateFormat
+    External_Function GetDateFormat "GetDateFormatA" Kernel32.Dll ;
+        DWord LCID DWord dwFlags Pointer lpsSystemTime Pointer lpFormat Pointer lpDateStr Integer cchDate Returns Integer
+#ENDIF
+
+#IFNDEF get_GetModuleFileName
+    External_Function GetModuleFileName "GetModuleFileNameA" Kernel32.dll ;
+        Handle hModule Pointer lpFilename UInteger nSize Returns UInteger
+#ENDIF
+
+#IFNDEF get_PathRemoveFileSpec
+    External_Function PathRemoveFileSpec "PathRemoveFileSpecA" Shlwapi.dll ;
+        Pointer pszPath Returns Integer
+#ENDIF

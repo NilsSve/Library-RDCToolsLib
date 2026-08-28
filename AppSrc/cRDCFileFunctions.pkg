@@ -1,0 +1,220 @@
+//****************************************************************************
+// $Module type: Class Package.
+// $Module name: cRDCFileFunctions
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+//
+// Description : Generic file helper functions:
+//               - ApplicationPath: full path of the running program.
+//               - CreateFileFromMemory: write an embedded compiler resource
+//                 to a file on disk.
+//               - FileTimeWinApi (Get/Set): read & write a file's WinAPI
+//                 file time, e.g. to restore a file date after manipulating
+//                 the file.
+//               - WinAPIFileTimeToDateTime: convert a WinAPI file time to a
+//                 DataFlex DateTime.
+//
+//               The class auto-creates the oRDCFileFunctions object and
+//               registers it in the global ghoRDCFileFunctions handle, so a
+//               simple "Use cRDCFileFunctions.pkg" is all that is needed:
+//                   Get ApplicationPath of ghoRDCFileFunctions to sPath
+//
+//               History: these members were extracted 2026-08-28 from the
+//               retired DigitalCert library's cDigitalSoftwareCertificate
+//               class (created 2014-07-26); the signing machinery stayed
+//               behind, the generic helpers moved here.
+//****************************************************************************
+Use VdfBase.pkg
+Use seq_chnl.pkg
+Use Dfcursor.pkg
+Use cRDCFileFunctions.h.pkg
+
+#IFNDEF ghoRDCFileFunctions
+    Global_Variable Integer ghoRDCFileFunctions
+#ENDIF
+
+Class cRDCFileFunctions is a cObject
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Move Self to ghoRDCFileFunctions
+    End_Procedure
+
+    // Returns the full path of the Application (no trailing "\")
+    Function ApplicationPath Returns String
+        String sApplicationFileName sPath
+        Integer iNumChars iRetval
+
+        Move (Repeat(Character(0), 1024))    to sApplicationFileName
+        Move (GetModuleFileName(0, AddressOf(sApplicationFileName), 1024)) to iNumChars
+        Move (CString(sApplicationFileName)) to sApplicationFileName
+        Move (PathRemoveFileSpec(AddressOf(sApplicationFileName))) to iRetval
+        Move (CString(sApplicationFileName)) to sPath
+
+        Function_Return sPath
+    End_Function
+
+    // Creates a file, that has been embedded by the compiler as a resource.
+    // Pass the memory resource file reference and the filename to be created,
+    // including full path.
+    Procedure CreateFileFromMemory String sMemFileName String sFileName
+        String sText
+        Integer iCh iSize iArgSize
+
+        Send Cursor_Wait of (Cursor_Control(Self))
+        Get Seq_Open_Input_Channel sMemFileName to iCh
+            Get_Channel_Size iCh to iSize
+#IF (!@ < 201)
+            Get_Argument_Size to iArgSize
+            If (iSize > iArgSize) Begin
+                Set_Argument_Size iSize
+            End
+#ENDIF
+            Read_Block channel iCh sText iSize
+        Send Seq_Close_Channel iCh
+
+        Get Seq_Open_Output_Channel sFileName to iCh
+            Write channel iCh sText
+        Send Seq_Close_Channel iCh
+
+#IF (!@ < 201)
+        If (iSize <> iArgSize) Begin
+            Set_Argument_Size iArgSize
+        End
+#ENDIF
+        // Wait for file to be written to disk.
+        Sleep 2
+        Send Cursor_Ready of (Cursor_Control(Self))
+    End_Procedure
+
+    // Please see: Function FileTimeWinApi for usage.
+    Procedure Set FileTimeWinApi String sFileName tWinFileTimeDC stFileTime
+        Handle hFileName
+        Integer iRetval
+
+        Get _WinAPIOpenFileForReadAndWrite sFileName to hFileName
+        If (hFileName <> 0) Begin
+            Get _WinAPISetFileTime hFileName stFileTime  to iRetval
+            Get _WinAPICloseFile hFileName   to iRetval
+        End
+    End_Procedure
+
+    // The return value for this function is a struct with two DWord datetime values.
+    // These values are _not_ DateTime values. The return value only makes
+    // sense if used together with the Set FileTimeWinApi function.
+    // It can be used to e.g. reset the the file date to a previous value.
+    // First do a "Get FileTimeWinApi to MyVar", then manipulate the file somehow
+    // that changes the file date & finally do a "Set FileTimeWinApi hFile to MyVar",
+    // to reset the file date value.
+    // NOTE: To get the file datetime as a DataFlex DateTime value; use the
+    //       "WinAPIFileTimeToDateTime" function.
+    Function FileTimeWinApi String sFileName Returns tWinFileTimeDC
+        tWinFileTimeDC stFileTime
+        Handle hFileName
+        Integer iRetval
+
+        Get _WinAPIOpenFileForReadAndWrite sFileName to hFileName
+        If (hFileName <> 0) Begin
+            Get _WinAPIGetFileTime hFileName to stFileTime
+            Get _WinAPICloseFile hFileName   to iRetval
+            Move 0 to stFileTime.iError
+        End
+        Else Begin
+            Move 1 to stFileTime.iError
+        End
+
+        Function_Return stFileTime
+    End_Function
+
+    // To convert a return value from the FileTimeWinApi function to a DataFlex DateTime variable.
+    // Second parameter is optional and is a boolean (True/False) to denote if to convert to local time or not.
+    // It is very uncommon _not_ to pass a TRUE here (if you pass the second parameter).
+    // This function code is courtesy of Vincent Oorsprong.
+    Function WinAPIFileTimeToDateTime tWinFileTimeDC iFileTime Boolean bConvertToLocalFileTimexx Returns DateTime
+        String sFormattedTime sFormattedDate
+        Integer iSuccess iDataLength
+        tSystemTime iSystemTime
+        tWinFileTimeDC iLocalFileTime
+        DateTime dtResult
+        Boolean bConvertToLocalFileTime
+
+        Move False to bConvertToLocalFileTime
+        If (num_arguments > 1) Begin
+            Move bConvertToLocalFileTimexx to bConvertToLocalFileTime
+        End
+
+        If (bConvertToLocalFileTime) Begin
+            Move (FileTimeToLocalFileTime(AddressOf(iFileTime), AddressOf(iLocalFileTime))) to iSuccess
+            If (iSuccess <> 0) Begin
+                Move iLocalFileTime to iFileTime
+            End
+        End
+
+        Move (FileTimeToSystemTime(AddressOf(iFileTime), AddressOf(iSystemTime) )) to iSuccess
+        If (iSuccess <> 0) Begin
+            Move (Repeat(Character(0), 255)) to sFormattedTime
+            Move (GetTimeFormat(Locale_User_Default, 0, AddressOf(iSystemTime), 0, AddressOf(sFormattedTime), 255)) to iDataLength
+
+            Move (Repeat(Character(0), 255)) to sFormattedDate
+            Move (GetDateFormat(Locale_User_Default, 0, AddressOf(iSystemTime), 0, AddressOf(sFormattedDate), 255)) to iDataLength
+
+            Move (Cstring(sFormattedDate) * Cstring(sFormattedTime) ) to dtResult
+        End
+
+        Function_Return dtResult
+    End_Function
+
+    { Visibility=Private MethodType=Event  NoDoc=True }
+    Function _WinAPIGetFileTime Handle hFileName Returns tWinFileTimeDC
+        tWinFileTimeDC stFileTime
+        Integer iRetval
+
+        Move (fGetFileTime(hFileName, CI_SimpleNullMember, CI_SimpleNullMember, AddressOf(stFileTime))) to iRetval
+        Function_Return stFileTime
+    End_Function
+
+    { Visibility=Private MethodType=Event  NoDoc=True }
+    Function _WinAPISetFileTime Handle hFileName tWinFileTimeDC stFileTime Returns Integer
+        Integer iRetval
+
+        Move (fSetFileTime(hFileName, CI_SimpleNullMember, CI_SimpleNullMember, AddressOf(stFileTime))) to iRetval
+        Function_Return iRetval
+    End_Function
+
+    // Opens a file with the WinAPI CreateFile function for read & write.
+    // When using the WinAPI GetFileTime & SetFileTime functions, the file first needs to be opened with the
+    // WinAPI CreateFileA function (Yes, it also _opens_ a file). The returned file handle from this function is needed by
+    // the WinAPI GetFileTime & SetFileTime functions.
+    // If it fails a 0 (zero) is returned.
+    { Visibility=Private MethodType=Event  NoDoc=True }
+    Function _WinAPIOpenFileForReadAndWrite String sFilename Returns Handle
+        Integer iRetVal iErrornumber
+        String sFilenameANSI
+
+        Move (Utf8ToAnsi(sFilename)) to sFilenameANSI
+        Append sFilenameANSI (Character(0)) (Character(0))
+
+        Move (fCreatefile(AddressOf(sFilenameANSI), CI_Generic_Random, CI_File_Share_Random, CI_FNull, CI_Open_Existing, CI_File_Attribute_Normal, CI_FNull)) to iRetVal
+        If (iRetVal = INVALID_HANDLE_VALUE) Begin
+            Move (GetLastError()) to iErrornumber
+            Send Info_Box (C_$Error + ":" * String(iErrornumber) * "Could not open file:\n" + sFilename)
+            Function_Return 0
+        End
+
+        Function_Return iRetVal
+    End_Function
+
+    // Closes a file that has previously been opened with _WinAPIOpenFileForReadAndWrite.
+    // Pass the handle that was returned from that function to close it.
+    // Returns True if successful.
+    { Visibility=Private MethodType=Event  NoDoc=True }
+    Function _WinAPICloseFile Handle hFileName Returns Boolean
+        Integer iRetval
+        Move (fCloseHandle(hFileName)) to iRetVal
+        Function_Return (iRetVal <> 0)
+    End_Function
+
+End_Class
+
+Object oRDCFileFunctions is a cRDCFileFunctions
+End_Object
