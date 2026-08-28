@@ -1,9 +1,9 @@
-{
+﻿{
     "dependencies": [
         {
             "source": "https://github.com/NilsSve/Library-vwin32fh.git",
             "sws": "StudioLibrary/vWin32fh-Library-DF26.0.sws",
-            "version": "9fbbb945e3107ab999f0d425f52fa4a65b9ecd74"
+            "version": "7609ea9b4a89098ee059672a8b54738e340d60cc"
         }
     ],
     "description": "RDC Tools base library: subclassed DataFlex standard classes shared by the RDC Tools projects.",
