@@ -3,6 +3,7 @@
 // $Module name: cRDCFileFunctions.h.pkg
 // $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
 // Web-site    : http://www.rdctools.com
+// Created     : 2026-08-28
 //
 // Description : Declarations for cRDCFileFunctions.pkg - generic file helpers:
 //               WinAPI file times, resource-to-disk extraction and the
@@ -14,6 +15,9 @@
 //               need the tWinFileTimeDC/tSystemTime structs and the WinAPI
 //               declarations (e.g. code that carries its own file-time
 //               methods).
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 
 #IFNDEF CI_SimpleNullMember
