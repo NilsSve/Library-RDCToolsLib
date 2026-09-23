@@ -1,5 +1,6 @@
 ﻿Use Dfclient.pkg
 Use cCJCommandBarSystem.pkg
+Use cCJSkinFramework.pkg
 
 Register_Procedure ScaleFont Integer iClicks
 
