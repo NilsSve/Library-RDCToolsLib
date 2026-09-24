@@ -34,7 +34,7 @@ options.
 **DataFlex 26 and later** — add it as a package:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDCToolsLibLibrary26.0.sws
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library-26.0.sws
 ```
 
 **DataFlex 25** — add `RDCToolsLibLibrary25.0.sws` as a library in your workspace.
