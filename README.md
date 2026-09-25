@@ -34,14 +34,17 @@ options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library-26.0.sws#1.0.0
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.1
 ```
 
-Each release has a version tag (`1.0.0`, `1.0.1`, ...), listed under Tags on GitHub. Pin a tag, not a
-commit: DUF and RDCFlexTron ask for RDCToolsLib by version range (`^1.0.0`), and a range cannot accept a
+Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
+commit: DUF and RDCFlexTron ask for RDCToolsLib by version range (`^1.0.1`), and a range cannot accept a
 commit, so df-cli would report "Incompatible ref". Without the `#` part the workspace gets a commit. If
 your workspace also uses DUF or RDCFlexTron, list RDCToolsLib before them. A library of your own that
-uses RDCToolsLib asks for a range the same way, `"version": "^1.0.0"`.
+uses RDCToolsLib asks for a range the same way, `"version": "^1.0.1"`.
+
+From 1.0.1 on, the package file has no DataFlex version in its name. Release 1.0.0 still has the old
+name, `RDC-Windows-Sub-Classes-Library-26.0.sws`.
 
 **DataFlex 25** — add `RDCToolsLibLibrary25.0.sws` as a library in your workspace.
 
