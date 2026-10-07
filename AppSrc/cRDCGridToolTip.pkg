@@ -1,0 +1,155 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: cRDCGridToolTip.pkg
+//
+// $Author     : Nils Svedmyr, RDC Tools International.
+// Copyright (c) 2026 RDC Tools International
+// E-mail      : support@rdctools.com
+// Web-site    : http://www.rdctools.com
+//
+// Created     : 2026-09-08 in DFRefactor; in the library since 1.0.2 (2026-10-07)
+//
+// Note        : ONE place that decides how a grid's cell tooltip looks, read off the program's
+//               global tooltip controller (cRDCTooltipController) - and the wrapping that gives a
+//               long tooltip a sensible width.
+//
+//               Every CodeJock grid draws a tooltip for a cell whose text does not fit. A plain
+//               cCJGrid sets no maximum width, so a long hint runs off the screen; the RDC grids
+//               used to read the controller in OnCreateGridControl, which looks right and is not:
+//
+//               THE WIDTH ONLY TAKES IF IT IS SET AS THE GRID'S OWN PROPERTY, AT CONSTRUCT TIME.
+//               CreateGridControl applies the backing properties and only THEN sends
+//               OnCreateGridControl, so a raw COM Set on the tooltip context from there lands too
+//               late and is lost again whenever the control re-realizes. peTooltipStyle and
+//               piTooltipMaxWidth store the backing property AND push to the context, so they work
+//               from either place and survive a re-create. cRDCCJGrid and cRDCDbCJGrid send
+//               RDCApplyGridToolTipStyle from their Construct_Object; cRDCToolTipGrid does the same
+//               for a plain cCJGrid.
+//
+//               The style is xtpToolTipOffice2007 - a legacy alias for xtpToolTipResource, and NOT
+//               the reason a tooltip fails to wrap. A tooltip's max width is in PIXELS and it WRAPS
+//               there - it does not truncate. So a narrower tooltip is a taller one, and the cure
+//               for a tooltip that runs off the screen is shorter text, or line breaks in it:
+//               cRDCToolTipColumn.
+//
+// The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// This is free software; you can redistribute it and/or modify it under the terms of the
+// GNU Lesser General Public License - see the "GNU Lesser General Public License.txt"
+// in the help folder for more details.
+//
+//****************************************************************************
+Use cCJGrid.pkg                // phoToolTipContext and the xtpToolTip* style constants
+Use cRDCTooltipController.pkg  // ghoToolTipController
+Use cCJGridColumn.pkg          // the column class the wrapped-tooltip column extends
+
+// Apply the program's tooltip settings to one grid. CALL IT FROM Construct_Object, not from
+// OnCreateGridControl - that is the whole point, see the note above. Safe when no controller was
+// ever created: it then uses 400 pixels, the controller's own default.
+Procedure RDCApplyGridToolTipStyle Global Handle hoGrid
+    Integer iStyle iWidth
+    Boolean bBalloon
+
+    If (hoGrid = 0) ;
+        Procedure_Return
+
+    // cCJGrid.pkg defines xtpToolTipOffice2007 as xtpToolTipResource (5): CodeJock removed the Office2007 name.
+    Move xtpToolTipOffice2007 to iStyle
+    Move 400                  to iWidth
+    If (ghoToolTipController > 0) Begin
+        Get piMaxWidth     of ghoToolTipController to iWidth
+        Get pbBalloonStyle of ghoToolTipController to bBalloon
+        If (bBalloon = True) ;
+            Move xtpToolTipBalloon to iStyle
+    End
+    // -1 is the framework's "no maximum", which is the bug being fixed rather than a setting.
+    If (iWidth < 1) ;
+        Move 400 to iWidth
+
+    Set peTooltipStyle    of hoGrid to iStyle
+    Set piTooltipMaxWidth of hoGrid to iWidth
+End_Procedure
+
+/* HOW A GRID TOOLTIP ACTUALLY GETS A SENSIBLE WIDTH: line breaks in its TEXT.
+
+   A column whose OnGetTooltip hands back text that already carries newlines draws a readable tooltip;
+   one unbroken sentence draws one unbroken line. RDCWrapToolTipText breaks a string into lines of at
+   most iChars characters on word boundaries, keeping any line breaks the text already has (including
+   the escaped forms \r\n and \n a stored help string may carry). A word longer than iChars is left
+   whole rather than cut in half - a path or an identifier is more use unbroken than wrapped.
+
+   CI_RDCTipWrapChars is the one place the width is decided. It is in CHARACTERS, not pixels, because
+   this works on the text and needs no cooperation from the tooltip window. Define it before the first
+   Use of this package to take another width. */
+#IFNDEF CI_RDCTipWrapChars
+    Define CI_RDCTipWrapChars for 50
+#ENDIF
+
+Function RDCWrapToolTipText Global String sText Integer iChars Returns String
+    String sOut sLine sWord
+    String[] asLines asWords
+    Integer i j iLastLine iLastWord
+
+    Move (Trim(sText)) to sText
+    If (sText = "" or iChars < 10) ;
+        Function_Return sText
+    // The literal two-character escapes a stored help string carries.
+    Move (Replaces("\r\n", sText, C_NewLine)) to sText
+    Move (Replaces("\n", sText, C_NewLine)) to sText
+
+    Move (StrSplitToArray(sText, C_NewLine)) to asLines
+    Move (SizeOfArray(asLines) - 1) to iLastLine
+    Move "" to sOut
+    For i from 0 to iLastLine
+        Move (StrSplitToArray(asLines[i], " ")) to asWords
+        Move (SizeOfArray(asWords) - 1) to iLastWord
+        Move "" to sLine
+        For j from 0 to iLastWord
+            Move asWords[j] to sWord
+            If (sWord <> "") Begin
+                If (sLine = "") Begin
+                    Move sWord to sLine
+                End
+                Else If ((Length(sLine) + 1 + Length(sWord)) > iChars) Begin
+                    If (sOut = "") ;
+                        Move sLine to sOut
+                    Else ;
+                        Move (sOut + C_NewLine + sLine) to sOut
+                    Move sWord to sLine
+                End
+                Else Begin
+                    Move (sLine + " " + sWord) to sLine
+                End
+            End
+        Loop
+        If (sOut = "") ;
+            Move sLine to sOut
+        Else ;
+            Move (sOut + C_NewLine + sLine) to sOut
+    Loop
+    Function_Return sOut
+End_Function
+
+/* THE TWO CLASSES, so no view or dialog carries tooltip code of its own. Use cRDCToolTipGrid wherever a
+   plain cCJGrid is wanted; the grids that descend from cRDCCJGrid or cRDCDbCJGrid get the same treatment in
+   their own Construct_Object, because they cannot also descend from this one. */
+Class cRDCToolTipGrid is a cCJGrid
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Send RDCApplyGridToolTipStyle Self
+    End_Procedure
+
+End_Class
+
+/* A column whose cell tooltip is WRAPPED - which is what actually gives a tooltip a sensible width, the
+   tooltip taking its shape from the line breaks in its text. Give this class to any column whose cells
+   hold a sentence rather than a name. It costs nothing on a short cell: the wrap returns text that
+   already fits unchanged. */
+Class cRDCToolTipColumn is a cCJGridColumn
+
+    Function OnGetTooltip Integer iRow String sValue String sText Returns String
+        Function_Return (RDCWrapToolTipText(sValue, CI_RDCTipWrapChars))
+    End_Function
+
+End_Class

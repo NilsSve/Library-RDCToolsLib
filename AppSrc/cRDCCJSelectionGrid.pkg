@@ -228,27 +228,24 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
     
     Procedure OnCreateGridControl
         Handle hoObject
-        Integer iToolTipStyle
         Boolean bIsBalloonStyleSupported
 
         Forward Send OnCreateGridControl
 
         Get phoToolTipContext to hoObject
         If (hoObject <> 0) Begin
-            Move xtpToolTipStandard to iToolTipStyle
             // Baloon tooltip style requires IE 5.0 or later, so check if installed.
             // The ComShowTitleAndDescription also requires IE 5.0.
             Get ComIsBalloonStyleSupported of hoObject to bIsBalloonStyleSupported
             If (bIsBalloonStyleSupported = True) Begin
                 Send ComShowTitleAndDescription of hoObject True xtpToolTipIconInfo
             End
-            Set ComStyle             of hoObject to iToolTipStyle
             Set ComShowOfficeBorder  of hoObject to True
             Set ComShowShadow        of hoObject to True
-            // Set the max width for a tooltip. 250 just seems to be a good
-            // compromise. After 250 pixels the text will wrap to the next line automatically.
-            Set ComMaxTipWidth       of hoObject to 250 // In pixels
         End
+        // The tooltip's style and width are the grid's own properties, set at construction (cRDCCJGrid,
+        // from cRDCGridToolTip.pkg). A Set on the context here used to override them with the Standard
+        // style and 250 pixels.
         Send DoChangeFontSize
     End_Procedure
 
@@ -343,7 +340,7 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         For iCount from 0 to iSize
             Move TheData[iCount].sValue[iCheckbox_Col] to bSelected
             If (bSelected = True) Begin
-                Move TheData[iCount].sValue[iData_Col] to asDataArray[SizeOfArray(asDataArray)]
+                Move TheData[iCount].sValue[iData_Col] to asDataArray[-1]
             End
         Loop
 

@@ -1,6 +1,6 @@
 ﻿//****************************************************************************
 // $Module type: Package
-// $Module name: cRDCProjectIniFile.pkg
+// $Module name: cRDCCJGrid.pkg
 //
 // $Author     : Nils Svedmyr, RDC Tools International.
 // Copyright (c) 2012 RDC Tools International
@@ -20,6 +20,7 @@ Use cCJGrid.pkg
 Use cSelectFolderDialog.pkg
 Use vWin32fh.pkg
 Use cRDCProjectIniFile.pkg
+Use cRDCGridToolTip.pkg   // RDCApplyGridToolTipStyle - the tooltip's style and width, at construction
 
 #IFNDEF _struct_tsSearchResult
 Struct tsSearchResult
@@ -86,17 +87,13 @@ Class cRDCCJGrid is a cCJGrid
         Set pbAllowAppendRow to False
         Set pbEditOnClick to False
         Set pbAutoAppend to False 
-        Set piTooltipMaxWidth to 400
+        // The tooltip's style and maximum width, from the program's tooltip controller - here, at
+        // construction, the one place the width takes (cRDCGridToolTip.pkg).
+        Send RDCApplyGridToolTipStyle Self
         Set peAnchors to anAll
         
-        // Colors
-        Set pbUseAlternateRowBackgroundColor to True  
-        Set piAlternateRowBackgroundColor    to clAlternateRowBgColor   
-        Set piSelectedRowBackColor           to clActiveRow
-        Set piSelectedRowForeColor           to clWhite
-        Set piHighlightBackColor             to clActiveRow  
-        Set piCaptionBackColor               to clProgramIconBg
-        Set piCaptionForeColor               to clWhite   
+        // The colours - SetGridLook, so a subclass can take other ones, or none (the CodeJock theme's).
+        Send SetGridLook
 
 //        On_Key Key_End                Send MoveToLastEnterableColumn
 //        On_Key Key_Home               Send MoveToFirstEnterableColumn
@@ -105,6 +102,20 @@ Class cRDCCJGrid is a cCJGrid
         On_Key kCancel                Send CancelIfPopupObject
         On_Key Key_Alt+Key_Down_Arrow Send MoveDown
         On_Key Key_Alt+Key_Up_Arrow   Send MoveUp
+    End_Procedure
+
+    /* THE GRID'S LOOK: the colours of the alternate row, the selected row and the highlight, and the
+       caption. Called from Construct_Object. A subclass overrides this to colour the grid its own way -
+       or to set nothing, and take the CodeJock theme's own colours (the FlexTron grids do, RDCFlexTron
+       0.9.15). */
+    Procedure SetGridLook
+        Set pbUseAlternateRowBackgroundColor to True
+        Set piAlternateRowBackgroundColor    to clAlternateRowBgColor
+        Set piSelectedRowBackColor           to clActiveRow
+        Set piSelectedRowForeColor           to clWhite
+        Set piHighlightBackColor             to clActiveRow
+        Set piCaptionBackColor               to clProgramIconBg
+        Set piCaptionForeColor               to clWhite
     End_Procedure
 
     Procedure BrowseForFolder

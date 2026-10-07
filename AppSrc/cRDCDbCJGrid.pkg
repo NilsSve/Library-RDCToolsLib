@@ -2,6 +2,7 @@
 Use cDbCJGrid.pkg
 Use cSelectFolderDialog.pkg 
 Use vWin32fh.pkg
+Use cRDCGridToolTip.pkg        // RDCApplyGridToolTipStyle - the tooltip's style and width, at construction
 #IF (!@ < 230)
     Use cRDCDbCJGridColumnHyperLink.pkg
 #ENDIF    
@@ -205,6 +206,10 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Property Boolean pbDbShowRemoveItemMenuItem False
         Property Boolean pbDbShowInvertSelectionsMenuItem False
         Property Boolean pbDbShowEditMenuItem False
+        // The column whose edit is saved the moment it changes (OnComValueChanged), as the checkbox column's
+        // tick is (OnComItemCheck) - CodeJock otherwise persists a row only on row-exit. The grid object that
+        // has such a column sets it, a combo column say; -1 = none.
+        Property Handle phoSaveOnChangeColumn -1
         
         // General settings
         Set pbRestoreLayout to True
@@ -227,23 +232,18 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set pbSelectTextOnEdit to False
         Set pbShowNonActiveInPlaceButton to False
         Set pbDrawGridForEmptySpace to False
-        Set piTooltipMaxWidth to 400
+        // The tooltip's style and maximum width, from the program's tooltip controller - here, at
+        // construction, the one place the width takes (cRDCGridToolTip.pkg).
+        Send RDCApplyGridToolTipStyle Self
         Set pbStaticData to False
         Set peAnchors to anAll
         
         // Visual
         Set peBorderStyle                    to xtpBorderThemedFrame
         Set peHorizontalGridStyle            to xtpGridSolid // SmallDots // Solid
-        Set pbUseAlternateRowBackgroundColor to True  
-        Set piAlternateRowBackgroundColor    to clAlternateRowBgColor   
-        Set piSelectedRowBackColor           to clActiveRow
-        Set piSelectedRowForeColor           to clWhite
-        Set piHighlightBackColor             to clActiveRow  
-        Set piCaptionBackColor               to clProgramIconBg
-        Set piCaptionForeColor               to clWhite   
-        Set piFocusCellForeColor             to clBlack
-        Set piFocusCellBackColor             to clDefault
-        Set peVisualTheme                    to xtpGridThemeOffice2003 //xtpGridThemeDefault
+        // The colours and the theme - SetGridLook, so a subclass can take other ones, or none (the CodeJock
+        // theme's).
+        Send SetGridLook
 
 //        On_Key Key_End         Send MoveToLastEnterableColumn
 //        On_Key Key_Home        Send MoveToFirstEnterableColumn
@@ -257,7 +257,24 @@ Class cRDCDbCJGrid is a cDbCJGrid
         On_Key Key_Ctrl+Key_I  Send SelectInvert
         On_Key Key_Space       Send ToggleCurrentItem
         On_Key Key_Ctrl+Key_F5 send None
-    End_Procedure 
+    End_Procedure
+
+    /* THE GRID'S LOOK: the colours of the alternate row, the selected row and the highlight, the caption
+       and the focused cell, and the CodeJock theme. Called from Construct_Object. A subclass overrides this
+       to colour the grid its own way - or to set nothing, and take the CodeJock theme's own colours (the
+       FlexTron grids do, RDCFlexTron 0.9.15). */
+    Procedure SetGridLook
+        Set pbUseAlternateRowBackgroundColor to True
+        Set piAlternateRowBackgroundColor    to clAlternateRowBgColor
+        Set piSelectedRowBackColor           to clActiveRow
+        Set piSelectedRowForeColor           to clWhite
+        Set piHighlightBackColor             to clActiveRow
+        Set piCaptionBackColor               to clProgramIconBg
+        Set piCaptionForeColor               to clWhite
+        Set piFocusCellForeColor             to clBlack
+        Set piFocusCellBackColor             to clDefault
+        Set peVisualTheme                    to xtpGridThemeOffice2003
+    End_Procedure
                   
 //    Procedure MoveToLastEnterableColumn
 //        Boolean bInEdit
@@ -319,6 +336,13 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
     End_Procedure
 
+    // Whether Select All may tick this row; sDataVal is the row's data-column value. True here; a grid
+    // object overrides it to keep some rows unticked (a "never pick" list, say). Invert and a tick by hand
+    // are the user's own doing and are not asked.
+    Function IsSelectableItem String sDataVal Returns Boolean
+        Function_Return True
+    End_Function
+
     Procedure SelectAll
         Set SelectItems to cx_DbSelect_All
     End_Procedure
@@ -362,7 +386,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
             Case Begin
                 Move TheData[iCount].sValue[iData_Col] to sDataVal
                 Case (iState = cx_DbSelect_All)
-                    Move True to bChecked
+                    Move (IsSelectableItem(Self, sDataVal)) to bChecked
                     Case Break
                 Case (iState = cx_DbSelect_None)
                     Move False to bChecked
@@ -398,7 +422,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
 
     // Returns a string array with selected values for the data column (phoData_Col).
     Function SelectedItems Returns String[]
-        Integer i iItems iSize iCheckbox_Col iData_Col
+        Integer i iItems iCheckbox_Col iData_Col
         String[] sDataArray
         Handle hoDataSource hoData_Col hoCheckBox_Col
         tDataSourceRow[] TheData
@@ -427,8 +451,7 @@ Class cRDCDbCJGrid is a cDbCJGrid
         For i from 0 to iItems
             Move TheData[i].sValue[iCheckbox_Col] to bChecked
             If (bChecked = True) Begin
-                Move (SizeOfArray(sDataArray)) to iSize
-                Move TheData[i].sValue[iData_Col] to sDataArray[iSize]
+                Move TheData[i].sValue[iData_Col] to sDataArray[-1]
             End
         Loop
 
@@ -486,6 +509,62 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Send Destroy of ho
         If (sFolderName <> "") Begin
             Send AddItem sFolderName
+        End
+    End_Procedure
+
+    /* A no-clear save reaches the grid only when it is realized: a CodeJock db-grid faults "Invalid message
+       GET_SHOULD_SAVE_ROW" on one that is not - a save broadcast from a view can arrive before the grid has
+       been paged in. */
+    Procedure Request_Save_No_Clear
+        If (IsComObjectCreated(Self)) ;
+            Forward Send Request_Save_No_Clear
+    End_Procedure
+
+    /* THE ROW IS SAVED THE MOMENT ITS TICK CHANGES. CodeJock persists a row only on row-exit, so a single
+       mouse tick followed at once by an action that reads the table was lost. These events fire only on a
+       realized grid with a current row, so the save never hits the unrealized-grid fault above. (The space
+       bar and the bulk selects save for themselves - ToggleCurrentItem, SelectItems.) */
+    Procedure OnComItemCheck Variant llRow Variant llItem
+        Handle hoItem hoCheckbox_Col
+        Integer iColumn iCheckCol
+
+        Forward Send OnComItemCheck llRow llItem
+        Get phoCheckbox_Col to hoCheckbox_Col
+        If (hoCheckbox_Col > 0) Begin
+            Get phoReportRecordItem to hoItem
+            Set pvComObject of hoItem to llItem
+            Get ComIndex of hoItem to iColumn
+            Get piColumnId of hoCheckbox_Col to iCheckCol
+            If (iColumn = iCheckCol) Begin
+                Send Request_Save
+            End
+        End
+    End_Procedure
+
+    /* ...AND A VALUE-EDIT IN THE REGISTERED COLUMN (phoSaveOnChangeColumn), BUT ONLY WHEN THE VALUE REALLY
+       CHANGED. CodeJock raises ValueChanged as the in-place editor comes UP too, with the value it already
+       had; a save there refreshes the grid and tears the editor down before a combo's list can drop. The
+       before and after values come from the data source, which the base's NotifyEndEdit updates only on a
+       genuine change - the same test it makes. */
+    Procedure OnComValueChanged Variant llRow Variant llColumn Variant llItem
+        Handle hoItem hoSaveCol
+        Integer iColumn iSaveCol
+        String sBefore sAfter
+
+        Get phoSaveOnChangeColumn to hoSaveCol
+        If (hoSaveCol > 0) ;
+            Get SelectedRowValueBeforeEdit of hoSaveCol to sBefore
+        Forward Send OnComValueChanged llRow llColumn llItem
+        If (hoSaveCol > 0) Begin
+            Get phoReportRecordItem to hoItem
+            Set pvComObject of hoItem to llItem
+            Get ComIndex of hoItem to iColumn
+            Get piColumnId of hoSaveCol to iSaveCol
+            If (iColumn = iSaveCol) Begin
+                Get SelectedRowValueBeforeEdit of hoSaveCol to sAfter
+                If (sAfter <> sBefore) ;
+                    Send Request_Save
+            End
         End
     End_Procedure
 
@@ -651,41 +730,12 @@ Class cRDCDbCJGrid is a cDbCJGrid
     End_Procedure
 
     { MethodType=Method }
+    // Kept for a caller that wants the tooltip re-read at run time; the settings themselves are applied in
+    // Construct_Object, the one place the width actually takes (cRDCGridToolTip.pkg).
     Procedure DoChangeTooltipStyle
-        Handle  hoTooltip
-        Integer iIcon iStyle iWidth
-        Boolean bBaloon
+        Send RDCApplyGridToolTipStyle Self
+    End_Procedure
 
-        Get phoToolTipContext to hoTooltip
-
-        // This is the programs global tooltip control defined at desktop level.
-        If (ghoToolTipController > 0) Begin
-            Get piIcon of ghoToolTipController to iIcon
-            // The global tooltip controller allows the icons to be
-            // from 0-5, but the tooltip context class only allows
-            // the tooltip icon to be between 0-3.
-            If (iIcon > 3) Begin
-                Move xtpToolTipIconInfo to iIcon
-            End
-            Get piMaxWidth of ghoToolTipController to iWidth
-            Get pbBalloonStyle of ghoToolTipController to bBaloon
-            If (bBaloon = True) Begin
-                Move xtpToolTipBalloon to iStyle
-            End
-            Else Begin
-                Move xtpToolTipOffice2007 to iStyle
-            End
-        End
-        Else Begin
-            Move xtpToolTipIconInfo   to iIcon
-            Move xtpToolTipOffice2007 to iStyle
-            Move 400                  to iWidth
-        End
-
-        Set ComStyle of hoTooltip to iStyle
-        Set ComMaxTipWidth of hoTooltip to iWidth
-    End_Procedure    
-    
     // When changing to new row, update the form 'No of Rows'
     Procedure OnRowChanged Integer iOldRow Integer iNewSelectedRow
         Forward Send OnRowChanged iOldRow iNewSelectedRow

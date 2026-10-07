@@ -29,12 +29,24 @@ panel and *Working…* indicator for long operations.
 buttons, splitter support, and CodeJock menu items for changing colours, skins and text-edit
 options.
 
+## What is new in 1.0.2
+
+- `cRDCGridToolTip.pkg`: `RDCApplyGridToolTipStyle` sets a grid's tooltip style and maximum width from the
+  program's tooltip controller, at construction - the one place the width takes; `cRDCToolTipGrid` is a plain
+  `cCJGrid` with it, and `cRDCToolTipColumn` a column whose cell tooltip wraps at `CI_RDCTipWrapChars`
+  characters (`RDCWrapToolTipText`). `cRDCCJGrid` and `cRDCDbCJGrid` use it themselves.
+- `cRDCDbCJGrid`: the row is saved the moment its tick changes, and a value-edit in `phoSaveOnChangeColumn`
+  the moment it changes; `IsSelectableItem` lets a grid keep rows out of Select All; a no-clear save reaches
+  the grid only when it is realized.
+- `cRDCCJGrid`, `cRDCDbCJGrid`: the colours (and the theme) are set in `SetGridLook`, for a subclass to
+  replace or leave to the CodeJock theme.
+
 ## Installing
 
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.1
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.2
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
