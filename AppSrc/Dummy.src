@@ -102,6 +102,7 @@ Use cRDCExternalProgramResult.pkg
 Use cRDCFontDialog.pkg
 Use cRDCForm.pkg
 Use cRDCFormFileName.pkg
+Use cRDCGridClipboard.pkg
 Use cRDCGroup.pkg
 Use cRDCHeaderDbGroup.pkg
 Use cRDCHeaderGroup.pkg

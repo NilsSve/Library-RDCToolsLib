@@ -13,7 +13,7 @@
         "icon": "RDC-Mark.svg",
         "license": "MIT",
         "licenseFile": "LICENSE",
-        "version": "1.0.2"
+        "version": "1.0.3"
     },
     "studio": {
         "DefaultFormHeight": 12

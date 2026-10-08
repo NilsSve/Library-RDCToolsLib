@@ -11,7 +11,8 @@ text box, rich edit and suggestion forms, each in a `cRDC…` and a `cRDCDb…` 
 groups, header groups, modal panels and icon views.
 
 **CodeJock grids** — `cRDCCJGrid` and `cRDCDbCJGrid` with column types for buttons, hyperlinks,
-prompt lists and suggestions, a check-box grid, and a selection grid.
+prompt lists and suggestions, a check-box grid, a selection grid, and `cRDCGridClipboard` for a grid's
+selected rows on the clipboard.
 
 **Settings that persist themselves** — `cRDCIniFileForm`, `cRDCIniFileCheckbox`,
 `cRDCSuggestionIniForm` and `cRDCRegKeyForm` read and write their own value to an INI file or the
@@ -28,6 +29,14 @@ panel and *Working…* indicator for long operations.
 **Interface touches** — a tooltip controller, a font dialog, slide on/off switches, command-link
 buttons, splitter support, and CodeJock menu items for changing colours, skins and text-edit
 options.
+
+## What is new in 1.0.3
+
+- `cRDCGridClipboard.pkg`: `RDCCopyGridRows` puts a grid's selected rows - the current row when none is
+  selected - on the clipboard, one line each, the values of the columns asked for joined by a tab, and
+  answers how many; `RDCGridRowsText` is that text, `RDCGridSelectedRows` the rows. Global functions that
+  take the grid, so every grid class has them - `cRDCCJGrid`, `cRDCDbCJGrid`, `cRDCToolTipGrid`, a plain
+  `cCJGrid` - from a `Copy` of the grid's own, which Ctrl+C or a context menu sends.
 
 ## What is new in 1.0.2
 
@@ -46,7 +55,7 @@ options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.2
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.3
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
