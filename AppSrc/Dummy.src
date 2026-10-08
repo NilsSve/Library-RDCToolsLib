@@ -76,6 +76,7 @@ Use cRDCCJGridPromptList.pkg
 Use cRDCCJSelectionGrid.pkg
 Use cRDCCJTextEditMenuItem.pkg
 Use cRDCCJToolPanel.pkg
+Use cRDCCJToolPanelGrid.pkg
 Use cRDCCheckBoxGrid.pkg
 Use cRDCCheckbox.pkg
 Use cRDCComboForm.pkg

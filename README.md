@@ -28,7 +28,16 @@ panel and *Working…* indicator for long operations.
 
 **Interface touches** — a tooltip controller, a font dialog, slide on/off switches, command-link
 buttons, splitter support, a tool panel docked as a CodeJock dialog bar that remembers its dragged
-height (`cRDCCJToolPanel`), and CodeJock menu items for changing colours, skins and text-edit options.
+height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
+CodeJock menu items for changing colours, skins and text-edit options.
+
+## What is new in 1.0.5
+
+- `cRDCCJToolPanelGrid.pkg`: a grid inside a `cRDCCJToolPanel` - a `cRDCToolTipGrid` that claims the panel's
+  context menu for itself when it takes the focus and again on a right-click, then pops it; a right-click on
+  the grid beside the one that held the focus would otherwise act on the sibling. Just before the menu pops,
+  `OnToolPanelMenuPopup` hands the grid the menu, to grey an item that does not apply to it or to its current
+  row. The grid-side half of the panel's contract, as DFRefactor's dock grids carried it.
 
 ## What is new in 1.0.4
 
@@ -66,7 +75,7 @@ height (`cRDCCJToolPanel`), and CodeJock menu items for changing colours, skins 
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.4
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.5
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
