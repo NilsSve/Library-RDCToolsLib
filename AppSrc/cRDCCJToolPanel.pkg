@@ -1,0 +1,377 @@
+﻿//****************************************************************************
+// $Module type: Class
+// $Module name: cRDCCJToolPanel
+// $Author     : Nils Svedmyr, RDC Tools International.
+// Copyright (c) 2026 RDC Tools International
+// E-mail      : support@rdctools.com
+// Web-site    : http://www.rdctools.com
+//
+// Created     : 2026-10-08 - cCJToolPanel of The Hammer, courtesy of Wil van Antwerpen, as DFRefactor carried
+//               it since 2024, with what it learned there in 2026: the dragged height remembered across runs,
+//               and a floor under a drag.
+//
+// Description : A tool panel docked at the main window's edge: a Container3d a CodeJock dialog bar presents -
+//               the user drags it taller or shorter, hides it with its x, and the program shows it again with
+//               Activate. A compiler's output, a log, a list of results live in one. psLabel is its title,
+//               peBarPosition its edge, piMinSize the smallest it may be; a subclass or object answers
+//               ToolPanelContextMenuClass with the command-bar system class that builds its context menu
+//               (phoToolPanelContextMenu, for the grids inside); OnUpdate is sent on every show, after the
+//               bar is realized - the moment to fill it, and an object MUST define it.
+//
+//               THE DRAGGED HEIGHT ACROSS RUNS, when psSizeSettingKey names a registry value (under
+//               psSizeSettingSection, through the application object's WriteInteger / ReadInteger): the
+//               LIVE window rectangle is read just before the bar is hidden - GuiSize and Size report only
+//               the DESIGN size, the panel being reparented into the CodeJock bar whose splitter CodeJock
+//               drives - and applied again on the next show, after the bar is docked and realized (earlier,
+//               CodeJock recomputes the docked size on the first dock and discards it).
+//
+//               THE FLOOR: while the dock is shown a 150 ms watchdog reads the live rectangle and, when the
+//               user dragged the bar below piMinSize, snaps it back once the left mouse button is up - never
+//               during the drag, so nothing flickers. DataFlex sees no resize event for a CodeJock splitter,
+//               so polling is the only way.
+//
+// The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// This is free software; you can redistribute it and/or modify it under the terms of the
+// GNU Lesser General Public License - see the "GNU Lesser General Public License.txt"
+// in the help folder for more details.
+//
+Use Windows.pkg
+Use cCJCommandBars.pkg
+Use cTimer.pkg                 // the min-height watchdog
+Use Winuser.pkg                // GetWindowRect, GetAsyncKeyState
+
+// The Win32 RECT, under a name of this package's own.
+Struct tRDCDockRect
+    Integer Left
+    Integer Top
+    Integer Right
+    Integer Bottom
+End_Struct
+
+// The watchdog: while its dock is shown it fires every 150 ms and has the dock re-assert its minimum height
+// (EnforceMinDockHeight). The dock creates one for itself and runs it only while it is shown.
+Class cRDCDockMinHeightTimer is a cTimer
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        { MethodType=Property }
+        Property Handle phoOwnerDock 0
+        Set piTimeout to 150
+        Set pbEnabled to False
+    End_Procedure
+
+    Procedure OnTimer
+        Handle hoDock
+        Get phoOwnerDock to hoDock
+        If (hoDock <> 0) ;
+            Send EnforceMinDockHeight to hoDock
+    End_Procedure
+
+End_Class
+
+{ DesignerClass=cDTModalPanel }
+{ OverrideProperty=Visible_State DesignTime=False }
+Class cRDCCJToolPanel is a Container3d
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        { MethodType=Property }
+        Property String psLabel ''
+
+        { MethodType=Property InitialValue=xtpBarFloating }
+        { EnumList='xtpBarTop,xtpBarBottom,xtpBarLeft,xtpBarRight,xtpBarFloating' }
+        Property Integer peBarPosition xtpBarFloating
+
+        { DesignTime=False }
+        Property Handle phoCJDialogBar          // the CodeJock dialog bar that presents the panel
+        { DesignTime=False }
+        Property Handle phoToolPanelContextMenu // the context menu the grids inside show (see ToolPanelContextMenuClass)
+        { DesignTime=False }
+        Property Handle phInvokingObject 0
+        { DesignTime=False }
+        Property Handle phInvokingItem 0
+
+        Property Boolean pbResizable True
+
+        // The dragged height remembered across runs: the registry value named here, under psSizeSettingSection,
+        // through the application object's WriteInteger / ReadInteger; "" = not remembered.
+        { MethodType=Property }
+        Property String psSizeSettingSection "Settings"
+        { MethodType=Property }
+        Property String psSizeSettingKey ''
+
+        // Set when the dock goes hidden -> shown, taken by the Activate that follows: the saved height is applied on
+        // EVERY show - it is saved on every hide, so an in-session resize is never lost.
+        { DesignTime=False }
+        Property Boolean pbPendingHeightRestore False
+        // The watchdog, created in End_Construct_Object; enabled only while the dock is shown.
+        { DesignTime=False }
+        Property Handle phoMinHeightTimer 0
+
+        Set Border_Style to Border_None
+        // NO class colour: each panel sets its own in its object body. A Set Color here is what the Studio's Designer
+        // paints, and one in End_Construct_Object would override the panel's own in the running program.
+    End_Procedure
+
+    // The command-bar system class that builds the dock's context menu - RefClass(cMyCommandBarSystem), whose
+    // OnCreateCommandBars creates the menu and hands it up: Delegate Set phoToolPanelContextMenu to <the menu>.
+    // 0 = no menu. A subclass or object answers it.
+    Function ToolPanelContextMenuClass Returns Integer
+        Function_Return 0
+    End_Function
+
+    Procedure End_Construct_Object
+        Handle ho hoTimer
+        Integer iClass
+        Forward Send End_Construct_Object
+        Get ToolPanelContextMenuClass to iClass
+        If (iClass <> 0) Begin
+            Get Create iClass to ho
+            Set Name of ho to "oToolPanelCommandBarSystem"
+            Set phoToolPanelContextMenu to ho
+        End
+        Get Create (RefClass(cRDCDockMinHeightTimer)) to hoTimer
+        Set Name         of hoTimer to "oDockMinHeightTimer"
+        Set phoOwnerDock of hoTimer to Self
+        Set phoMinHeightTimer to hoTimer
+    End_Procedure
+
+    // For code that knows the dialog bar's own name for it.
+    Procedure Set ComVisible Boolean bState
+        Set Visible_State to bState
+        Set pbVisible to bState
+    End_Procedure
+
+    // The panel is a Container3d with a CodeJock dialog bar on top. The toolbar button hides the container; the x of
+    // the bar hides the bar - so "visible" is both.
+    Function ComVisible Returns Boolean
+        Boolean bState bBarState bIsCreated
+        Handle  hoCJDialogBar
+
+        Move False to bBarState
+        Get Visible_State to bState
+        Get phoCJDialogBar to hoCJDialogBar
+        If (Object_Id(hoCJDialogBar) <> 0) Begin
+            Get IsComObjectCreated of hoCJDialogBar to bIsCreated
+            If (bIsCreated = True) ;
+                Get ComVisible of hoCJDialogBar to bBarState
+        End
+        Function_Return (bState and bBarState)
+    End_Function
+
+    /* HIDE (bState False): the dragged height is remembered just before the bar goes, when it is to be - the LIVE
+       window rectangle, read while the dock is still active (a shutdown hide finds it torn down, and does nothing).
+       SHOW (bState True): a dock that was hidden is marked for the height's restore, which the Activate that follows
+       does; one shown already keeps the height it has. The watchdog runs only while the dock is shown, and only when
+       piMinSize sets a floor. Then the bar is shown or hidden. */
+    Procedure Set pbVisible Boolean bState
+        Handle  hWnd hoToolPane
+        Integer iHeight iOK iMinSize
+        String  sKey
+        Boolean bWasVisible
+        tRDCDockRect rcDock
+
+        Get psSizeSettingKey to sKey
+        If (sKey <> "") Begin
+            If ((bState = False) and (Active_State(Self)) and (ghoApplication <> 0)) Begin
+                Get Container_Handle to hWnd
+                If (hWnd <> 0) Begin
+                    Move (GetWindowRect(hWnd, AddressOf(rcDock))) to iOK
+                    Move (rcDock.Bottom - rcDock.Top) to iHeight
+                    If (iHeight > 0) ;
+                        Send WriteInteger of ghoApplication (psSizeSettingSection(Self)) sKey iHeight
+                End
+            End
+            If (bState = True) Begin
+                Get pbVisible to bWasVisible
+                If (bWasVisible = False) ;
+                    Set pbPendingHeightRestore to True
+            End
+        End
+        Get piMinSize to iMinSize
+        If (phoMinHeightTimer(Self) <> 0) Begin
+            If (bState = True) ;
+                Set pbEnabled of (phoMinHeightTimer(Self)) to (iMinSize <> 0)
+            Else If (Active_State(Self)) ;
+                Set pbEnabled of (phoMinHeightTimer(Self)) to False
+        End
+        Get phoCJDialogBar to hoToolPane
+        If ((hoToolPane <> 0) and (Active_State(hoToolPane))) ;
+            Set ComVisible of hoToolPane to bState
+    End_Procedure
+
+    Function pbVisible Returns Boolean
+        Boolean bVisible
+        Get ComVisible to bVisible
+        Function_Return bVisible
+    End_Function
+
+    Procedure Close_Panel
+        Set pbVisible to False
+    End_Procedure
+
+    /* ACTIVATE docks the bar - the only way it docks: Add_Focus -> Update -> Create_ToolPanel builds it, and the
+       activation shows it. A dock activated from outside any scope first activates the main panel's client area, as
+       a view does. OnUpdate is sent once the bar is up; then the remembered height, when a hidden dock was just marked
+       for it - after the bar is docked and realized, never before - clamped to piMinSize. */
+    Procedure Activate Returns Integer
+        Integer iErr iSize iWidth iMinHeight iSaved
+        Handle  hoScopeObj hoMain hoClient hoToolPane
+        String  sKey
+        Boolean bPending
+
+        Get Current_Scope to hoScopeObj
+        If ((not(Active_State(Self))) and (hoScopeObj > Desktop)) Begin
+            Move 0 to hoMain
+            Move 0 to hoClient
+            If (ghoApplication <> 0) ;
+                Get phoMainPanel of ghoApplication to hoMain
+            If (hoMain <> 0) ;
+                Get Client_Id of hoMain to hoClient
+            If (hoClient <> 0) ;
+                Move hoClient to hoMain
+            If (hoMain <> 0) ;
+                Send Activate of hoMain
+        End
+
+        Forward Get msg_Activate to iErr
+        If (iErr = 0) Begin
+            Set pbVisible to True
+            Send OnUpdate
+            Get pbPendingHeightRestore to bPending
+            Get psSizeSettingKey to sKey
+            If ((bPending = True) and (sKey <> "") and (ghoApplication <> 0)) Begin
+                Set pbPendingHeightRestore to False
+                Get ReadInteger of ghoApplication (psSizeSettingSection(Self)) sKey 0 to iSaved
+                Get phoCJDialogBar to hoToolPane
+                If ((iSaved > 0) and (hoToolPane <> 0)) Begin
+                    // The width, and the floor, from the design size - as Create_ToolPanel derives them.
+                    Get piMinSize to iSize
+                    If (iSize = 0) ;
+                        Get Size to iSize
+                    Get DialogToGui (Hi(iSize)) (Low(iSize)) to iSize
+                    Move (Low(iSize)) to iWidth
+                    Move (Hi(iSize))  to iMinHeight
+                    If (iSaved < iMinHeight) ;
+                        Move iMinHeight to iSaved
+                    Send ComSetSize of hoToolPane iWidth iSaved
+                End
+            End
+        End
+        Procedure_Return iErr
+    End_Procedure
+
+    // The programmer's hook, sent with the bar once it is created.
+    { MethodType=Event }
+    Procedure OnCreateToolPanel Handle hoToolPane
+    End_Procedure
+
+    Procedure Create_ToolPanel
+        Variant vToolPane
+        String  sLabel sObjName
+        Boolean bResizable
+        Integer eBarPosition iSize iWidth iHeight
+        Handle  hoToolPane hWnd
+
+        If (ghoCommandBars <> 0) Begin
+            Get psLabel to sLabel
+            Get Object_Label to sObjName
+            Get Container_Handle to hWnd
+            Get piMinSize to iSize
+            If (iSize = 0) ;
+                Get Size to iSize
+            Get DialogToGui (Hi(iSize)) (Low(iSize)) to iSize
+            Move (Hi(iSize))  to iHeight
+            Move (Low(iSize)) to iWidth
+            Move (sObjName + "Pane") to sObjName
+            Get peBarPosition to eBarPosition
+            Get pbResizable to bResizable
+
+            Get ComAddDialogBar of ghoCommandBars sLabel eBarPosition to vToolPane
+            Get CreateNamed     of ghoCommandBars (RefClass(cCJDialogBar)) sObjName to hoToolPane
+            If (hoToolPane <> 0) Begin
+                Set pvComObject        of hoToolPane to vToolPane
+                Set ComChildHandle     of hoToolPane to hWnd
+                Set ComTitle           of hoToolPane to sLabel
+                Set ComVisible         of hoToolPane to False
+                Set ComShowGripper     of hoToolPane to True
+                Set ComEnableAnimation of hoToolPane to True
+                Set ComResizable       of hoToolPane to bResizable
+                Send ComSetSize        of hoToolPane iWidth iHeight
+                Set ComShowGripper     of hoToolPane to True
+            End
+            Set phoCJDialogBar to hoToolPane
+            Send OnCreateToolPanel hoToolPane
+        End
+    End_Procedure
+
+    Procedure Add_Focus Handle hoParent Returns Integer
+        Integer iErr
+
+        Forward Get msg_Add_Focus hoParent to iErr
+        If (iErr = 0) Begin
+            Send Update
+            Send OnResize
+        End
+        Procedure_Return iErr
+    End_Procedure
+
+    Procedure Update
+        Send Create_ToolPanel
+        Set pbVisible to (Visible_State(Self))
+    End_Procedure
+
+    Function DEO_Object Returns Boolean
+        Function_Return False
+    End_Function
+
+    Procedure Set Label String sVal
+        Set psLabel to sVal
+        If (phoCJDialogBar(Self) <> 0) ;
+            Set ComTitle of (phoCJDialogBar(Self)) to sVal
+    End_Procedure
+
+    Function Can_UndoAction Returns Boolean
+        Function_Return False
+    End_Function
+
+    Function Can_RedoAction Returns Boolean
+        Function_Return False
+    End_Function
+
+    /* THE FLOOR, re-asserted by the watchdog every 150 ms while the dock is shown: the live window rectangle,
+       and when the user dragged the bar below piMinSize, ComSetSize back to it - only once the LEFT MOUSE BUTTON is
+       up, so the clamp never fights CodeJock's live drag. The width is kept from the live rectangle; the floor is
+       piMinSize in pixels, as Create_ToolPanel derives it. A 4 px deadband keeps gripper rounding from re-clamping
+       a bar that sits at the floor. Safe before the bar exists and during shutdown. */
+    Procedure EnforceMinDockHeight
+        Handle  hWnd hoToolPane
+        Integer iKey iSize iMinH iCurH iCurW iOK
+        tRDCDockRect rcDock
+
+        Move (GetAsyncKeyState(1)) to iKey          // 1 = VK_LBUTTON: held, the clamp waits for the release
+        If ((iKey <> 0) and (iKey <> 1)) ;
+            Procedure_Return
+        If (not(Active_State(Self))) ;
+            Procedure_Return
+        Get piMinSize to iSize
+        If (iSize = 0) ;
+            Procedure_Return
+        Get phoCJDialogBar to hoToolPane
+        If ((hoToolPane = 0) or (not(Active_State(hoToolPane)))) ;
+            Procedure_Return
+        Get Container_Handle to hWnd
+        If (hWnd = 0) ;
+            Procedure_Return
+        Move (GetWindowRect(hWnd, AddressOf(rcDock))) to iOK
+        Move (rcDock.Bottom - rcDock.Top) to iCurH
+        Move (rcDock.Right  - rcDock.Left) to iCurW
+        Get DialogToGui (Hi(iSize)) (Low(iSize)) to iSize
+        Move (Hi(iSize)) to iMinH
+        If ((iCurH > 0) and ((iMinH - iCurH) > 4)) ;
+            Send ComSetSize of hoToolPane iCurW iMinH
+    End_Procedure
+
+End_Class

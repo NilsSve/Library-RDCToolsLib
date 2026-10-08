@@ -27,8 +27,19 @@ launching programs and reading back their output, `CaptureWindow` for screenshot
 panel and *Working…* indicator for long operations.
 
 **Interface touches** — a tooltip controller, a font dialog, slide on/off switches, command-link
-buttons, splitter support, and CodeJock menu items for changing colours, skins and text-edit
-options.
+buttons, splitter support, a tool panel docked as a CodeJock dialog bar that remembers its dragged
+height (`cRDCCJToolPanel`), and CodeJock menu items for changing colours, skins and text-edit options.
+
+## What is new in 1.0.4
+
+- `cRDCCJToolPanel.pkg`: a tool panel docked at the main window's edge as a CodeJock dialog bar - a
+  `Container3d` the user drags taller or shorter, hides with its x and a program shows again with `Activate`;
+  a compiler's output, a log, a list of results. `psLabel`, `peBarPosition`, `piMinSize`; `OnUpdate` on every
+  show, after the bar is realized; `ToolPanelContextMenuClass` for the command-bar system that builds its
+  context menu. With `psSizeSettingKey` it remembers the dragged height across runs, in the registry under
+  `psSizeSettingSection` through the application object, and a watchdog keeps a floor under a drag at
+  `piMinSize` - once the mouse button is up, so nothing flickers. The Hammer's `cCJToolPanel`, courtesy of
+  Wil van Antwerpen, as DFRefactor carried and taught it.
 
 ## What is new in 1.0.3
 
@@ -55,7 +66,7 @@ options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.3
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.4
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
