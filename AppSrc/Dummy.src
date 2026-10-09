@@ -57,6 +57,7 @@ Use CJBrowseForFolder.pkg
 Use CaptureWindow.pkg
 Use RDCRunProgram.pkg
 Use RDCStatusPanel.pkg
+Use RDCTimeSpan.pkg
 Use ShellExecute.pkg
 Use ShellExecuteErrors.pkg
 Use StartProg.pkg

@@ -1,0 +1,44 @@
+﻿//****************************************************************************
+// $Module type: Procedures (Global)
+// $Module name: RDCTimeSpan
+// $Author     : Nils Svedmyr, RDC Tools International.
+// Copyright (c) 2026 RDC Tools International
+// E-mail      : support@rdctools.com
+// Web-site    : http://www.rdctools.com
+//
+// Created     : 2026-10-09 - DFRefactor's TimeSpanToString, which its engine and its status panel each
+//               carried (the panel's comment said so), and the panel's own clock, as a library package.
+//
+// Description : A TimeSpan as text. RDCTimeSpanToClock gives "HH:MM:SS", with the days in front as "D:"
+//               when there are any - the form for a clock a person watches while something runs, where
+//               milliseconds only jitter. RDCTimeSpanToString adds them, ".mmm", zero-padded - the form
+//               for the summary of a run, where they say something: 1.007 seconds reads "00:00:01.007".
+//
+// The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// This is free software; you can redistribute it and/or modify it under the terms of the
+// GNU Lesser General Public License - see the "GNU Lesser General Public License.txt"
+// in the help folder for more details.
+//
+//****************************************************************************
+Use VdfBase.pkg
+
+// The span as "HH:MM:SS", the days in front as "D:" when there are any.
+Function RDCTimeSpanToClock Global TimeSpan tsTime Returns String
+    Integer iDays
+    String sTime
+
+    Move (SpanDays(tsTime)) to iDays
+    Move "" to sTime
+    If (iDays > 0) ;
+        Move (String(iDays) + ":") to sTime
+    Move (sTime + Right("0" + String(SpanHours(tsTime)),   2) + ":" + ;
+                  Right("0" + String(SpanMinutes(tsTime)), 2) + ":" + ;
+                  Right("0" + String(SpanSeconds(tsTime)), 2)) to sTime
+    Function_Return sTime
+End_Function
+
+// The span as "HH:MM:SS.mmm" - the clock above with the milliseconds, zero-padded to three digits.
+Function RDCTimeSpanToString Global TimeSpan tsTime Returns String
+    Function_Return (RDCTimeSpanToClock(tsTime) + "." + Right("000" + String(SpanMilliSeconds(tsTime)), 3))
+End_Function

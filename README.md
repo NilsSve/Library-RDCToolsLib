@@ -19,7 +19,8 @@ selected rows on the clipboard.
 registry, so a settings dialog needs no load-and-save code.
 
 **Application plumbing** — `cRDCApplication`, `cRDCLogFile`, `cRDCProjectIniFile`,
-`cRDCAutoCreateNewID` for allocating record IDs, and `cDataBaseFunctions` for database utilities.
+`cRDCAutoCreateNewID` for allocating record IDs, `cDataBaseFunctions` for database utilities, and
+`RDCTimeSpan` for an elapsed time as text.
 
 **Windows and shell helpers** — `ShellExecute`, `StartProg` and `cRDCExternalProgramResult` for
 launching programs and reading back their output, `RDCRunProgram` for a program run and waited for
@@ -33,6 +34,13 @@ panel and *Working…* indicator for long operations.
 buttons, splitter support, a tool panel docked as a CodeJock dialog bar that remembers its dragged
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
+
+## What is new in 1.0.8
+
+- `RDCTimeSpan.pkg`: a TimeSpan as text. `RDCTimeSpanToClock` gives `HH:MM:SS`, the days in front as `D:`
+  when there are any - the clock a person watches while something runs; `RDCTimeSpanToString` adds the
+  milliseconds, `.mmm` - the summary of a run. DFRefactor's engine and status panel each carried the
+  function.
 
 ## What is new in 1.0.7
 
@@ -101,7 +109,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.7
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.8
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
