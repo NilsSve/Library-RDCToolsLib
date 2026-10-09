@@ -1,0 +1,187 @@
+﻿//****************************************************************************
+// $Module type: Procedures (Global)
+// $Module name: RDCRunProgram
+// $Author     : Nils Svedmyr, RDC Tools International.
+// Copyright (c) 2026 RDC Tools International
+// E-mail      : support@rdctools.com
+// Web-site    : http://www.rdctools.com
+//
+// Created     : 2026-10-09 - DFRefactor's RFRunProgram.pkg of 2026 (itself lifted out of DUF's
+//               WsGlobalFunctions.pkg) as a library package, the strings reaching Windows in the
+//               ANSI code page.
+//
+// Description : What a program hands to the Windows shell, through ShellExecuteEx.
+//
+//               RDCRunProgramWait launches a program and blocks until it exits, with no console
+//               window flashing for a console-subsystem child (the DataFlex compiler is one).
+//               BLOCKING: the message pump is frozen meanwhile. It can never be safe for a tool that
+//               might ask a question - ShellExecuteEx cannot redirect the child's input, and the
+//               wait is infinite - so such a tool runs through RDCRunProgramBounded
+//               (cRDCAsyncProcess.pkg), through a wrapper that redirects its output.
+//
+//               RDCRevealInExplorer opens Windows Explorer with a file selected in its folder, or a
+//               folder opened; RDCOpenHelpPage opens a local .htm/.html page in the user's own
+//               browser; RDCOpenUrl hands an http or https address to it. The three return at once,
+//               and each takes the string only where it names something real - a path on disk, a
+//               page, a web address: handing an arbitrary string to the shell is a way to run
+//               things, and with the checks the worst a bad caller can do is show the user
+//               something. Silent on refusal: a caller passing a path that is missing or not a
+//               page has a bug, and a message box in a shell helper is not where that gets
+//               diagnosed.
+//
+// The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// This is free software; you can redistribute it and/or modify it under the terms of the
+// GNU Lesser General Public License - see the "GNU Lesser General Public License.txt"
+// in the help folder for more details.
+//
+//****************************************************************************
+Use Windows.pkg
+Use StartProg.pkg              // CloseHandleEf
+Use vWin32fh.pkg               // vFilePathExists, vFolderExists
+
+Struct tRDCShellExecuteInfo
+    DWord   cbSize
+    Integer fMask
+    Handle  hwnd
+    Pointer lpVerb
+    Pointer lpFile
+    Pointer lpParameters
+    Pointer lpDirectory
+    Integer nShow
+#IFDEF IS$WIN64
+    Integer iMissingAlignment1
+#ENDIF
+    Pointer hInstApp
+    Pointer lpIDList
+    Pointer lpClass
+    Handle  hkeyClass
+    DWord   dwHotKey
+#IFDEF IS$WIN64
+    Integer iMissingAlignment2
+#ENDIF
+    Handle  hIconMonitor // Union
+    //Handle  hMonitor     // Union
+    Handle  hProcess
+End_Struct
+
+// SEE_MASK_NOCLOSEPROCESS (0x40): the started process's handle is wanted back. Prefixed, since DUF's
+// WsGlobalFunctions.pkg defines the plain name without a guard.
+Define RDC_SEE_MASK_NOCLOSEPROCESS for 64
+
+#IFNDEF get_ShellExecuteExEf
+    External_Function ShellExecuteExEf "ShellExecuteEx" Shell32.dll Pointer pExecInfo Returns Integer
+#ENDIF
+
+#IFNDEF get_WaitForSingleObjectEf
+    External_Function WaitForSingleObjectEf "WaitForSingleObject" Kernel32.dll Handle hHandle DWord dwMilliseconds Returns DWord
+#ENDIF
+
+// Launches sProgram with sParameter and blocks until the process exits. Unlike a plain Runprogram, no
+// console window flashes for a console-subsystem child: the window is hidden. The strings reach
+// ShellExecuteEx, an ANSI entry, in the ANSI code page - a path with a national character in it
+// arrives intact; a character outside the code page becomes '?'.
+Procedure RDCRunProgramWait Global String sProgram String sParameter
+    Handle hProcess
+    Integer iVoid
+    String sProgramA sParameterA
+    tRDCShellExecuteInfo sInfo
+
+    Move (Utf8ToAnsi(sProgram))   to sProgramA
+    Move (Utf8ToAnsi(sParameter)) to sParameterA
+    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
+    Move RDC_SEE_MASK_NOCLOSEPROCESS to sInfo.fMask
+    Move (AddressOf(sProgramA))   to sInfo.lpFile
+    Move (AddressOf(sParameterA)) to sInfo.lpParameters
+    Move 0 to sInfo.nShow          // SW_HIDE - no flash of a console window for a console child
+    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+    Move sInfo.hProcess to hProcess
+    If (hProcess) Begin
+        Move (WaitForSingleObjectEf(hProcess, -1)) to iVoid
+        Move (CloseHandleEf(hProcess)) to iVoid
+    End
+End_Procedure
+
+// Opens Windows Explorer showing sPath - a file SELECTED in its folder, or a folder opened. Nothing is
+// waited on, and the window is shown. THE PATH MUST EXIST, and that is checked here rather than at the
+// caller: requiring a real file or folder on disk means the worst a bad caller can do is show the user
+// a directory. explorer.exe is named for the same reason - the shell picks no handler from the string.
+// /select needs the path QUOTED: Explorer takes everything after the comma as the target, and an
+// unquoted path stops at the first space, which is most of Program Files.
+Procedure RDCRevealInExplorer Global String sPath
+    Integer iVoid
+    String sArgs sProg
+    Boolean bIsDir
+    tRDCShellExecuteInfo sInfo
+
+    Move (Trim(sPath)) to sPath
+    If (sPath = "") ;
+        Procedure_Return
+    Move (vFolderExists(sPath)) to bIsDir
+    If (bIsDir = False and (vFilePathExists(sPath)) = False) ;
+        Procedure_Return
+
+    Move "explorer.exe" to sProg
+    If (bIsDir = True) ;
+        Move (Utf8ToAnsi('"' + sPath + '"')) to sArgs
+    Else ;
+        Move (Utf8ToAnsi('/select,"' + sPath + '"')) to sArgs
+
+    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
+    Move 0 to sInfo.fMask                  // nothing waited on, so no handle wanted back
+    Move (AddressOf(sProg)) to sInfo.lpFile
+    Move (AddressOf(sArgs)) to sInfo.lpParameters
+    Move 1 to sInfo.nShow                  // SW_SHOWNORMAL - the window must be visible
+    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+End_Procedure
+
+// Opens a LOCAL .htm/.html page in whatever the user has set as their browser. Separate from
+// RDCOpenUrl, which refuses anything but http and https - so a page shipped with a program cannot go
+// through it, and a file:/// address is exactly what it exists to reject. Two narrow doors beat one
+// wide one. The two guards are the whole procedure: the file must exist, and it must be a page -
+// without the extension test this would launch an .exe, a .bat or a .lnk as happily as a document.
+// The shell's default handler opens it: the user's chosen browser, and no program is named here,
+// since naming one would mean picking a browser on the user's behalf.
+Procedure RDCOpenHelpPage Global String sPath
+    Integer iVoid
+    String sLow sPathA
+    tRDCShellExecuteInfo sInfo
+
+    Move (Trim(sPath)) to sPath
+    If (sPath = "") ;
+        Procedure_Return
+    If ((vFilePathExists(sPath)) = False) ;
+        Procedure_Return
+    Move (Lowercase(sPath)) to sLow
+    If (Right(sLow, 5) <> ".html" and (Right(sLow, 4)) <> ".htm") ;
+        Procedure_Return
+
+    Move (Utf8ToAnsi(sPath)) to sPathA
+    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
+    Move 0 to sInfo.fMask                  // nothing waited on, so no handle wanted back
+    Move (AddressOf(sPathA)) to sInfo.lpFile
+    // lpVerb stays null = the shell's default verb ("open") for .htm/.html.
+    Move 1 to sInfo.nShow                  // SW_SHOWNORMAL - the browser must be visible
+    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+End_Procedure
+
+// Hands sTarget to the shell's default handler - the browser, for an http or https address - and
+// returns at once. http and https ONLY: a shell "open" on an arbitrary string is a way to run things,
+// so the scheme is checked here rather than trusted from the caller.
+Procedure RDCOpenUrl Global String sTarget
+    Integer iVoid
+    String sLow sTargetA
+    tRDCShellExecuteInfo sInfo
+
+    Move (Lowercase(Trim(sTarget))) to sLow
+    If (Left(sLow, 8) <> "https://" and Left(sLow, 7) <> "http://") ;
+        Procedure_Return
+
+    Move (Utf8ToAnsi(sTarget)) to sTargetA
+    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
+    Move 0 to sInfo.fMask                  // nothing waited on, so no handle wanted back
+    Move (AddressOf(sTargetA)) to sInfo.lpFile
+    // lpVerb stays null = the shell's default verb ("open").
+    Move 1 to sInfo.nShow                  // SW_SHOWNORMAL - the browser must be visible
+    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+End_Procedure

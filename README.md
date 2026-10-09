@@ -22,7 +22,10 @@ registry, so a settings dialog needs no load-and-save code.
 `cRDCAutoCreateNewID` for allocating record IDs, and `cDataBaseFunctions` for database utilities.
 
 **Windows and shell helpers** — `ShellExecute`, `StartProg` and `cRDCExternalProgramResult` for
-launching programs and reading back their output, `CaptureWindow` for screenshots,
+launching programs and reading back their output, `RDCRunProgram` for a program run and waited for
+without a console flash, a file revealed in Explorer, a help page or a web address opened in the
+browser, `cRDCAsyncProcess` for a process started and polled from a timer - with
+`RDCRunProgramBounded` for a tool that must never hang the program - `CaptureWindow` for screenshots,
 `cSelectFolderDialog` and `CJBrowseForFolder` for folder pickers, `Base64Functions`, and a status
 panel and *Working…* indicator for long operations.
 
@@ -30,6 +33,23 @@ panel and *Working…* indicator for long operations.
 buttons, splitter support, a tool panel docked as a CodeJock dialog bar that remembers its dragged
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
+
+## What is new in 1.0.6
+
+- `RDCRunProgram.pkg`: `RDCRunProgramWait` runs a program and waits for it, with no console window
+  flashing for a console-subsystem child such as the DataFlex compiler; `RDCRevealInExplorer` opens
+  Explorer with a file selected in its folder, or a folder opened; `RDCOpenHelpPage` opens a local
+  .htm/.html page in the user's browser; `RDCOpenUrl` hands an http or https address to it. The three
+  openers take the string only where it names something real - a path on disk, a page, a web address -
+  and say nothing on refusal. The strings reach Windows in the ANSI code page, so a path with a national
+  character in it arrives intact.
+- `cRDCAsyncProcess.pkg`: `cRDCAsyncProcess` starts a process with no console and lets a timer poll it
+  (`StartProcess`, `IsProcessRunning`, `ProcessExitCode`, `KillProcess` - the whole process tree -
+  and `CleanUp`), and `RDCRunProgramBounded` runs a tool, waits for it and never hangs on it: a deadline
+  ends a child that stalls, and the answer is the exit code, `CI_RDCRunToolFailedToStart` or
+  `CI_RDCRunToolTimedOut`. While it waits it keeps a status panel alive, when the program shows one. A
+  tool that might ask a question must run through a wrapper that redirects its output; the deadline
+  alone only bounds the wait. Both are DFRefactor's, built there in 2026.
 
 ## What is new in 1.0.5
 
@@ -75,7 +95,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.5
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.6
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a

@@ -1,0 +1,378 @@
+﻿//****************************************************************************
+// $Module type: Class
+// $Module name: cRDCAsyncProcess
+// $Author     : Nils Svedmyr, RDC Tools International.
+// Copyright (c) 2026 RDC Tools International
+// E-mail      : support@rdctools.com
+// Web-site    : http://www.rdctools.com
+//
+// Created     : 2026-10-09 - DFRefactor's cAsyncProcess.pkg of 2026, as a library package.
+//
+// Description : A process started without blocking, and polled. cRDCAsyncProcess launches a
+//               program through CreateProcess and keeps its handles, so a timer can ask
+//               IsProcessRunning until the child exits and then read ProcessExitCode - the shape
+//               for a UI that must stay alive while a compiler or a tool runs. KillProcess ends the
+//               whole process TREE (the launched process is often a cmd.exe wrapper); CleanUp
+//               closes the handles and MUST be sent once the process is done - it is idempotent.
+//               With bShowWindow False the child gets no console at all (CREATE_NO_WINDOW), the
+//               only thing that keeps a console child's window from showing.
+//
+//               Typical use:
+//                   Get StartProcess of oProc sCmd sParams sWorkDir False to bOK
+//                   Set pbEnabled of oPollTimer to True
+//                   ...and in the timer's tick:
+//                   Get IsProcessRunning of oProc to bRunning
+//                   If (bRunning = False) Begin
+//                       Get ProcessExitCode of oProc to iExitCode
+//                       Send CleanUp of oProc
+//                       Set pbEnabled of oPollTimer to False
+//                   End
+//
+//               RDCRunProgramBounded, below, is the blocking form with a deadline: it runs a tool,
+//               waits for it and never hangs on it.
+//
+// The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// This is free software; you can redistribute it and/or modify it under the terms of the
+// GNU Lesser General Public License - see the "GNU Lesser General Public License.txt"
+// in the help folder for more details.
+//
+//****************************************************************************
+Use VdfBase.pkg
+Use Winuser.pkg
+Use Winkern.pkg
+Use StartProg.pkg   // tStartInfo, tProcessInfo, tWinSecurityAttributes, CreateProcessEf, GetExitCodeProcessEf,
+                    // CloseHandleEf, TerminateProcessEf, SleepEf, GetLastError, STILL_ACTIVE, STARTF_USESHOWWINDOW
+
+// CreateProcess dwCreationFlags. SW_HIDE in STARTUPINFO does not suppress the console window of a
+// console-subsystem child (a compiler is one); CREATE_NO_WINDOW tells Windows to allocate none.
+#IFNDEF CREATE_NO_WINDOW
+    Define CREATE_NO_WINDOW for |CI$08000000
+#ENDIF
+
+// GetProcessId(handle) -> the OS process id. KillProcess needs it to hand the whole process TREE to
+// taskkill: the launched process is often a shell wrapper (a cmd.exe redirecting a child's output), and
+// a bare TerminateProcess on that handle kills only the wrapper, orphaning the real child it spawned.
+#IFNDEF get_GetProcessIdEf
+    External_Function GetProcessIdEf "GetProcessId" kernel32.dll Handle hProcess Returns Integer
+#ENDIF
+
+Class cRDCAsyncProcess is a cObject
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property Handle  phProcess   0
+        Property Handle  phThread    0
+        Property Boolean pbActive    False
+        Property String  psLastError ""
+    End_Procedure
+
+    // Launches sCommand with sParams in sWorkDir and returns at once: True, with phProcess and phThread
+    // set and pbActive True; or False, with psLastError set.
+    //   sWorkDir     The folder the child starts in. Empty is REJECTED (False, psLastError set): an empty
+    //                value is almost always a caller's bug, and silently inheriting whatever the current
+    //                directory happens to be is a hidden coupling. Pass "." to inherit it on purpose.
+    //   bShowWindow  True: the child's window is shown (a console, say). False: hidden, and a console
+    //                child gets no console at all - the usual case for a background tool.
+    Function StartProcess String sCommand String sParams String sWorkDir Boolean bShowWindow Returns Boolean
+        String sCmd sWorkDirZ
+        Pointer pCmd pWorkDir pStartup pProcessInfo
+        Integer iRet iError iFlags
+        tWinSecurityAttributes aAttributes
+        tProcessInfo ProcessInfo
+        tStartInfo   StartInfo
+
+        // Drop any stale handle from a prior run before taking new ones.
+        Send CleanUp
+
+        If (Trim(sWorkDir) = "") Begin
+            Set psLastError to "StartProcess: sWorkDir is empty. Pass '.' to inherit the current directory, or supply a real folder."
+            Function_Return False
+        End
+
+        // Quote the command if not already quoted (paths with spaces).
+        If (Left(sCommand, 1) <> '"' and (Left(sCommand, 1) <> "'")) Begin
+            Move ('"' + sCommand + '"') to sCommand
+        End
+
+        /* UTF-8 TO ANSI, NOT OEM TO ANSI. DataFlex strings are UTF-8 and CreateProcessEf is CreateProcessA,
+           so the command line and the folder must reach it in the ANSI code page. OemToAnsi read the
+           UTF-8 bytes as OEM characters and mapped each one, so a path with a national character in it
+           reached the child as garbled characters: "file not found", nothing run. Utf8ToAnsi is this
+           runtime's conversion; a character outside the ANSI code page becomes '?', which only a
+           CreateProcessW wrapper would carry. */
+        Move (Utf8ToAnsi(sCommand + " " + sParams) + (Character(0))) to sCmd
+        Move (Utf8ToAnsi(sWorkDir) + (Character(0)))                 to sWorkDirZ
+        Move (AddressOf(sCmd))      to pCmd
+        Move (AddressOf(sWorkDirZ)) to pWorkDir
+        // "." is the explicit opt-in to inheriting the current directory - CreateProcess wants NULL for that.
+        If (Trim(sWorkDir) = ".") Begin
+            Move 0 to pWorkDir
+        End
+
+        Move (SizeOfType(tStartInfo)) to StartInfo.cb
+        Move STARTF_USESHOWWINDOW     to StartInfo.dwFlags
+        Move 0                        to iFlags
+        If (bShowWindow = True) Begin
+            Move SW_SHOW to StartInfo.wShowWindow
+        End
+        Else Begin
+            Move SW_HIDE             to StartInfo.wShowWindow
+            // SW_HIDE alone leaves a console window for a console child; CREATE_NO_WINDOW suppresses it.
+            Move CREATE_NO_WINDOW    to iFlags
+        End
+
+        Move 0                        to ProcessInfo.hProcess
+        Move (AddressOf(StartInfo))   to pStartup
+        Move (AddressOf(ProcessInfo)) to pProcessInfo
+
+        Move (CreateProcessEf(0, pCmd, 0, 0, False, iFlags, 0, pWorkDir, pStartup, pProcessInfo)) to iRet
+        If (iRet = 0) Begin
+            Move (GetLastError()) to iError
+            Set psLastError to ("CreateProcess failed; GetLastError=" * String(iError))
+            Function_Return False
+        End
+
+        Set phProcess   to ProcessInfo.hProcess
+        Set phThread    to ProcessInfo.hThread
+        Set pbActive    to True
+        Set psLastError to ""
+        Function_Return True
+    End_Function
+
+    // True while the process started by StartProcess runs. False when none was started, it has exited,
+    // or its exit code could not be read (the caller should still send CleanUp).
+    Function IsProcessRunning Returns Boolean
+        Boolean bActive
+        Handle  hProcess
+        Pointer pExitCode
+        String  sExitCode
+        Integer iRet iExitCode
+
+        Get pbActive  to bActive
+        Get phProcess to hProcess
+        If (bActive = False or hProcess = 0) Begin
+            Function_Return False
+        End
+
+        Move (Repeat(Character(0), 32)) to sExitCode
+        Move (AddressOf(sExitCode))     to pExitCode
+        Move (GetExitCodeProcessEf(hProcess, pExitCode)) to iRet
+        If (iRet = 0) Begin
+            Function_Return False
+        End
+        Move (BytesToDword(sExitCode, 1)) to iExitCode
+        Function_Return (iExitCode = STILL_ACTIVE)
+    End_Function
+
+    // The process's exit code, or -1 while it still runs or when there is none to read.
+    Function ProcessExitCode Returns Integer
+        Handle  hProcess
+        Pointer pExitCode
+        String  sExitCode
+        Integer iRet iExitCode
+
+        Get phProcess to hProcess
+        If (hProcess = 0) Begin
+            Function_Return -1
+        End
+
+        Move (Repeat(Character(0), 32)) to sExitCode
+        Move (AddressOf(sExitCode))     to pExitCode
+        Move (GetExitCodeProcessEf(hProcess, pExitCode)) to iRet
+        If (iRet = 0) Begin
+            Function_Return -1
+        End
+
+        Move (BytesToDword(sExitCode, 1)) to iExitCode
+        If (iExitCode = STILL_ACTIVE) Begin
+            Function_Return -1
+        End
+        Function_Return iExitCode
+    End_Function
+
+    // Ends the running child, with iExitCode as the code it reports - pass a non-zero value, so a reader
+    // of the code sees the abnormal end. A no-op when no process is active. The OS marks the process as
+    // exited almost at once, so the next IsProcessRunning says False and the caller's normal path runs;
+    // a caller that must tell "killed" from "exited" keeps a flag of its own - the exit code alone is no
+    // signal, since a tool that failed may report a non-zero code too.
+    Procedure KillProcess Integer iExitCode
+        Boolean bActive bKilled
+        Handle  hProcess
+        Integer iRet iPid
+
+        Get pbActive  to bActive
+        Get phProcess to hProcess
+        If (bActive = False or hProcess = 0) Begin
+            Procedure_Return
+        End
+
+        // The launched process is often a shell WRAPPER (a cmd.exe redirecting a child's output to a file).
+        // TerminateProcess on this handle kills ONLY the wrapper and ORPHANS the real child, which keeps
+        // running and may hold files open. So the whole TREE is killed with taskkill /T, while the wrapper
+        // is still alive and the tree intact.
+        Move False to bKilled
+        Move (GetProcessIdEf(hProcess)) to iPid
+        If (iPid > 0) ;
+            Get _RunHidden "taskkill.exe" ("/F /T /PID " + String(iPid)) to bKilled
+
+        // When taskkill is missing or failed to launch: at least the wrapper ends.
+        If (bKilled = False) ;
+            Move (TerminateProcessEf(hProcess, iExitCode)) to iRet
+    End_Procedure
+
+    // Closes the process and thread handles and clears the state. Idempotent.
+    Procedure CleanUp
+        Handle  hProcess hThread
+        Integer iRet
+
+        Get phProcess to hProcess
+        Get phThread  to hThread
+        If (hProcess <> 0) Begin
+            Move (CloseHandleEf(hProcess)) to iRet
+        End
+        If (hThread <> 0) Begin
+            Move (CloseHandleEf(hThread)) to iRet
+        End
+        Set phProcess to 0
+        Set phThread  to 0
+        Set pbActive  to False
+    End_Procedure
+
+    // A short-lived helper (taskkill, say) launched and forgotten, with no console: CREATE_NO_WINDOW, for
+    // the reason StartProcess uses it. True when the process was created; its handles are closed at once
+    // since it is never polled.
+    Function _RunHidden String sCommand String sParams Returns Boolean
+        String  sCmd
+        Pointer pCmd pStartup pProcessInfo
+        Integer iRet iFlags
+        tProcessInfo ProcessInfo
+        tStartInfo   StartInfo
+
+        If (Left(sCommand, 1) <> '"' and (Left(sCommand, 1) <> "'")) ;
+            Move ('"' + sCommand + '"') to sCommand
+        Move (Utf8ToAnsi(sCommand + " " + sParams) + (Character(0))) to sCmd   // UTF-8 -> ANSI; see StartProcess
+        Move (AddressOf(sCmd))       to pCmd
+
+        Move (SizeOfType(tStartInfo)) to StartInfo.cb
+        Move STARTF_USESHOWWINDOW     to StartInfo.dwFlags
+        Move SW_HIDE                  to StartInfo.wShowWindow
+        Move CREATE_NO_WINDOW         to iFlags
+
+        Move 0                        to ProcessInfo.hProcess
+        Move (AddressOf(StartInfo))   to pStartup
+        Move (AddressOf(ProcessInfo)) to pProcessInfo
+
+        Move (CreateProcessEf(0, pCmd, 0, 0, False, iFlags, 0, 0, pStartup, pProcessInfo)) to iRet
+        If (iRet = 0) ;
+            Function_Return False
+
+        If (ProcessInfo.hProcess <> 0) ;
+            Move (CloseHandleEf(ProcessInfo.hProcess)) to iRet
+        If (ProcessInfo.hThread <> 0) ;
+            Move (CloseHandleEf(ProcessInfo.hThread)) to iRet
+        Function_Return True
+    End_Function
+
+End_Class
+
+// The progress panel RDCRunProgramBounded keeps alive while it waits: DataFlex's ghoStatusPanel
+// (StatPnl.pkg) with the RDC panel's ghoProgressBar (RDCStatusPanel.pkg), when the program has them.
+// Declared here too, guarded, so a program without a panel compiles - its runner simply nudges nothing.
+#IFNDEF ghoStatusPanel
+    Global_Variable Handle ghoStatusPanel
+    Move 0 to ghoStatusPanel
+#ENDIF
+
+#IFNDEF ghoProgressBar
+    Global_Variable Handle ghoProgressBar
+    Move 0 to ghoProgressBar
+#ENDIF
+
+// RDCRunProgramBounded's answers when the tool gave none.
+Define CI_RDCRunToolFailedToStart for -1   // the child never started
+Define CI_RDCRunToolTimedOut      for -2   // still running at the deadline, and was killed
+
+/*  Run a console tool, wait for it, and NEVER hang on it.
+
+    RDCRunProgramWait (RDCRunProgram.pkg) is the plain blocking launcher, and for a tool that only ever
+    works and exits it is the right one. It cannot be used for a tool that might ask a question: it
+    launches through ShellExecuteEx, which cannot redirect the child's input, and waits for ever - a
+    child prompting on its hidden console blocks, and the whole program blocks with it.
+
+    TWO protections, and only the second holds on its own: the child gets no console (CREATE_NO_WINDOW,
+    bShowWindow False), and a deadline ends anything that stalls - a prompt nobody can answer, a network
+    mount, a lock. No console does NOT make a prompt fail: a tool asking on its missing console simply
+    waits until the deadline kills it. What makes the same question exit at once is REDIRECTING THE
+    TOOL'S OUTPUT - a cmd.exe wrapper with "> log 2>&1" around it - so a tool that might ask runs through
+    such a wrapper; this function alone only bounds the wait.
+
+    Returns the child's exit code, or CI_RDCRunToolFailedToStart / CI_RDCRunToolTimedOut. The caller
+    judges the OUTCOME by its own evidence where it can (whether the file changed, say) and uses this
+    to explain what happened.
+
+    BLOCKING, but bounded: the message pump is frozen while it waits. While a status panel shows,
+    every pass advances its progress bar - a marquee that wraps at the bar's own maximum, since the
+    tool reports no progress - and pumps the panel, so it stays alive. Use cRDCAsyncProcess with a
+    timer where the UI must stay live.  */
+Function RDCRunProgramBounded Global String sProgram String sParams String sWorkDir Integer iTimeoutSecs Returns Integer
+    Handle  hoProc
+    Boolean bOk bRunning
+    // iChildExit, NOT iExit: iExit is a DataDictionary FIELD MESSAGE in the framework, and a local of that
+    // name is "Symbol already defined" wherever DataDict is in the chain.
+    Integer iWaitedMs iLimitMs iChildExit iVoid iBarMax iBarPos
+
+    If (iTimeoutSecs < 1) ;
+        Move 1 to iTimeoutSecs
+    Move (iTimeoutSecs * 1000) to iLimitMs
+
+    Get Create (RefClass(cRDCAsyncProcess)) to hoProc
+    // sWorkDir is passed THROUGH: StartProcess rejects a blank one on purpose, and "." is its opt-in to
+    // inheriting the current directory - so a blank one here means that.
+    If (Trim(sWorkDir) = "") ;
+        Move "." to sWorkDir
+    Get StartProcess of hoProc sProgram sParams sWorkDir False to bOk
+    If (bOk = False) Begin
+        Send CleanUp of hoProc
+        Send Destroy of hoProc
+        Function_Return CI_RDCRunToolFailedToStart
+    End
+
+    // Polls rather than waiting on the handle, so the deadline is checked on every pass; iWaitedMs grows
+    // whatever the child does, so the loop ends. The panel's Cancel is not honoured: a half-run tool is
+    // not a state this can tidy up.
+    Move 0 to iWaitedMs
+    Move True to bRunning
+    While (bRunning = True and iWaitedMs < iLimitMs)
+        Move (SleepEf(200)) to iVoid
+        Move (iWaitedMs + 200) to iWaitedMs
+        If (ghoStatusPanel <> 0) Begin
+            If (Active_State(ghoStatusPanel) = True) Begin
+                If (ghoProgressBar <> 0) Begin
+                    Get piMaximum of ghoProgressBar to iBarMax
+                    If (iBarMax > 0) Begin
+                        Get piPosition of ghoProgressBar to iBarPos
+                        Move (iBarPos + 1) to iBarPos
+                        If (iBarPos > iBarMax) ;
+                            Move 0 to iBarPos
+                        Set piPosition of ghoProgressBar to iBarPos
+                    End
+                End
+                Get Check_StatusPanel of ghoStatusPanel to iVoid
+            End
+        End
+        Get IsProcessRunning of hoProc to bRunning
+    Loop
+
+    If (bRunning = True) Begin
+        Send KillProcess of hoProc 1
+        Send CleanUp of hoProc
+        Send Destroy of hoProc
+        Function_Return CI_RDCRunToolTimedOut
+    End
+
+    Get ProcessExitCode of hoProc to iChildExit
+    Send CleanUp of hoProc
+    Send Destroy of hoProc
+    Function_Return iChildExit
+End_Function

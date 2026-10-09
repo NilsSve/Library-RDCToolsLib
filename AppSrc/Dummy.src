@@ -55,6 +55,7 @@ End_Object
 Use Base64Functions.pkg
 Use CJBrowseForFolder.pkg
 Use CaptureWindow.pkg
+Use RDCRunProgram.pkg
 Use RDCStatusPanel.pkg
 Use ShellExecute.pkg
 Use ShellExecuteErrors.pkg
@@ -62,6 +63,7 @@ Use StartProg.pkg
 Use Working.pkg
 Use cDataBaseFunctions.pkg
 Use cRDCApplication.pkg
+Use cRDCAsyncProcess.pkg
 Use cRDCAutoCreateNewID.pkg
 Use cRDCBitmapContainer.pkg
 Use cRDCButton.pkg
