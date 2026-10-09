@@ -20,6 +20,7 @@
 //****************************************************************************
 Use cRDCApplication.pkg
 Use cCJGrid.pkg
+Use Winuser.pkg                 // VK_SPACE - the key preview below
 Use cCJGridColumn.pkg
 Use cCJGridColumnRowIndicator.pkg
 Use cRDCCJGrid.pkg
@@ -194,10 +195,25 @@ Class cRDCCJSelectionGrid is a cRDCCJGrid
         Set pbMultipleSelection to True
         Set Status_Help      to "Select with spacebar"
         
-        On_Key Key_Space      Send ToggleCurrentItem
         On_Key Key_Ctrl+Key_A Send SelectAll
         On_Key Key_Ctrl+Key_N Send SelectNone
         On_Key Key_Ctrl+Key_I Send SelectInvert
+    End_Procedure
+
+    /* SPACE TOGGLES THE ROW - but not while a cell is being edited, where it is a character (1.0.7). The On_Key
+       binding this replaces fired in edit mode too: ToggleCurrentItem ended the edit and flipped the row's tick,
+       so no space could be typed into an editable cell. The key preview knows the edit state. */
+    Procedure OnComPreviewKeyDown Short ByRef iKeyCode Short iShift Boolean ByRef bCancel
+        Boolean bEditMode
+
+        Forward Send OnComPreviewKeyDown (&iKeyCode) iShift (&bCancel)
+        If (iKeyCode = VK_SPACE and iShift = 0) Begin
+            Get ComEditMode to bEditMode
+            If (bEditMode = False) Begin
+                Send ToggleCurrentItem
+                Move True to bCancel
+            End
+        End
     End_Procedure
 
     Procedure End_Construct_Object

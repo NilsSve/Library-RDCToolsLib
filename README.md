@@ -34,6 +34,12 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.7
+
+- `cRDCDbCJGrid` and `cRDCCJSelectionGrid`: the space bar toggles the row's selection only while no cell is
+  being edited; in an editable cell it is a character again. The key binding fired in edit mode too, ended
+  the edit and flipped the row's tick, so no space could be typed into a cell.
+
 ## What is new in 1.0.6
 
 - `RDCRunProgram.pkg`: `RDCRunProgramWait` runs a program and waits for it, with no console window
@@ -95,7 +101,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.6
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.7
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
