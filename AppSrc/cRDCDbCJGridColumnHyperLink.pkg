@@ -30,6 +30,7 @@
 
 
 Use cDbCJGridColumn.pkg
+Use RDCCJGridNames.pkg      // the grid's "Grid" names on a DataFlex before 23
 
 Class cDbCJGridColumnHyperLink is a cDbCJGridColumn
 

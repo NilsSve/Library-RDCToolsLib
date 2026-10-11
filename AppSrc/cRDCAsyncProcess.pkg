@@ -95,12 +95,12 @@ Class cRDCAsyncProcess is a cObject
             Move ('"' + sCommand + '"') to sCommand
         End
 
-        /* UTF-8 TO ANSI, NOT OEM TO ANSI. DataFlex strings are UTF-8 and CreateProcessEf is CreateProcessA,
-           so the command line and the folder must reach it in the ANSI code page. OemToAnsi read the
-           UTF-8 bytes as OEM characters and mapped each one, so a path with a national character in it
-           reached the child as garbled characters: "file not found", nothing run. Utf8ToAnsi is this
-           runtime's conversion; a character outside the ANSI code page becomes '?', which only a
-           CreateProcessW wrapper would carry. */
+        // UTF-8 TO ANSI, NOT OEM TO ANSI. DataFlex strings are UTF-8 and CreateProcessEf is CreateProcessA,
+        // so the command line and the folder must reach it in the ANSI code page. OemToAnsi read the
+        // UTF-8 bytes as OEM characters and mapped each one, so a path with a national character in it
+        // reached the child as garbled characters: "file not found", nothing run. Utf8ToAnsi is this
+        // runtime's conversion; a character outside the ANSI code page becomes '?', which only a
+        // CreateProcessW wrapper would carry.
         Move (Utf8ToAnsi(sCommand + " " + sParams) + (Character(0))) to sCmd
         Move (Utf8ToAnsi(sWorkDir) + (Character(0)))                 to sWorkDirZ
         Move (AddressOf(sCmd))      to pCmd
@@ -293,28 +293,28 @@ End_Class
 Define CI_RDCRunToolFailedToStart for -1   // the child never started
 Define CI_RDCRunToolTimedOut      for -2   // still running at the deadline, and was killed
 
-/*  Run a console tool, wait for it, and NEVER hang on it.
-
-    RDCRunProgramWait (RDCRunProgram.pkg) is the plain blocking launcher, and for a tool that only ever
-    works and exits it is the right one. It cannot be used for a tool that might ask a question: it
-    launches through ShellExecuteEx, which cannot redirect the child's input, and waits for ever - a
-    child prompting on its hidden console blocks, and the whole program blocks with it.
-
-    TWO protections, and only the second holds on its own: the child gets no console (CREATE_NO_WINDOW,
-    bShowWindow False), and a deadline ends anything that stalls - a prompt nobody can answer, a network
-    mount, a lock. No console does NOT make a prompt fail: a tool asking on its missing console simply
-    waits until the deadline kills it. What makes the same question exit at once is REDIRECTING THE
-    TOOL'S OUTPUT - a cmd.exe wrapper with "> log 2>&1" around it - so a tool that might ask runs through
-    such a wrapper; this function alone only bounds the wait.
-
-    Returns the child's exit code, or CI_RDCRunToolFailedToStart / CI_RDCRunToolTimedOut. The caller
-    judges the OUTCOME by its own evidence where it can (whether the file changed, say) and uses this
-    to explain what happened.
-
-    BLOCKING, but bounded: the message pump is frozen while it waits. While a status panel shows,
-    every pass advances its progress bar - a marquee that wraps at the bar's own maximum, since the
-    tool reports no progress - and pumps the panel, so it stays alive. Use cRDCAsyncProcess with a
-    timer where the UI must stay live.  */
+//  Run a console tool, wait for it, and NEVER hang on it.
+//
+//  RDCRunProgramWait (RDCRunProgram.pkg) is the plain blocking launcher, and for a tool that only ever
+//  works and exits it is the right one. It cannot be used for a tool that might ask a question: it
+//  launches through ShellExecuteEx, which cannot redirect the child's input, and waits for ever - a
+//  child prompting on its hidden console blocks, and the whole program blocks with it.
+//
+//  TWO protections, and only the second holds on its own: the child gets no console (CREATE_NO_WINDOW,
+//  bShowWindow False), and a deadline ends anything that stalls - a prompt nobody can answer, a network
+//  mount, a lock. No console does NOT make a prompt fail: a tool asking on its missing console simply
+//  waits until the deadline kills it. What makes the same question exit at once is REDIRECTING THE
+//  TOOL'S OUTPUT - a cmd.exe wrapper with "> log 2>&1" around it - so a tool that might ask runs through
+//  such a wrapper; this function alone only bounds the wait.
+//
+//  Returns the child's exit code, or CI_RDCRunToolFailedToStart / CI_RDCRunToolTimedOut. The caller
+//  judges the OUTCOME by its own evidence where it can (whether the file changed, say) and uses this
+//  to explain what happened.
+//
+//  BLOCKING, but bounded: the message pump is frozen while it waits. While a status panel shows,
+//  every pass advances its progress bar - a marquee that wraps at the bar's own maximum, since the
+//  tool reports no progress - and pumps the panel, so it stays alive. Use cRDCAsyncProcess with a
+//  timer where the UI must stay live.
 Function RDCRunProgramBounded Global String sProgram String sParams String sWorkDir Integer iTimeoutSecs Returns Integer
     Handle  hoProc
     Boolean bOk bRunning

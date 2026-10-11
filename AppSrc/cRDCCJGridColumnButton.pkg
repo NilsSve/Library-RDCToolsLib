@@ -4,6 +4,7 @@
 //
 Use cCJGrid.pkg
 Use cCJGridColumn.pkg
+Use RDCCJGridNames.pkg      // the grid's "Grid" names on a DataFlex before 23
 
 #IFNDEF Get_GetCapture
 Use cTimer.pkg

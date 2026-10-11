@@ -1,0 +1,35 @@
+﻿// The CodeJock grid's helper classes and constants under the names DataFlex 23 and later give them, for the
+// DataFlex versions before 23. There they carry "Report" in their names: cCJReportItemButton,
+// xtpReportItemControlLeft and so on. A package that needs one of them Uses this package and writes the
+// new name. From DataFlex 23 on this package adds nothing.
+Use cCJGrid.pkg
+
+#IF (!@ < 230)
+
+Define xtpGridItemControlUnknown      for xtpReportItemControlUnknown
+Define xtpGridItemControlLeft         for xtpReportItemControlLeft
+Define xtpGridItemControlRight        for xtpReportItemControlRight
+Define xtpGridItemControlTypeButton   for xtpReportItemControlTypeButton
+Define xtpGridItemButtonStateAll      for xtpReportItemButtonStateAll
+Define xtpGridItemButtonStateNormal   for xtpReportItemButtonStateNormal
+Define xtpGridItemButtonStateHot      for xtpReportItemButtonStateHot
+Define xtpGridItemButtonStatePressed  for xtpReportItemButtonStatePressed
+Define xtpGridItemButtonStateDisabled for xtpReportItemButtonStateDisabled
+Define xtpGridTextDecorationUnderline for xtpReportTextDecorationUnderline
+
+Class cCJGridItemButton is a cCJReportItemButton
+End_Class
+
+Class cCJGridItemControls is a cCJReportItemControls
+End_Class
+
+Class cCJGridHitTestInfo is a cCJReportHitTestInfo
+End_Class
+
+Class cCJGridHyperlinks is a cCJReportHyperlinks
+End_Class
+
+Class cCJGridHyperlinkStyle is a cCJReportHyperlinkStyle
+End_Class
+
+#ENDIF

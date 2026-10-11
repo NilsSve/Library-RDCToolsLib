@@ -161,11 +161,11 @@ Class cRDCCJToolPanel is a Container3d
         Function_Return (bState and bBarState)
     End_Function
 
-    /* HIDE (bState False): the dragged height is remembered just before the bar goes, when it is to be - the LIVE
-       window rectangle, read while the dock is still active (a shutdown hide finds it torn down, and does nothing).
-       SHOW (bState True): a dock that was hidden is marked for the height's restore, which the Activate that follows
-       does; one shown already keeps the height it has. The watchdog runs only while the dock is shown, and only when
-       piMinSize sets a floor. Then the bar is shown or hidden. */
+    // HIDE (bState False): the dragged height is remembered just before the bar goes, when it is to be - the LIVE
+    // window rectangle, read while the dock is still active (a shutdown hide finds it torn down, and does nothing).
+    // SHOW (bState True): a dock that was hidden is marked for the height's restore, which the Activate that follows
+    // does; one shown already keeps the height it has. The watchdog runs only while the dock is shown, and only when
+    // piMinSize sets a floor. Then the bar is shown or hidden.
     Procedure Set pbVisible Boolean bState
         Handle  hWnd hoToolPane
         Integer iHeight iOK iMinSize
@@ -212,10 +212,10 @@ Class cRDCCJToolPanel is a Container3d
         Set pbVisible to False
     End_Procedure
 
-    /* ACTIVATE docks the bar - the only way it docks: Add_Focus -> Update -> Create_ToolPanel builds it, and the
-       activation shows it. A dock activated from outside any scope first activates the main panel's client area, as
-       a view does. OnUpdate is sent once the bar is up; then the remembered height, when a hidden dock was just marked
-       for it - after the bar is docked and realized, never before - clamped to piMinSize. */
+    // ACTIVATE docks the bar - the only way it docks: Add_Focus -> Update -> Create_ToolPanel builds it, and the
+    // activation shows it. A dock activated from outside any scope first activates the main panel's client area, as
+    // a view does. OnUpdate is sent once the bar is up; then the remembered height, when a hidden dock was just marked
+    // for it - after the bar is docked and realized, never before - clamped to piMinSize.
     Procedure Activate Returns Integer
         Integer iErr iSize iWidth iMinHeight iSaved
         Handle  hoScopeObj hoMain hoClient hoToolPane
@@ -341,11 +341,11 @@ Class cRDCCJToolPanel is a Container3d
         Function_Return False
     End_Function
 
-    /* THE FLOOR, re-asserted by the watchdog every 150 ms while the dock is shown: the live window rectangle,
-       and when the user dragged the bar below piMinSize, ComSetSize back to it - only once the LEFT MOUSE BUTTON is
-       up, so the clamp never fights CodeJock's live drag. The width is kept from the live rectangle; the floor is
-       piMinSize in pixels, as Create_ToolPanel derives it. A 4 px deadband keeps gripper rounding from re-clamping
-       a bar that sits at the floor. Safe before the bar exists and during shutdown. */
+    // THE FLOOR, re-asserted by the watchdog every 150 ms while the dock is shown: the live window rectangle,
+    // and when the user dragged the bar below piMinSize, ComSetSize back to it - only once the LEFT MOUSE BUTTON is
+    // up, so the clamp never fights CodeJock's live drag. The width is kept from the live rectangle; the floor is
+    // piMinSize in pixels, as Create_ToolPanel derives it. A 4 px deadband keeps gripper rounding from re-clamping
+    // a bar that sits at the floor. Safe before the bar exists and during shutdown.
     Procedure EnforceMinDockHeight
         Handle  hWnd hoToolPane
         Integer iKey iSize iMinH iCurH iCurW iOK

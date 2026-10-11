@@ -12,7 +12,12 @@
 // $Rev History:
 //    2013-10-29  Module header created
 //****************************************************************************
+// The error object's class: cWindowsErrorHandler.pkg from DataFlex 23, Dferror.pkg before it.
+#IF (!@ < 230)
+Use Dferror.pkg
+#ELSE
 Use cWindowsErrorHandler.pkg
+#ENDIF
 Use cDataBaseFunctions.h.pkg
 
 // Important: Only use _ONE_ instance of this object,
@@ -23,6 +28,26 @@ Class cDatabaseFunctions is a cObject
         Forward Send Construct_Object
         Move Self to ghoDatabaseFunctions
         Property Boolean pbReindexCodeFiles True
+    End_Procedure
+
+    // Whether the error object shows error numbers and source line numbers. The property is pbVerboseState
+    // from DataFlex 23 and Verbose_State before it.
+    Function ErrorObjectVerboseState Returns Boolean
+        Boolean bVerbose
+#IF (!@ < 230)
+        Get Verbose_State of Error_Object_Id to bVerbose
+#ELSE
+        Get pbVerboseState of Error_Object_Id to bVerbose
+#ENDIF
+        Function_Return bVerbose
+    End_Function
+
+    Procedure Set ErrorObjectVerboseState Boolean bVerbose
+#IF (!@ < 230)
+        Set Verbose_State of Error_Object_Id to bVerbose
+#ELSE
+        Set pbVerboseState of Error_Object_Id to bVerbose
+#ENDIF
     End_Procedure
 
     // *** MAIN PROCEDURES ***
@@ -251,8 +276,8 @@ Class cDatabaseFunctions is a cObject
         
         // This will tell the error object to _not_ display
         // error numbers and source number lines, while reindexing.
-        Get pbVerboseState of Error_Object_Id to bVerbose
-        Set pbVerboseState of Error_Object_Id to False
+        Get ErrorObjectVerboseState to bVerbose
+        Set ErrorObjectVerboseState to False
 
         // Start the status panel
         If (ghoStatusPanel <> 0) Begin
@@ -359,7 +384,7 @@ Class cDatabaseFunctions is a cObject
             End
         Until (iTableNum = 0)
 
-        Set pbVerboseState of Error_Object_Id to bVerbose
+        Set ErrorObjectVerboseState to bVerbose
         If (ghoStatusPanel <> 0) Begin
             Send Stop_StatusPanel of ghoStatusPanel
         End
@@ -440,8 +465,8 @@ Class cDatabaseFunctions is a cObject
 
         // This will tell the error object to _not_ display
         // error numbers and source number lines.
-        Get pbVerboseState of Error_Object_Id to bVerbose
-        Set pbVerboseState of Error_Object_Id to False
+        Get ErrorObjectVerboseState to bVerbose
+        Set ErrorObjectVerboseState to False
 
         // Start the status panel
         If (ghoStatusPanel <> 0) Begin
@@ -558,7 +583,7 @@ Class cDatabaseFunctions is a cObject
             End
         Until (iTableNum = 0 or FindErr = True)
 
-        Set pbVerboseState of Error_Object_Id to bVerbose
+        Set ErrorObjectVerboseState to bVerbose
         // Stop progress messages
         If (ghoStatusPanel <> 0) Begin
             Send Stop_StatusPanel of ghoStatusPanel

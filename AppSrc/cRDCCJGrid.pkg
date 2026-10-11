@@ -104,10 +104,10 @@ Class cRDCCJGrid is a cCJGrid
         On_Key Key_Alt+Key_Up_Arrow   Send MoveUp
     End_Procedure
 
-    /* THE GRID'S LOOK: the colours of the alternate row, the selected row and the highlight, and the
-       caption. Called from Construct_Object. A subclass overrides this to colour the grid its own way -
-       or to set nothing, and take the CodeJock theme's own colours (the FlexTron grids do, RDCFlexTron
-       0.9.15). */
+    // THE GRID'S LOOK: the colours of the alternate row, the selected row and the highlight, and the
+    // caption. Called from Construct_Object. A subclass overrides this to colour the grid its own way -
+    // or to set nothing, and take the CodeJock theme's own colours (the FlexTron grids do, RDCFlexTron
+    // 0.9.15).
     Procedure SetGridLook
         Set pbUseAlternateRowBackgroundColor to True
         Set piAlternateRowBackgroundColor    to clAlternateRowBgColor

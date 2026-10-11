@@ -259,9 +259,9 @@ Class cRDCDbCJGrid is a cDbCJGrid
         On_Key Key_Ctrl+Key_F5 send None
     End_Procedure
 
-    /* SPACE TOGGLES THE ROW - but not while a cell is being edited, where it is a character (1.0.7). The On_Key
-       binding this replaces fired in edit mode too: ToggleCurrentItem ended the edit and flipped the row's tick,
-       so no space could be typed into an editable cell. The key preview knows the edit state. */
+    // SPACE TOGGLES THE ROW - but not while a cell is being edited, where it is a character (1.0.7). The On_Key
+    // binding this replaces fired in edit mode too: ToggleCurrentItem ended the edit and flipped the row's tick,
+    // so no space could be typed into an editable cell. The key preview knows the edit state.
     Procedure OnComPreviewKeyDown Short ByRef iKeyCode Short iShift Boolean ByRef bCancel
         Boolean bEditMode
 
@@ -275,10 +275,10 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
     End_Procedure
 
-    /* THE GRID'S LOOK: the colours of the alternate row, the selected row and the highlight, the caption
-       and the focused cell, and the CodeJock theme. Called from Construct_Object. A subclass overrides this
-       to colour the grid its own way - or to set nothing, and take the CodeJock theme's own colours (the
-       FlexTron grids do, RDCFlexTron 0.9.15). */
+    // THE GRID'S LOOK: the colours of the alternate row, the selected row and the highlight, the caption
+    // and the focused cell, and the CodeJock theme. Called from Construct_Object. A subclass overrides this
+    // to colour the grid its own way - or to set nothing, and take the CodeJock theme's own colours (the
+    // FlexTron grids do, RDCFlexTron 0.9.15).
     Procedure SetGridLook
         Set pbUseAlternateRowBackgroundColor to True
         Set piAlternateRowBackgroundColor    to clAlternateRowBgColor
@@ -289,7 +289,13 @@ Class cRDCDbCJGrid is a cDbCJGrid
         Set piCaptionForeColor               to clWhite
         Set piFocusCellForeColor             to clBlack
         Set piFocusCellBackColor             to clDefault
-        Set peVisualTheme                    to xtpGridThemeOffice2003
+        #IF (!@ > 180)
+            #IF (!@ < 230)
+                Set peVisualTheme            to xtpReportThemeExplorer
+            #ELSE
+                Set peVisualTheme            to xtpGridThemeOffice2003
+            #ENDIF
+        #ENDIF
     End_Procedure
                   
 //    Procedure MoveToLastEnterableColumn
@@ -528,18 +534,18 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
     End_Procedure
 
-    /* A no-clear save reaches the grid only when it is realized: a CodeJock db-grid faults "Invalid message
-       GET_SHOULD_SAVE_ROW" on one that is not - a save broadcast from a view can arrive before the grid has
-       been paged in. */
+    // A no-clear save reaches the grid only when it is realized: a CodeJock db-grid faults "Invalid message
+    // GET_SHOULD_SAVE_ROW" on one that is not - a save broadcast from a view can arrive before the grid has
+    // been paged in.
     Procedure Request_Save_No_Clear
         If (IsComObjectCreated(Self)) ;
             Forward Send Request_Save_No_Clear
     End_Procedure
 
-    /* THE ROW IS SAVED THE MOMENT ITS TICK CHANGES. CodeJock persists a row only on row-exit, so a single
-       mouse tick followed at once by an action that reads the table was lost. These events fire only on a
-       realized grid with a current row, so the save never hits the unrealized-grid fault above. (The space
-       bar and the bulk selects save for themselves - ToggleCurrentItem, SelectItems.) */
+    // THE ROW IS SAVED THE MOMENT ITS TICK CHANGES. CodeJock persists a row only on row-exit, so a single
+    // mouse tick followed at once by an action that reads the table was lost. These events fire only on a
+    // realized grid with a current row, so the save never hits the unrealized-grid fault above. (The space
+    // bar and the bulk selects save for themselves - ToggleCurrentItem, SelectItems.)
     Procedure OnComItemCheck Variant llRow Variant llItem
         Handle hoItem hoCheckbox_Col
         Integer iColumn iCheckCol
@@ -557,11 +563,11 @@ Class cRDCDbCJGrid is a cDbCJGrid
         End
     End_Procedure
 
-    /* ...AND A VALUE-EDIT IN THE REGISTERED COLUMN (phoSaveOnChangeColumn), BUT ONLY WHEN THE VALUE REALLY
-       CHANGED. CodeJock raises ValueChanged as the in-place editor comes UP too, with the value it already
-       had; a save there refreshes the grid and tears the editor down before a combo's list can drop. The
-       before and after values come from the data source, which the base's NotifyEndEdit updates only on a
-       genuine change - the same test it makes. */
+    // ...AND A VALUE-EDIT IN THE REGISTERED COLUMN (phoSaveOnChangeColumn), BUT ONLY WHEN THE VALUE REALLY
+    // CHANGED. CodeJock raises ValueChanged as the in-place editor comes UP too, with the value it already
+    // had; a save there refreshes the grid and tears the editor down before a combo's list can drop. The
+    // before and after values come from the data source, which the base's NotifyEndEdit updates only on a
+    // genuine change - the same test it makes.
     Procedure OnComValueChanged Variant llRow Variant llColumn Variant llItem
         Handle hoItem hoSaveCol
         Integer iColumn iSaveCol

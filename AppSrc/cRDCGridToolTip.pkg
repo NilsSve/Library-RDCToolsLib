@@ -70,17 +70,17 @@ Procedure RDCApplyGridToolTipStyle Global Handle hoGrid
     Set piTooltipMaxWidth of hoGrid to iWidth
 End_Procedure
 
-/* HOW A GRID TOOLTIP ACTUALLY GETS A SENSIBLE WIDTH: line breaks in its TEXT.
-
-   A column whose OnGetTooltip hands back text that already carries newlines draws a readable tooltip;
-   one unbroken sentence draws one unbroken line. RDCWrapToolTipText breaks a string into lines of at
-   most iChars characters on word boundaries, keeping any line breaks the text already has (including
-   the escaped forms \r\n and \n a stored help string may carry). A word longer than iChars is left
-   whole rather than cut in half - a path or an identifier is more use unbroken than wrapped.
-
-   CI_RDCTipWrapChars is the one place the width is decided. It is in CHARACTERS, not pixels, because
-   this works on the text and needs no cooperation from the tooltip window. Define it before the first
-   Use of this package to take another width. */
+// HOW A GRID TOOLTIP ACTUALLY GETS A SENSIBLE WIDTH: line breaks in its TEXT.
+//
+// A column whose OnGetTooltip hands back text that already carries newlines draws a readable tooltip;
+// one unbroken sentence draws one unbroken line. RDCWrapToolTipText breaks a string into lines of at
+// most iChars characters on word boundaries, keeping any line breaks the text already has (including
+// the escaped forms \r\n and \n a stored help string may carry). A word longer than iChars is left
+// whole rather than cut in half - a path or an identifier is more use unbroken than wrapped.
+//
+// CI_RDCTipWrapChars is the one place the width is decided. It is in CHARACTERS, not pixels, because
+// this works on the text and needs no cooperation from the tooltip window. Define it before the first
+// Use of this package to take another width.
 #IFNDEF CI_RDCTipWrapChars
     Define CI_RDCTipWrapChars for 50
 #ENDIF
@@ -130,9 +130,9 @@ Function RDCWrapToolTipText Global String sText Integer iChars Returns String
     Function_Return sOut
 End_Function
 
-/* THE TWO CLASSES, so no view or dialog carries tooltip code of its own. Use cRDCToolTipGrid wherever a
-   plain cCJGrid is wanted; the grids that descend from cRDCCJGrid or cRDCDbCJGrid get the same treatment in
-   their own Construct_Object, because they cannot also descend from this one. */
+// THE TWO CLASSES, so no view or dialog carries tooltip code of its own. Use cRDCToolTipGrid wherever a
+// plain cCJGrid is wanted; the grids that descend from cRDCCJGrid or cRDCDbCJGrid get the same treatment in
+// their own Construct_Object, because they cannot also descend from this one.
 Class cRDCToolTipGrid is a cCJGrid
 
     Procedure Construct_Object
@@ -142,10 +142,10 @@ Class cRDCToolTipGrid is a cCJGrid
 
 End_Class
 
-/* A column whose cell tooltip is WRAPPED - which is what actually gives a tooltip a sensible width, the
-   tooltip taking its shape from the line breaks in its text. Give this class to any column whose cells
-   hold a sentence rather than a name. It costs nothing on a short cell: the wrap returns text that
-   already fits unchanged. */
+// A column whose cell tooltip is WRAPPED - which is what actually gives a tooltip a sensible width, the
+// tooltip taking its shape from the line breaks in its text. Give this class to any column whose cells
+// hold a sentence rather than a name. It costs nothing on a short cell: the wrap returns text that
+// already fits unchanged.
 Class cRDCToolTipColumn is a cCJGridColumn
 
     Function OnGetTooltip Integer iRow String sValue String sText Returns String
