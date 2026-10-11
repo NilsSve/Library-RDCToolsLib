@@ -31,12 +31,6 @@ Object oHtmlHelp is a cHtmlHelp
 End_Object
 
 Object oApplication is a cApplication
-
-    Object oConnection is a cConnection
-        Use LoginEncryption.pkg
-        Use DatabaseLoginDialog.dg
-    End_Object
-
 End_Object
 
 // ---------------------------------------------------------------------------
