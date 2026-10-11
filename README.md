@@ -35,6 +35,16 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.9
+
+- The library compiles on DataFlex 20.1, 23 and 24 again, beside 25 and 26, and each of them has its
+  workspace files (`RDCToolsLibLibrary20.1.sws` and so on). Block comments became line comments, and what
+  DataFlex 23 named or added stands behind a version gate: the error handler package in
+  `cDataBaseFunctions`, the grid theme in `cRDCDbCJGrid`, and the CodeJock grid's "Grid" names, which the
+  new `RDCCJGridNames.pkg` gives the older versions.
+- `CaptureWindow`: asks `vFolderExists` whether its folder is there; `IsDirectory` is known from DataFlex 25
+  only.
+
 ## What is new in 1.0.8
 
 - `RDCTimeSpan.pkg`: a TimeSpan as text. `RDCTimeSpanToClock` gives `HH:MM:SS`, the days in front as `D:`
@@ -109,7 +119,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.8
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.9
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
