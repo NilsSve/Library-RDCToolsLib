@@ -131,12 +131,12 @@ uses RDCToolsLib asks for a range the same way, `"version": "^1.0.1"`.
 From 1.0.1 on, the package file has no DataFlex version in its name. Release 1.0.0 still has the old
 name, `RDC-Windows-Sub-Classes-Library-26.0.sws`.
 
-**DataFlex 20.1, 23, 24 and 25** — add the `RDCToolsLibLibrary` file of your version (`RDCToolsLibLibrary20.1.sws`,
-`23.0`, `24.0` or `25.0`) as a library in your workspace.
+**DataFlex 19.1, 20.1, 23, 24 and 25** — add the `RDCToolsLibLibrary` file of your version (`RDCToolsLibLibrary19.1.sws`,
+`20.1`, `23.0`, `24.0` or `25.0`) as a library in your workspace.
 
 ## Requirements
 
-DataFlex 20.1 to 26, Windows desktop. The grid and CodeJock classes need the CodeJock controls that
+DataFlex 19.1 to 26, Windows desktop. The grid and CodeJock classes need the CodeJock controls that
 ship with DataFlex.
 
 RDCToolsLib uses [vwin32fh](https://github.com/NilsSve/Library-vwin32fh) for Windows file handling.
@@ -144,8 +144,8 @@ RDCToolsLib uses [vwin32fh](https://github.com/NilsSve/Library-vwin32fh) for Win
 **On DataFlex 26 you do not need to do anything about it** — it is declared as a dependency of this
 package, so installing RDCToolsLib brings vwin32fh in with it.
 
-**On DataFlex 20.1, 23, 24 and 25** there is no package manager, so add both to your workspace yourself, as
-siblings - the 25.0 files here; the 20.1, 23.0 and 24.0 files are named the same way:
+**On DataFlex 19.1, 20.1, 23, 24 and 25** there is no package manager, so add both to your workspace yourself, as
+siblings - the 25.0 files here; the 19.1, 20.1, 23.0 and 24.0 files are named the same way:
 
 ```
 Lib1=Libraries\RDCToolsLib\RDCToolsLibLibrary25.0.sws
