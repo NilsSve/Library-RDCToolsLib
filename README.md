@@ -35,6 +35,20 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.10
+
+- The library compiles on DataFlex 19.1 again, and has its workspace files for it
+  (`RDCToolsLibLibrary19.1.sws`, `RDCToolsLibDev19.1.sws`). What DataFlex 20 added stands behind a version
+  gate: wide strings and the wide Windows functions, `Utf8ToAnsi`, `C_NewLine`, and the application object's
+  `ReadInteger` and `WriteInteger`, for which the new `RDCAppInteger.pkg` has `RDCReadAppInteger` and
+  `RDCWriteAppInteger`.
+- No source file starts with a UTF-8 mark any more: DataFlex 19.1 stops at one. The national texts in
+  `cDataBaseFunctions.h.pkg` are OEM text (code page 850) again; DataFlex 20 and later convert them when
+  they compile.
+- `TypeFaceWinTextMetric` of the suggestion classes, on DataFlex 20 and later: it measured a default font
+  instead of the one asked for, and let Windows write past the end of its structure. Both are fixed.
+- Unit tests on DFUnit: `AppSrc\UnitTests.src` with 16 first tests. See "Unit tests" below.
+
 ## What is new in 1.0.9
 
 - The library compiles on DataFlex 20.1, 23 and 24 again, beside 25 and 26, and each of them has its
@@ -119,7 +133,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.9
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.10
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
