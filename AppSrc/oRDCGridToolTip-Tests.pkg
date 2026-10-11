@@ -1,0 +1,56 @@
+// oRDCGridToolTip-Tests.pkg - RDCWrapToolTipText, which breaks a tooltip text into lines, and C_NewLine, which
+// VdfBase.pkg has from DataFlex 20 and cRDCGridToolTip.pkg defines where it is missing.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use cRDCGridToolTip.pkg
+
+Object oRDCGridToolTip_Tests is a cTestFixture
+    Set psTestFixtureName to "cRDCGridToolTip - wrapping a tooltip text"
+
+    { Published=True }
+    Procedure Test_C_NewLine_Is_Carriage_Return_And_Line_Feed
+        String sNewLine
+
+        Move C_NewLine to sNewLine
+        Send AssertIAreEqual 2  (Length(sNewLine))          "Two characters."
+        Send AssertIAreEqual 13 (Ascii(Left(sNewLine, 1)))  "The first is a carriage return."
+        Send AssertIAreEqual 10 (Ascii(Right(sNewLine, 1))) "The second is a line feed."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_Wrap_Breaks_Between_Words
+        String sWrapped
+
+        Get RDCWrapToolTipText "aaaa bbbb cccc dddd" 10 to sWrapped
+        Send AssertSAreEqual ("aaaa bbbb" + C_NewLine + "cccc dddd") sWrapped "Two words fit in ten characters, a third does not."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_Wrap_Leaves_A_Long_Word_Whole
+        String sWrapped
+
+        Get RDCWrapToolTipText "short averyveryverylongword end" 10 to sWrapped
+        Send AssertSAreEqual ("short" + C_NewLine + "averyveryverylongword" + C_NewLine + "end") sWrapped "A word longer than the width gets a line of its own."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_Wrap_Keeps_The_Line_Breaks_Of_The_Text
+        String sWrapped
+
+        Get RDCWrapToolTipText ("first" + C_NewLine + "second") 20 to sWrapped
+        Send AssertSAreEqual ("first" + C_NewLine + "second") sWrapped "A line break in the text stays."
+        Get RDCWrapToolTipText "first\nsecond" 20 to sWrapped
+        Send AssertSAreEqual ("first" + C_NewLine + "second") sWrapped "The written-out \n of a stored help text becomes a line break."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_Wrap_Leaves_What_It_Cannot_Wrap
+        String sWrapped
+
+        Get RDCWrapToolTipText "" 50 to sWrapped
+        Send AssertSAreEqual "" sWrapped "Nothing in, nothing out."
+        Get RDCWrapToolTipText "one two three four five" 5 to sWrapped
+        Send AssertSAreEqual "one two three four five" sWrapped "A width under ten characters is not used."
+    End_Procedure
+
+End_Object

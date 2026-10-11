@@ -9,5 +9,7 @@ Is$Win64=True
 DefaultFormHeight=12
 [Libraries]
 Lib1=..\vwin32fh\StudioLibrary\vWin32fh-Library-DF24.0.sws
+Lib2=..\DFUnit\DFUnit-24.0.sws
 [Projects]
 Project0=Dummy.src
+Project1=UnitTests.src

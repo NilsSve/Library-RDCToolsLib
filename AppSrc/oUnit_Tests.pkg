@@ -1,0 +1,26 @@
+// oUnit_Tests.pkg - the root fixture for the unit tests of the RDCToolsLib workspace.
+//
+// This is the only file to edit when a test file is added: one Use line per subject. One file per package or
+// per function under test, named o<Subject>-Tests.pkg.
+
+Use DFUnit\Fixturing\Fixture.pkg
+
+Object oWorkspace_Tests is a cTestFixture
+    Set psTestFixtureName to "RDCToolsLib"
+
+    Procedure Setup
+    End_Procedure
+
+    Procedure TearDown
+    End_Procedure
+
+    // *** Test files below - one Use line per subject: ***
+    Use oRDCAppInteger-Tests.pkg
+    Use oUtf8ToAnsi-Tests.pkg
+    Use oRDCGridToolTip-Tests.pkg
+    Use oRDCCJGridNames-Tests.pkg
+    Use oRDCApplication-Tests.pkg
+    Use oCaptureWindow-Tests.pkg
+    Use oTypeFaceWinTextMetric-Tests.pkg
+
+End_Object

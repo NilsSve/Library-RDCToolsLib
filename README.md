@@ -155,6 +155,26 @@ Lib2=Libraries\vwin32fh\StudioLibrary\vWin32fh-Library-DF25.0.sws
 If vwin32fh is missing, the compile fails with error 4313 on `vWin32fh.pkg`, reported from a grid
 class — which does not obviously point at the real cause.
 
+## Unit tests
+
+`AppSrc\UnitTests.src` is the unit-test program of the workspace, built on
+[DFUnit](https://github.com/NilsSve/Library-DFUnit). The tests are in `AppSrc\o<Subject>-Tests.pkg`, one file
+per subject, and `AppSrc\oUnit_Tests.pkg` lists them. The first files cover the code that differs between
+DataFlex versions: the whole-number registry helpers, `Utf8ToAnsi`, the tooltip wrap, the CodeJock "Grid"
+names, the Windows user name, the Pictures folder and the font metrics.
+
+The `RDCToolsLibDev<version>.sws` files take DFUnit from the sibling folder `..\DFUnit`, which `setup.bat`
+clones.
+
+Compile `UnitTests` and run it: the test-runner window opens. `UnitTests64.exe -c` runs the tests without a
+window and ends with exit code 0 when all passed; `-o result.xml` adds a JUnit file. On DataFlex 19.1 the
+program is `UnitTests.exe`.
+
+`AppSrc\UnitTestHeaps.pkg` is for the test of a function that hands a buffer or a structure to Windows:
+`UnitTestDamagedHeaps()` asks Windows whether every heap of the process is still sound. A function that lets
+Windows write past the end of what it handed over shows up there at once, and not as a crash somewhere else
+later.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).

@@ -1,0 +1,39 @@
+// oUtf8ToAnsi-Tests.pkg - Utf8ToAnsi as RDCRunProgram and cRDCAsyncProcess use it for the command line of a
+// program they start: DataFlex's own function from version 20, and before it a stand-in on ToANSI, because a
+// string is OEM there.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use RDCRunProgram.pkg
+
+Object oUtf8ToAnsi_Tests is a cTestFixture
+    Set psTestFixtureName to "Utf8ToAnsi - a text as the ANSI functions of Windows want it"
+
+    { Published=True }
+    Procedure Test_Plain_Text_Stays_As_It_Is
+        String sAnsi
+
+        Move (Utf8ToAnsi("notepad.exe C:\Temp\a file.txt")) to sAnsi
+        Send AssertSAreEqual "notepad.exe C:\Temp\a file.txt" sAnsi "ASCII is the same in every coding."
+    End_Procedure
+
+    // a-umlaut is character 132 in the OEM code pages 437 and 850 (a string before DataFlex 20) and character
+    // 228 in Unicode (from 20 on). In the ANSI code page 1252 it is the one byte 228.
+    { Published=True }
+    Procedure Test_A_National_Letter_Becomes_One_ANSI_Byte
+        String sLetter sAnsi
+        UChar[] aBytes
+
+#IF (!@ < 200)
+        Move (Character(132)) to sLetter
+#ELSE
+        Move (Character(228)) to sLetter
+#ENDIF
+        Move (Utf8ToAnsi("x" + sLetter + "y")) to sAnsi
+        Move (StringToUCharArray(sAnsi)) to aBytes
+        Send AssertIAreEqual 3 (SizeOfArray(aBytes)) "Three bytes: x, the letter, y."
+        If (SizeOfArray(aBytes) = 3) Begin
+            Send AssertIAreEqual 228 aBytes[1] "The letter is byte 228 of the ANSI code page 1252."
+        End
+    End_Procedure
+
+End_Object

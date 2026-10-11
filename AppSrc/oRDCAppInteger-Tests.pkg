@@ -1,0 +1,44 @@
+// oRDCAppInteger-Tests.pkg - RDCReadAppInteger and RDCWriteAppInteger: a whole number in the application's
+// registry settings, through ReadInteger / WriteInteger from DataFlex 20 and ReadDword / WriteDword before it.
+//
+// The tests write under one section of the test program's own registry key, and TearDown removes that section.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use RDCAppInteger.pkg
+Use cRegistry.pkg
+
+Object oRDCAppInteger_Tests is a cTestFixture
+    Set psTestFixtureName to "RDCAppInteger - a whole number in the registry settings"
+
+    Procedure TearDown
+        Handle hoRegistry
+        String sKey
+        Boolean bGone
+
+        Get RegistryKeyString of ghoApplication to sKey
+        Get Create (RefClass(cRegistry)) to hoRegistry
+        Get DeleteKey of hoRegistry (sKey + "\UnitTestSection") to bGone
+        Send Destroy of hoRegistry
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_A_Value_Written_Is_Read_Back
+        Integer iValue
+
+        Send RDCWriteAppInteger "UnitTestSection" "Number" 4242
+        Get RDCReadAppInteger "UnitTestSection" "Number" 0 to iValue
+        Send AssertIAreEqual 4242 iValue "What was written is read."
+        Send RDCWriteAppInteger "UnitTestSection" "Number" 7
+        Get RDCReadAppInteger "UnitTestSection" "Number" 0 to iValue
+        Send AssertIAreEqual 7 iValue "A second write replaces the first."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_A_Missing_Value_Gives_The_Default
+        Integer iValue
+
+        Get RDCReadAppInteger "UnitTestSection" "NeverWritten" 99 to iValue
+        Send AssertIAreEqual 99 iValue "Nothing is stored, so the default comes back."
+    End_Procedure
+
+End_Object

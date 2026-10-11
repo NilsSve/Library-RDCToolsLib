@@ -1,0 +1,22 @@
+// oRDCApplication-Tests.pkg - cRDCApplication's WindowsUserName: the wide Windows function from DataFlex 20,
+// the ANSI one before it.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use cRDCApplication.pkg
+Use UnitTestHeaps.pkg
+
+Object oRDCApplication_Tests is a cTestFixture
+    Set psTestFixtureName to "cRDCApplication - the Windows user name"
+
+    { Published=True }
+    Procedure Test_WindowsUserName_Is_The_Logged_In_User
+        String sUser sLogon
+
+        Get WindowsUserName of ghoApplication to sUser
+        Get_Environment "USERNAME" to sLogon
+        Send Assert (sLogon <> "") "The USERNAME variable is set."
+        Send AssertSAreEqual (Uppercase(sLogon)) (Uppercase(sUser)) "The name Windows gives is the one in the USERNAME variable."
+        Send AssertIAreEqual 0 (UnitTestDamagedHeaps()) "Windows finds no damaged heap after the call."
+    End_Procedure
+
+End_Object

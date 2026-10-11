@@ -1,0 +1,23 @@
+// oCaptureWindow-Tests.pkg - CaptureWindow's lookup of a shell folder: the wide Windows function from
+// DataFlex 20, the ANSI one before it.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use CaptureWindow.pkg
+Use UnitTestHeaps.pkg
+
+Object oCaptureWindow_Tests is a cTestFixture
+    Set psTestFixtureName to "CaptureWindow - the Pictures folder"
+
+    { Published=True }
+    Procedure Test_cwShellFolderPath_Finds_The_Pictures_Folder
+        String sFolder
+        Boolean bExists
+
+        Get cwShellFolderPath CW_CSIDL_MYPICTURES to sFolder
+        Send Assert (sFolder <> "") "A folder comes back."
+        Get vFolderExists sFolder to bExists
+        Send Assert bExists ("And that folder is there:" * sFolder)
+        Send AssertIAreEqual 0 (UnitTestDamagedHeaps()) "Windows finds no damaged heap after the call."
+    End_Procedure
+
+End_Object

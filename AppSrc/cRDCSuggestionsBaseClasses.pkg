@@ -2,6 +2,15 @@ Use Windows.pkg
 Use cDbCJGridColumnSuggestion.pkg
 Use cRDCDbSuggestionForm.pkg
 
+// From DataFlex 20 GetTextMetrics is the wide Windows function, and it fills a tWinTextMetricW: four bytes more
+// than a tWinTextMetric. TypeFaceWinTextMetric returns a tWinTextMetric, so from DataFlex 20 it asks the ANSI
+// function, which fills exactly that structure. The measurements are the same from both.
+#IF (!@ > 191)
+#IFNDEF get_RDCGetTextMetricsA
+External_Function RDCGetTextMetricsA "GetTextMetricsA" Gdi32.dll Handle hDC Pointer lptm Returns Boolean
+#ENDIF
+#ENDIF
+
 Class cShowSuggestions is a Mixin
 //    Procedure ShowSuggestions
 //        Integer isize ilen iLines ipoints iFIXED_PITCH ilen1 i
@@ -53,7 +62,12 @@ Class cShowSuggestions is a Mixin
         Handle hDC hFont hOldFont
         Pointer lpLogFont lptm
         tWinTextMetric tm
+#IF (!@ < 200)
         tWinLogFont ALogFont
+#ELSE
+        // The wide font structure: the font name goes into it as wide characters below.
+        tWinLogFontW ALogFont
+#ENDIF
 
         // Convert Font point size to logical pixels....
         Move (GetDC(0)) to hDC
@@ -76,10 +90,19 @@ Class cShowSuggestions is a Mixin
         Move (0-iFontSize) to ALogFont.lfHeight  // use -ve value to instruct system to scale font to device
         Move (AddressOf(ALogFont)) to lpLogFont
 
+#IF (!@ < 200)
         Move (CreateFontIndirect(lpLogFont)) to hFont   // Here we create the Font
+#ELSE
+        // Not the CreateFontIndirect wrapper: that one expects the ANSI structure with a UTF-8 name in it.
+        Move (CreateFontIndirectW(lpLogFont)) to hFont  // Here we create the Font
+#ENDIF
         Move (SelectObject(hDC, hFont)) to hOldFont     // Now we select it to the device context
         Move (AddressOf(tm)) to lptm
+#IF (!@ < 200)
         Move (GetTextMetrics(hDC, lptm)) to bVoid       // Now we can get the font's text metrics
+#ELSE
+        Move (RDCGetTextMetricsA(hDC, lptm)) to bVoid   // Now we can get the font's text metrics
+#ENDIF
 
         Move (tm.tmHeight + tm.tmExternalLeading) to iFontSize   // Here is the font's physical size for this device
 

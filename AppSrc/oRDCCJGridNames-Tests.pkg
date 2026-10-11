@@ -1,0 +1,46 @@
+// oRDCCJGridNames-Tests.pkg - the CodeJock grid's helper classes and constants under their "Grid" names. DataFlex
+// has those names from version 23; before it RDCCJGridNames.pkg gives them to the "Report" classes and
+// constants. The numbers are the ones every version from 19.1 to 26 has.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use RDCCJGridNames.pkg
+
+Object oRDCCJGridNames_Tests is a cTestFixture
+    Set psTestFixtureName to "RDCCJGridNames - the Grid names on every version"
+
+    { Published=True }
+    Procedure Test_The_Constants_Have_Their_Values
+        Send AssertIAreEqual 0 xtpGridItemControlUnknown      "xtpGridItemControlUnknown"
+        Send AssertIAreEqual 1 xtpGridItemControlLeft         "xtpGridItemControlLeft"
+        Send AssertIAreEqual 2 xtpGridItemControlRight        "xtpGridItemControlRight"
+        Send AssertIAreEqual 1 xtpGridItemControlTypeButton   "xtpGridItemControlTypeButton"
+        Send AssertIAreEqual 0 xtpGridItemButtonStateAll      "xtpGridItemButtonStateAll"
+        Send AssertIAreEqual 1 xtpGridItemButtonStateNormal   "xtpGridItemButtonStateNormal"
+        Send AssertIAreEqual 2 xtpGridItemButtonStateHot      "xtpGridItemButtonStateHot"
+        Send AssertIAreEqual 3 xtpGridItemButtonStatePressed  "xtpGridItemButtonStatePressed"
+        Send AssertIAreEqual 4 xtpGridItemButtonStateDisabled "xtpGridItemButtonStateDisabled"
+        Send AssertIAreEqual 1 xtpGridTextDecorationUnderline "xtpGridTextDecorationUnderline"
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_The_Classes_Can_Be_Created
+        Handle ho
+
+        Get Create (RefClass(cCJGridItemButton)) to ho
+        Send Assert (ho <> 0) "cCJGridItemButton"
+        Send Destroy of ho
+        Get Create (RefClass(cCJGridItemControls)) to ho
+        Send Assert (ho <> 0) "cCJGridItemControls"
+        Send Destroy of ho
+        Get Create (RefClass(cCJGridHitTestInfo)) to ho
+        Send Assert (ho <> 0) "cCJGridHitTestInfo"
+        Send Destroy of ho
+        Get Create (RefClass(cCJGridHyperlinks)) to ho
+        Send Assert (ho <> 0) "cCJGridHyperlinks"
+        Send Destroy of ho
+        Get Create (RefClass(cCJGridHyperlinkStyle)) to ho
+        Send Assert (ho <> 0) "cCJGridHyperlinkStyle"
+        Send Destroy of ho
+    End_Procedure
+
+End_Object

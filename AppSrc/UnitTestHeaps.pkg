@@ -1,0 +1,31 @@
+// UnitTestHeaps.pkg - for the tests of functions that hand a buffer or a structure to Windows: are the heaps
+// of the process still sound afterwards?
+//
+// A function that lets Windows write past the end of what it handed over damages a heap. Nothing shows at that
+// moment; the program ends later, somewhere else, with a crash code. UnitTestDamagedHeaps asks Windows to look at
+// every heap of the process now, so the test of such a function can say so at once.
+
+Use Windows.pkg
+
+#IFNDEF get_UT_GetProcessHeaps
+External_Function UT_GetProcessHeaps "GetProcessHeaps" Kernel32.dll DWord nHeaps Pointer pHeaps Returns DWord
+External_Function UT_HeapValidate "HeapValidate" Kernel32.dll Pointer hHeap DWord dwFlags Pointer lpMem Returns Integer
+#ENDIF
+
+// The number of heaps that Windows finds damaged: 0 when all is well.
+Function UnitTestDamagedHeaps Global Returns Integer
+    Pointer[] aHeaps
+    Integer iCount iHeap iDamaged
+
+    Move (ResizeArray(aHeaps, 64)) to aHeaps
+    Move (UT_GetProcessHeaps(64, AddressOf(aHeaps))) to iCount
+    If (iCount > 64) Begin
+        Move 64 to iCount
+    End
+    For iHeap from 0 to (iCount - 1)
+        If (UT_HeapValidate(aHeaps[iHeap], 0, 0) = 0) Begin
+            Increment iDamaged
+        End
+    Loop
+    Function_Return iDamaged
+End_Function

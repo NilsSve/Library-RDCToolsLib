@@ -1,0 +1,60 @@
+// oTypeFaceWinTextMetric-Tests.pkg - TypeFaceWinTextMetric of the suggestion classes, which hands a font name to
+// Windows - as wide characters from DataFlex 20, as ANSI characters before it - and a structure for Windows to
+// fill with the measurements of that font.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use cRDCSuggestionsBaseClasses.pkg
+Use UnitTestHeaps.pkg
+
+// The function lives in a mixin; this is the smallest class that carries it.
+Class cTypeFaceWinTextMetricProbe is a cObject
+    Import_Class_Protocol cShowSuggestions
+End_Class
+
+Object oTypeFaceWinTextMetric_Tests is a cTestFixture
+    Set psTestFixtureName to "cShowSuggestions - the metrics of a font"
+
+    { Published=True }
+    Procedure Test_TypeFaceWinTextMetric_Measures_Arial
+        Handle ho
+        tWinTextMetric Metric
+
+        Get Create (RefClass(cTypeFaceWinTextMetricProbe)) to ho
+        Get TypeFaceWinTextMetric of ho "Arial" 10 to Metric
+        Send Destroy of ho
+        Send Assert (Metric.tmHeight > 0)       "The font has a height."
+        Send Assert (Metric.tmAveCharWidth > 0) "And an average character width."
+    End_Procedure
+
+    // Arial is a proportional font and Courier New a fixed-pitch one; both are part of every Windows. Windows
+    // says which it is in the lowest bit of tmPitchAndFamily: set when the widths of the characters vary. The
+    // two differ only when the font NAME reached Windows, and the bit is read right only when the structure is
+    // the one Windows filled.
+    { Published=True }
+    Procedure Test_The_Font_Name_Reaches_Windows
+        Handle ho
+        tWinTextMetric Arial Courier
+
+        Get Create (RefClass(cTypeFaceWinTextMetricProbe)) to ho
+        Get TypeFaceWinTextMetric of ho "Arial" 10 to Arial
+        Get TypeFaceWinTextMetric of ho "Courier New" 10 to Courier
+        Send Destroy of ho
+        Send AssertIAreEqual 1 (Arial.tmPitchAndFamily iand 1)   "Arial: the widths of its characters vary."
+        Send AssertIAreEqual 0 (Courier.tmPitchAndFamily iand 1) "Courier New: every character is as wide as the next."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_TypeFaceWinTextMetric_Leaves_The_Heaps_Sound
+        Handle ho
+        Integer iCall
+        tWinTextMetric Metric
+
+        Get Create (RefClass(cTypeFaceWinTextMetricProbe)) to ho
+        For iCall from 1 to 20
+            Get TypeFaceWinTextMetric of ho "Arial" 10 to Metric
+        Loop
+        Send Destroy of ho
+        Send AssertIAreEqual 0 (UnitTestDamagedHeaps()) "Windows finds no damaged heap after twenty calls."
+    End_Procedure
+
+End_Object
