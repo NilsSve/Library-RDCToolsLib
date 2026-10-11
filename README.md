@@ -35,6 +35,15 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.11
+
+- `cRDCSuggestionIniForm`: `psIniFileName` now decides where the form keeps its list of earlier values. Empty,
+  the default, is the workspace's `.ws` file as before. A file name is that ini file in the `Programs` folder,
+  and a full path is that file. A list still found in the `.ws` file is moved over the first time it is read.
+  So a program no longer has to write into `Config.ws`, a file that is under version control.
+- `Dummy.src` has no connection object any more. It was the only thing here that needed a
+  `LoginEncryptionKey.inc`, so the library workspace now compiles without one.
+
 ## What is new in 1.0.10
 
 - The library compiles on DataFlex 19.1 again, and has its workspace files for it
@@ -133,7 +142,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.10
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.11
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
