@@ -43,6 +43,11 @@ Use cCJGrid.pkg                // phoToolTipContext and the xtpToolTip* style co
 Use cRDCTooltipController.pkg  // ghoToolTipController
 Use cCJGridColumn.pkg          // the column class the wrapped-tooltip column extends
 
+// VdfBase.pkg has C_NewLine from DataFlex 20.
+#IFNDEF C_NewLine
+Define C_NewLine for (Character(13) + Character(10))
+#ENDIF
+
 // Apply the program's tooltip settings to one grid. CALL IT FROM Construct_Object, not from
 // OnCreateGridControl - that is the whole point, see the note above. Safe when no controller was
 // ever created: it then uses 400 pixels, the controller's own default.

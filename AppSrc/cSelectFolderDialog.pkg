@@ -1,4 +1,40 @@
-﻿Use Windows.pkg
+﻿// DataFlex has this class, and the function of DfUtils.dll behind it, from version 20; from there on this is
+// DataFlex's own package, unchanged. Before 20 the same class stands on the Windows folder browser of vWin32fh.
+// That browser takes no initial folder, so the argument is kept and not used.
+#IF (!@ < 200)
+Use Windows.pkg
+Use vWin32fh.pkg
+
+Class cSelectFolderDialog is a cObject
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property String  psTitle
+        Property String  psSelectedFolder
+        Property String  psInitialFolder
+        Property Boolean pbFolderIsSelected
+        Property Handle  phwParent
+    End_Procedure
+
+    // Opens the Windows folder browser and returns the selected folder, "" when none was selected.
+    Function SelectFolder String sTitle String sInitialFolder Returns String
+        String sSelectedFolder
+
+        Move (Trim(sTitle)) to sTitle
+        If (sTitle = "") Begin
+            Move "Select a folder" to sTitle
+        End
+        Set psTitle         to sTitle
+        Set psInitialFolder to sInitialFolder
+        Get vSHBrowseForFolder sTitle to sSelectedFolder
+        Set psSelectedFolder   to sSelectedFolder
+        Set pbFolderIsSelected to (sSelectedFolder <> "")
+        Function_Return sSelectedFolder
+    End_Function
+
+End_Class
+#ELSE
+Use Windows.pkg
 
 External_Function SelectFolderDialog 'SelectFolderDialog' DfUtils.dll ;
                                    Pointer lpwTitle ;
@@ -83,3 +119,4 @@ Class cSelectFolderDialog is a cObject
     End_Function
 	
 End_Class
+#ENDIF

@@ -38,6 +38,7 @@
 //
 Use Windows.pkg
 Use cCJCommandBars.pkg
+Use RDCAppInteger.pkg          // RDCReadAppInteger, RDCWriteAppInteger
 Use cTimer.pkg                 // the min-height watchdog
 Use Winuser.pkg                // GetWindowRect, GetAsyncKeyState
 
@@ -181,7 +182,7 @@ Class cRDCCJToolPanel is a Container3d
                     Move (GetWindowRect(hWnd, AddressOf(rcDock))) to iOK
                     Move (rcDock.Bottom - rcDock.Top) to iHeight
                     If (iHeight > 0) ;
-                        Send WriteInteger of ghoApplication (psSizeSettingSection(Self)) sKey iHeight
+                        Send RDCWriteAppInteger (psSizeSettingSection(Self)) sKey iHeight
                 End
             End
             If (bState = True) Begin
@@ -244,7 +245,7 @@ Class cRDCCJToolPanel is a Container3d
             Get psSizeSettingKey to sKey
             If ((bPending = True) and (sKey <> "") and (ghoApplication <> 0)) Begin
                 Set pbPendingHeightRestore to False
-                Get ReadInteger of ghoApplication (psSizeSettingSection(Self)) sKey 0 to iSaved
+                Get RDCReadAppInteger (psSizeSettingSection(Self)) sKey 0 to iSaved
                 Get phoCJDialogBar to hoToolPane
                 If ((iSaved > 0) and (hoToolPane <> 0)) Begin
                     // The width, and the floor, from the design size - as Create_ToolPanel derives them.

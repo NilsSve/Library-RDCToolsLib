@@ -195,7 +195,17 @@ External_Function CloseHandle "CloseHandle" kernel32.dll ;
 // SHGetFolderPathW is the compatibility entry point in SHFolder.dll. It is superseded by
 // SHGetKnownFolderPath, but that returns a COM-allocated string needing CoTaskMemFree - not
 // worth it for one lookup.
+// Before DataFlex 20 there is no WString to receive a wide path: the ANSI entry point there.
 #IFNDEF Get_CW_SHGetFolderPath
+#IF (!@ < 200)
+External_Function CW_SHGetFolderPath "SHGetFolderPathA" SHFolder.Dll ;
+    Pointer hWnd ;
+    Integer nFolder ;
+    Pointer hToken ;
+    DWord   dwFlags ;
+    Pointer lpszPath ;
+    Returns Integer
+#ELSE
 External_Function CW_SHGetFolderPath "SHGetFolderPathW" SHFolder.Dll ;
     Pointer hWnd ;
     Integer nFolder ;
@@ -204,6 +214,7 @@ External_Function CW_SHGetFolderPath "SHGetFolderPathW" SHFolder.Dll ;
     Pointer lpszPath ;
     Returns Integer
 #ENDIF
+#ENDIF
 
 Define CW_MAX_PATH          for 260
 Define CW_CSIDL_MYPICTURES  for |CI$0027   // 39 - the user's Pictures folder
@@ -211,7 +222,11 @@ Define CW_CSIDL_MYPICTURES  for |CI$0027   // 39 - the user's Pictures folder
 Function cwShellFolderPath Global Integer eFolder Returns String
     Integer iVoid
     Handle  hWnd
+#IF (!@ < 200)
+    String  wFolder
+#ELSE
     WString wFolder
+#ENDIF
 
     Move (Window_Handle(Focus(Desktop)))     to hWnd
     Move (Repeat(Character(0), CW_MAX_PATH)) to wFolder

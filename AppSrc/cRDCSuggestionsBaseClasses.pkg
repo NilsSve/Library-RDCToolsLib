@@ -41,7 +41,12 @@ Class cShowSuggestions is a Mixin
 //    End_Procedure
 
     // This is a copy of DF Function PointSizeToPhysicalFontSize, but returning all information of the typeface
+#IF (!@ < 200)
+    Function TypeFaceWinTextMetric String wTypeFace Integer iPointSize Returns tWinTextMetric
+        Address pTypeFace
+#ELSE
     Function TypeFaceWinTextMetric WString wTypeFace Integer iPointSize Returns tWinTextMetric
+#ENDIF
         Integer iFontSize iLogPixelsY
         Number nFontSize
         Boolean bVoid bOK
@@ -56,8 +61,16 @@ Class cShowSuggestions is a Mixin
         Move ((iPointSize * iLogPixelsY / 72.0) + 0.5) to nFontSize
         Move nFontSize to iFontSize    // nFontSize is rounded up, then we truncate it into iFontSize - this reduces rounding error due to integer truncation
 
+#IF (!@ < 200)
+        // Before DataFlex 20 the name is an OEM string and the font structure takes ANSI characters - as
+        // DataFlex's own PointSizeToPhysicalFontSize does it there.
+        Move (ToANSI(wTypeFace)) to wTypeFace
+        Move (AddressOf(ALogFont.lfFaceName)) to pTypeFace
+        Move wTypeFace to pTypeFace
+#ELSE
         // Convert the TypeFace name from WString into a Short Array (WChar).
         Move (MemCopy(AddressOf(ALogFont.lfFaceName), AddressOf(wTypeFace), SizeOfWString(wTypeFace)*2+2)) to bOK
+#ENDIF
 
         // Convert Logical Pixels into physical pixels....
         Move (0-iFontSize) to ALogFont.lfHeight  // use -ve value to instruct system to scale font to device

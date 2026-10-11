@@ -17,6 +17,7 @@
 //
 Use cRDCApplication.pkg
 Use cCJGrid.pkg
+Use RDCAppInteger.pkg          // RDCReadAppInteger, RDCWriteAppInteger
 Use cSelectFolderDialog.pkg
 Use vWin32fh.pkg
 Use cRDCProjectIniFile.pkg
@@ -425,7 +426,7 @@ Class cRDCCJGrid is a cCJGrid
         End
         Send Destroy to hoFont 
         Send ComRedraw  
-        Send WriteInteger of ghoApplication CS_Settings CS_GridFontSize iSize
+        Send RDCWriteAppInteger CS_Settings CS_GridFontSize iSize
     End_Procedure 
 
     // To use: call it before you access the Datasource!

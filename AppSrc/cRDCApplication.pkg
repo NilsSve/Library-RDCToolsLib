@@ -5,7 +5,12 @@ Use cCJGrid.pkg
 //  [out]     LPWSTR  lpBuffer,
 //  [in, out] LPDWORD pcbBuffer
 //);
+// The wide function from DataFlex 20, where a string can be handed over as a WString; the ANSI one before it.
+#IF (!@ < 200)
+External_Function WinAPI_GetUserName "GetUserNameA" Advapi32.dll Pointer lpBuffer Pointer pcbBuffer Returns Boolean
+#ELSE
 External_Function WinAPI_GetUserName "GetUserNameW" Advapi32.dll Pointer lpBuffer Pointer pcbBuffer Returns Boolean
+#ENDIF
 
 // Grid font size constants:
 #IFNDEF CS_Settings
@@ -149,7 +154,11 @@ Class cRDCApplication is a cApplication
     End_Function
     
     Function WindowsUserName Returns String
+#IF (!@ < 200)
+        String sBuffer
+#ELSE
         WString sBuffer
+#ENDIF
         DWord iSize
         Boolean bRes
         

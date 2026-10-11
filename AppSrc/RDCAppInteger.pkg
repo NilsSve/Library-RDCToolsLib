@@ -1,0 +1,23 @@
+﻿// A whole number in the application's registry settings. The application object reads and writes it with
+// ReadInteger / WriteInteger from DataFlex 20, and with ReadDword / WriteDword before it. The arguments are the
+// same: the section, the name of the value, and the default or the value.
+Use cApplication.pkg
+
+Function RDCReadAppInteger Global String sSubKey String sValueName Integer iDefault Returns Integer
+    Integer iValue
+
+#IF (!@ < 200)
+    Get ReadDword of ghoApplication sSubKey sValueName iDefault to iValue
+#ELSE
+    Get ReadInteger of ghoApplication sSubKey sValueName iDefault to iValue
+#ENDIF
+    Function_Return iValue
+End_Function
+
+Procedure RDCWriteAppInteger Global String sSubKey String sValueName Integer iValue
+#IF (!@ < 200)
+    Send WriteDword of ghoApplication sSubKey sValueName iValue
+#ELSE
+    Send WriteInteger of ghoApplication sSubKey sValueName iValue
+#ENDIF
+End_Procedure

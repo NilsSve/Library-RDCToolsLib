@@ -40,6 +40,16 @@ Use Windows.pkg
 Use StartProg.pkg              // CloseHandleEf
 Use vWin32fh.pkg               // vFilePathExists, vFolderExists
 
+// Before DataFlex 20 a string is OEM, not UTF-8, and there is no Utf8ToAnsi. ToANSI is the conversion that is
+// right there, so it stands in under that name and the calls below read the same on every version.
+#IF (!@ < 200)
+#IFNDEF get_Utf8ToAnsi
+Function Utf8ToAnsi Global String sText Returns String
+    Function_Return (ToANSI(sText))
+End_Function
+#ENDIF
+#ENDIF
+
 Struct tRDCShellExecuteInfo
     DWord   cbSize
     Integer fMask
