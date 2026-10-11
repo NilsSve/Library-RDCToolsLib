@@ -6,7 +6,8 @@
 // Created     : 2018-09-05 @ 09:50 (Military date format: YY-MM-DD)
 //
 // Description : The class consists of a variant of DataAccess Worldwide's cSuggestionFormList
-//               It has the added ability to save/retrieve values to the workspace .ws file.
+//               It has the added ability to save/retrieve values to the workspace .ws file,
+//               or to an ini file named in psIniFileName.
 //
 // $Rev History:
 //    2018-09-05  Module header created
@@ -66,14 +67,16 @@ Class cRDCSuggestionIniForm is a cRDCForm
         { Visibility=Private }
         Property String psIniFileSection
         Property Integer piSuggestionListMaxItems 99 // Max no of values saved/read to ini file
+        // False: the list is neither read nor saved.
         Property Boolean pbUseWorkspaceIniFile True
         Property Boolean pbAutoCheckValueExistsAsFile True
         Property Boolean pbAskToRemoveMissingFile True
-        // Note: pbUseWorkspaceIniFile has presedence over the psIniFileName setting.
-        //       That means that if pbUseWorkspaceIniFile=True, psIniFilename will be set to the
-        //       worspace .ws file on program startup.
-        { InitialValue="Workspace File (.ws)" }
-        Property String psIniFileName "RDCSuggestionForm.ini"
+        // Where the list is kept:
+        //   empty, the default   the workspace's .ws file (Config.ws)
+        //   a file name          that ini file in the folder of the .ws file - the Programs folder
+        //   a full path          that file
+        // With a file named here, a list still found in the .ws file is moved over the first time it is read.
+        Property String psIniFileName ""
     End_Procedure
 
     { Visibility=Private }
@@ -179,73 +182,148 @@ Class cRDCSuggestionIniForm is a cRDCForm
         Forward Set psToolTip to sToolTip
     End_Procedure
 
-    Function ReadWorkspaceIniFile Returns String[]
-        String sWorkspaceFile sObjectName sValue
+    // The workspace's .ws file.
+    Function WorkspaceIniFile Returns String
+        Function_Return (psWorkspaceWSFile(phoWorkspace(ghoApplication)))
+    End_Function
+
+    // The file the list is read from and saved to - see psIniFileName.
+    Function SuggestionIniFile Returns String
+        String sName sWorkspaceFile
+        Integer iPos
+
+        Get psIniFileName to sName
+        Move (Trim(sName)) to sName
+        Get WorkspaceIniFile to sWorkspaceFile
+        If (sName = "") Begin
+            Function_Return sWorkspaceFile
+        End
+        // A full path: it has a drive letter, or it is a network name.
+        If (Mid(sName, 1, 2) = ":" or Left(sName, 2) = "\\") Begin
+            Function_Return sName
+        End
+        Move (RightPos("\", sWorkspaceFile)) to iPos
+        Function_Return (Left(sWorkspaceFile, iPos) + sName)
+    End_Function
+
+    // The [section] of the list in the ini file: one for each form, by its object name.
+    Function SuggestionIniSection Returns String
+        String sObjectName
+
+        Get Object_Label to sObjectName
+        Function_Return (CS_cRDCSuggestionFormList * String(sObjectName))
+    End_Function
+
+    // The saved values of one section of one ini file.
+    { Visibility=Private }
+    Function ReadSavedItems String sFileName String sSection Returns String[]
+        String sValue
         String[] sSavedFormValues
         Handle hoIniFile
         Integer iItem iCount iSize
-        Boolean bExists
-
-        If (pbUseWorkspaceIniFile(Self) = False) Begin
-            Function_Return sSavedFormValues
-        End
 
         Move 0 to iItem
-        Get Object_Label to sObjectName
-        Move (psWorkspaceWSFile(phoWorkspace(ghoApplication))) to sWorkspaceFile
-        Set psIniFileName to sWorkspaceFile
         Get Create (RefClass(cIniFile)) to hoIniFile
-        Set psFileName of hoIniFile to sWorkspaceFile
+        Set psFileName of hoIniFile to sFileName
         Get piSuggestionListMaxItems to iSize
-
+        // We need to loop through all possible values because the list of items may not start at zero.
         For iCount from 0 to iSize
-            Get KeyExists of hoIniFile (CS_cRDCSuggestionFormList * String(sObjectName)) (CS_cRDCSuggestionSaveItem + String(iCount)) to bExists
-            // We need to loop through all possible values because the list of items may not start at zero.
-            Get ReadString of hoIniFile (CS_cRDCSuggestionFormList * String(sObjectName)) (CS_cRDCSuggestionSaveItem + String(iCount)) "" to sValue
+            Get ReadString of hoIniFile sSection (CS_cRDCSuggestionSaveItem + String(iCount)) "" to sValue
             If (Trim(sValue) <> "") Begin
                 Move sValue to sSavedFormValues[iItem]
                 Increment iItem
             End
         Loop
-
         Send Destroy of hoIniFile
+
         Function_Return sSavedFormValues
     End_Function
 
-    Procedure WriteWorkspaceIniFile
-        String sWorkspaceFile sObjectName sValue
-        String[] sSavedFormValues
+    // Saves the values as one section of one ini file, in place of what the section held. A value that is
+    // not the name of a file that is there is left out.
+    { Visibility=Private }
+    Procedure WriteSavedItems String sFileName String sSection String[] sSavedFormValues
+        String sValue
         Handle hoIniFile
         Integer iSize iCount
         Boolean bExists
 
-        If (pbUseWorkspaceIniFile(Self) = False) Begin
-            Procedure_Return
-        End
-
-        Get Object_Label  to sObjectName
-        Get psIniFileName to sWorkspaceFile
         Get Create (RefClass(cIniFile)) to hoIniFile
-        Set psFileName    of hoIniFile to sWorkspaceFile
-        Get SectionExists of hoIniFile (CS_cRDCSuggestionFormList * String(sObjectName)) to bExists
+        Set psFileName    of hoIniFile to sFileName
+        Get SectionExists of hoIniFile sSection to bExists
         If (bExists = True) Begin
-            Send DeleteSection of hoIniFile (CS_cRDCSuggestionFormList * String(sObjectName))
+            Send DeleteSection of hoIniFile sSection
         End
 
-        Get psSavedFormValues to sSavedFormValues
         Move (SizeOfArray(sSavedFormValues)) to iSize
         Decrement iSize
-
         For iCount from 0 to iSize
             Move sSavedFormValues[iCount] to sValue
             Move (Trim(sValue)) to sValue
             Get vFilePathExists sValue to bExists
             If (bExists = True) Begin
-                Send WriteString of hoIniFile (CS_cRDCSuggestionFormList * String(sObjectName)) (CS_cRDCSuggestionSaveItem + String(iCount)) sSavedFormValues[iCount]
+                Send WriteString of hoIniFile sSection (CS_cRDCSuggestionSaveItem + String(iCount)) sSavedFormValues[iCount]
             End
         Loop
-
         Send Destroy of hoIniFile
+    End_Procedure
+
+    // Takes one section out of one ini file.
+    { Visibility=Private }
+    Procedure DeleteSavedItems String sFileName String sSection
+        Handle hoIniFile
+        Boolean bExists
+
+        Get Create (RefClass(cIniFile)) to hoIniFile
+        Set psFileName    of hoIniFile to sFileName
+        Get SectionExists of hoIniFile sSection to bExists
+        If (bExists = True) Begin
+            Send DeleteSection of hoIniFile sSection
+        End
+        Send Destroy of hoIniFile
+    End_Procedure
+
+    // Reads the list. The name says "workspace" because that was the only place once; the file is the one
+    // of SuggestionIniFile.
+    Function ReadWorkspaceIniFile Returns String[]
+        String sFileName sWorkspaceFile sSection
+        String[] sSavedFormValues
+
+        If (pbUseWorkspaceIniFile(Self) = False) Begin
+            Function_Return sSavedFormValues
+        End
+
+        Get SuggestionIniFile    to sFileName
+        Get WorkspaceIniFile     to sWorkspaceFile
+        Get SuggestionIniSection to sSection
+        Get ReadSavedItems sFileName sSection to sSavedFormValues
+
+        // A named file that holds no list yet: a list still in the .ws file is moved over, once.
+        If (SizeOfArray(sSavedFormValues) = 0 and Uppercase(sFileName) <> Uppercase(sWorkspaceFile)) Begin
+            Get ReadSavedItems sWorkspaceFile sSection to sSavedFormValues
+            If (SizeOfArray(sSavedFormValues) > 0) Begin
+                Send WriteSavedItems  sFileName sSection sSavedFormValues
+                Send DeleteSavedItems sWorkspaceFile sSection
+                Get ReadSavedItems sFileName sSection to sSavedFormValues
+            End
+        End
+
+        Function_Return sSavedFormValues
+    End_Function
+
+    // Saves the list - to the file of SuggestionIniFile.
+    Procedure WriteWorkspaceIniFile
+        String sFileName sSection
+        String[] sSavedFormValues
+
+        If (pbUseWorkspaceIniFile(Self) = False) Begin
+            Procedure_Return
+        End
+
+        Get SuggestionIniFile    to sFileName
+        Get SuggestionIniSection to sSection
+        Get psSavedFormValues    to sSavedFormValues
+        Send WriteSavedItems sFileName sSection sSavedFormValues
     End_Procedure
 
     Procedure Prompt      

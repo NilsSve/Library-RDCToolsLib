@@ -1,0 +1,194 @@
+// oRDCSuggestionIniForm-Tests.pkg - where cRDCSuggestionIniForm keeps its list of earlier values: the
+// workspace's .ws file by default, or the ini file named in psIniFileName, with a list still in the .ws file
+// moved over once.
+//
+// Everything happens in the TEMP folder: a stand-in for the .ws file, a named ini file and two small files
+// whose names are the saved values (the form only saves the name of a file that is there). All are removed again.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use cRDCSuggestionIniForm.pkg
+Use cIniFile.pkg
+
+// The form with a .ws file and a section of the test's choosing.
+Class cRDCSuggestionIniFormProbe is a cRDCSuggestionIniForm
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property String psProbeWorkspaceFile ""
+    End_Procedure
+
+    Function WorkspaceIniFile Returns String
+        Function_Return (psProbeWorkspaceFile(Self))
+    End_Function
+
+    Function SuggestionIniSection Returns String
+        Function_Return "Suggestion Form List oTest_fm"
+    End_Function
+End_Class
+
+Object oRDCSuggestionIniForm_Tests is a cTestFixture
+    Set psTestFixtureName to "cRDCSuggestionIniForm - where the list is kept"
+
+    Function TempFile String sName Returns String
+        String sTemp
+
+        Get_Environment "TEMP" to sTemp
+        If (Right(sTemp, 1) <> "\") Begin
+            Move (sTemp + "\") to sTemp
+        End
+        Function_Return (sTemp + "RDCSuggestionTest_" + sName)
+    End_Function
+
+    Procedure MakeFile String sFileName
+        Integer iCh
+
+        Get Seq_New_Channel to iCh
+        Direct_Output channel iCh sFileName
+        Writeln channel iCh "a file for the suggestion form tests"
+        Close_Output channel iCh
+        Send Seq_Release_Channel iCh
+    End_Procedure
+
+    Procedure Setup
+        Send TearDown
+        Send MakeFile (TempFile(Self, "A.txt"))
+        Send MakeFile (TempFile(Self, "B.txt"))
+    End_Procedure
+
+    Procedure TearDown
+        EraseFile (TempFile(Self, "A.txt"))
+        EraseFile (TempFile(Self, "B.txt"))
+        EraseFile (TempFile(Self, "Config.ws"))
+        EraseFile (TempFile(Self, "Settings.ini"))
+    End_Procedure
+
+    // A probe form whose .ws file is the stand-in in TEMP.
+    Function NewForm Returns Handle
+        Handle ho
+
+        Get Create (RefClass(cRDCSuggestionIniFormProbe)) to ho
+        Set psProbeWorkspaceFile of ho to (TempFile(Self, "Config.ws"))
+        Function_Return ho
+    End_Function
+
+    Function TwoValues Returns String[]
+        String[] asValues
+
+        Get TempFile "A.txt" to asValues[0]
+        Get TempFile "B.txt" to asValues[1]
+        Function_Return asValues
+    End_Function
+
+    // Is the test section in that ini file?
+    Function HasList String sFileName Returns Boolean
+        Handle hoIniFile
+        Boolean bExists
+
+        File_Exist sFileName bExists
+        If (bExists = False) Begin
+            Function_Return False
+        End
+        Get Create (RefClass(cIniFile)) to hoIniFile
+        Set psFileName of hoIniFile to sFileName
+        Get SectionExists of hoIniFile "Suggestion Form List oTest_fm" to bExists
+        Send Destroy of hoIniFile
+        Function_Return bExists
+    End_Function
+
+    { Published=True }
+    Procedure Test_Which_File_It_Is
+        Handle ho
+        String sFile
+
+        Get NewForm to ho
+        Get SuggestionIniFile of ho to sFile
+        Send AssertSAreEqual (TempFile(Self, "Config.ws")) sFile "Nothing named: the .ws file, as before."
+
+        Set psIniFileName of ho to "RDCSuggestionTest_Settings.ini"
+        Get SuggestionIniFile of ho to sFile
+        Send AssertSAreEqual (TempFile(Self, "Settings.ini")) sFile "A file name: that file in the folder of the .ws file."
+
+        Set psIniFileName of ho to "C:\Somewhere\Else.ini"
+        Get SuggestionIniFile of ho to sFile
+        Send AssertSAreEqual "C:\Somewhere\Else.ini" sFile "A full path stays as it is."
+        Send Destroy of ho
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_By_Default_The_List_Is_In_The_Ws_File
+        Handle ho
+        String[] asRead
+
+        Get NewForm to ho
+        Set psSavedFormValues of ho to (TwoValues(Self))
+        Send WriteWorkspaceIniFile of ho
+        Get ReadWorkspaceIniFile of ho to asRead
+        Send Destroy of ho
+        Send AssertIAreEqual 2 (SizeOfArray(asRead)) "Both values come back."
+        Send Assert (HasList(Self, TempFile(Self, "Config.ws"))) "The list is in the .ws file."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_A_Named_File_Keeps_The_Ws_File_Clean
+        Handle ho
+        String[] asRead
+        Boolean bExists
+
+        Get NewForm to ho
+        Set psIniFileName of ho to "RDCSuggestionTest_Settings.ini"
+        Set psSavedFormValues of ho to (TwoValues(Self))
+        Send WriteWorkspaceIniFile of ho
+        Get ReadWorkspaceIniFile of ho to asRead
+        Send Destroy of ho
+        Send AssertIAreEqual 2 (SizeOfArray(asRead)) "Both values come back."
+        If (SizeOfArray(asRead) = 2) Begin
+            Send AssertSAreEqual (TempFile(Self, "A.txt")) asRead[0] "The first value."
+            Send AssertSAreEqual (TempFile(Self, "B.txt")) asRead[1] "The second value."
+        End
+        Send Assert (HasList(Self, TempFile(Self, "Settings.ini"))) "The list is in the named file."
+        File_Exist (TempFile(Self, "Config.ws")) bExists
+        Send AssertFalse bExists "The .ws file was not written at all."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_A_List_In_The_Ws_File_Is_Moved_Over_Once
+        Handle ho
+        String[] asRead
+
+        // the list as an earlier version left it: in the .ws file
+        Get NewForm to ho
+        Set psSavedFormValues of ho to (TwoValues(Self))
+        Send WriteWorkspaceIniFile of ho
+        Send Destroy of ho
+        Send Assert (HasList(Self, TempFile(Self, "Config.ws"))) "Before: the list is in the .ws file."
+
+        Get NewForm to ho
+        Set psIniFileName of ho to "RDCSuggestionTest_Settings.ini"
+        Get ReadWorkspaceIniFile of ho to asRead
+        Send AssertIAreEqual 2 (SizeOfArray(asRead)) "The first read finds the two values."
+        Send Assert (HasList(Self, TempFile(Self, "Settings.ini"))) "They are in the named file now."
+        Send AssertFalse (HasList(Self, TempFile(Self, "Config.ws"))) "And gone from the .ws file."
+
+        Get ReadWorkspaceIniFile of ho to asRead
+        Send Destroy of ho
+        Send AssertIAreEqual 2 (SizeOfArray(asRead)) "A second read gives the same list."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_Switched_Off_Nothing_Is_Read_Or_Saved
+        Handle ho
+        String[] asRead
+        Boolean bExists
+
+        Get NewForm to ho
+        Set psIniFileName of ho to "RDCSuggestionTest_Settings.ini"
+        Set pbUseWorkspaceIniFile of ho to False
+        Set psSavedFormValues of ho to (TwoValues(Self))
+        Send WriteWorkspaceIniFile of ho
+        Get ReadWorkspaceIniFile of ho to asRead
+        Send Destroy of ho
+        Send AssertIAreEqual 0 (SizeOfArray(asRead)) "Nothing is read."
+        File_Exist (TempFile(Self, "Settings.ini")) bExists
+        Send AssertFalse bExists "Nothing was saved."
+    End_Procedure
+
+End_Object

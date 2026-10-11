@@ -22,5 +22,6 @@ Object oWorkspace_Tests is a cTestFixture
     Use oRDCApplication-Tests.pkg
     Use oCaptureWindow-Tests.pkg
     Use oTypeFaceWinTextMetric-Tests.pkg
+    Use oRDCSuggestionIniForm-Tests.pkg
 
 End_Object
