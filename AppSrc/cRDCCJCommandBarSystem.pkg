@@ -1,4 +1,4 @@
-﻿Use cCJStandardCommandBarSystem.pkg
+Use cCJStandardCommandBarSystem.pkg
 Use cCJCommandBarSystem.pkg
 Use RDCAppInteger.pkg          // RDCReadAppInteger, RDCWriteAppInteger
 

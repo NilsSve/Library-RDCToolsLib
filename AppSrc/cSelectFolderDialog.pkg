@@ -1,4 +1,4 @@
-﻿// DataFlex has this class, and the function of DfUtils.dll behind it, from version 20; from there on this is
+// DataFlex has this class, and the function of DfUtils.dll behind it, from version 20; from there on this is
 // DataFlex's own package, unchanged. Before 20 the same class stands on the Windows folder browser of vWin32fh.
 // That browser takes no initial folder, so the argument is kept and not used.
 #IF (!@ < 200)

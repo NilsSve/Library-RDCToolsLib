@@ -1,4 +1,4 @@
-﻿Use cApplication.pkg
+Use cApplication.pkg
 Use cCJGrid.pkg
 
 // BOOL GetUserNameW(

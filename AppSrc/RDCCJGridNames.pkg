@@ -1,4 +1,4 @@
-﻿// The CodeJock grid's helper classes and constants under the names DataFlex 23 and later give them, for the
+// The CodeJock grid's helper classes and constants under the names DataFlex 23 and later give them, for the
 // DataFlex versions before 23. There they carry "Report" in their names: cCJReportItemButton,
 // xtpReportItemControlLeft and so on. A package that needs one of them Uses this package and writes the
 // new name. From DataFlex 23 on this package adds nothing.

@@ -1,4 +1,4 @@
-﻿//> This package enables base64 encoding and decoding of strings:
+//> This package enables base64 encoding and decoding of strings:
 //>
 //>     Get EncodeString of ghoBase64Functions sValue to sValue
 //>     Get DecodeString of ghoBase64Functions sValue to sValue

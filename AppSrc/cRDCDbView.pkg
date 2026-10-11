@@ -1,4 +1,4 @@
-﻿Use Dfclient.pkg
+Use Dfclient.pkg
 
 Register_Procedure ScaleFont Integer iClicks
 

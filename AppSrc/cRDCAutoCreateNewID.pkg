@@ -1,4 +1,4 @@
-﻿Use Windows.pkg
+Use Windows.pkg
 Use Datadict.pkg
 
 // Mixin class to auto-create a unique ID value - without the need to use a system file to
