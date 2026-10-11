@@ -2,6 +2,7 @@
 Use cCJStandardCommandBarSystem.pkg
 Use GlobalFunctionsProcedures.pkg
 Use cIniFile.pkg
+Use vWin32fh.pkg        // vFolderFormat, vFolderExists, vCreateDirectory
 Use CaptureWindow.h
 
 Define CS_CaptureSection for "Capture"
@@ -431,7 +432,9 @@ Function SnapShotFolder Global Returns String
         Move (sHome + sPath) to sPath
     End
 
-    Get IsDirectory sPath to bExist
+    // vFolderExists, not IsDirectory: IsDirectory is a global function DataFlex has only from 25.0, and
+    // this library is also for the versions before it.
+    Get vFolderExists sPath to bExist
     If (bExist = False) Begin
         If (sPath = "") Begin
             Get cwShellFolderPath vCSIDL_MYPICTURES to sPath  // E.g. "C:\Documents and Settings\username\My Documents\My Pictures"
