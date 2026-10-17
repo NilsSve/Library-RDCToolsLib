@@ -11,6 +11,7 @@
 //
 // $Rev History:
 //    2018-09-05  Module header created
+//    2026-10-17  The suggestion set-up is DataFlex's own: the timer property had its 20.1 name (error 98 on 23+)
 //
 //****************************************************************************
 Use Windows.pkg
@@ -31,14 +32,11 @@ Use vWin32fh.pkg
 Class cRDCSuggestionIniForm is a cRDCForm
 
     Procedure Define_cRDCSuggestionControl_mixin
-
-        { Visibility=Private }
-        Property Integer piTimeOutTicks 0
-
-        On_Key kEnter            Send SelectSuggestion
-        On_Key Key_Escape        Send DeActivateSuggestionList
-        On_Key Key_Up_Arrow      Send Up
-        On_Key Key_Down_Arrow    Send Down
+        // DataFlex's own set-up first: the timer property and the Enter, Escape, Up and Down keys. The property
+        // has the name that version's Key and OnSuggestionTimer ask for - piTimeOutTicks until DataFlex 20.1,
+        // puiTimeOutTicks from 23.0. (A copy of the 20.1 set-up stood here, so every key pressed in the form
+        // raised error 98 on DataFlex 23 and up.)
+        Send Define_cSuggestionControl_mixin
 
         // Added 'Home' & 'End' navigation keys for the drop-down list and the form object (and Ctrl+Home & Ctrl+End).
         On_Key Key_Home          Send Home

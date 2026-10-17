@@ -191,4 +191,24 @@ Object oRDCSuggestionIniForm_Tests is a cTestFixture
         Send AssertFalse bExists "Nothing was saved."
     End_Procedure
 
+    // DataFlex's Key and OnSuggestionTimer keep the time of the last key press in a property of the form: named
+    // piTimeOutTicks until DataFlex 20.1 and puiTimeOutTicks from 23.0. The form had the 20.1 name on every
+    // version, so on 23 and up each key pressed raised error 98.
+    { Published=True }
+    Procedure Test_The_Key_Timer_Property_Has_This_Versions_Name
+        Handle ho
+        Integer iTicks
+
+        Get NewForm to ho
+        #IF (!@ < 230)
+            Set piTimeOutTicks of ho to 12345
+            Get piTimeOutTicks of ho to iTicks
+        #ELSE
+            Set puiTimeOutTicks of ho to 12345
+            Get puiTimeOutTicks of ho to iTicks
+        #ENDIF
+        Send Destroy of ho
+        Send AssertIAreEqual 12345 iTicks "The form keeps the time of the last key press."
+    End_Procedure
+
 End_Object
