@@ -8,6 +8,7 @@
 //
 // $Rev History:
 //    2014-03-17  Module header created
+//    2026-10-17  A resizable panel keeps the piMinSize the object sets; the design size only when it sets none
 // The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // This is free software; you can redistribute it and/or modify it under the terms of the
@@ -80,7 +81,7 @@ Class cRDCModalPanel is a ModalPanel
     // Put a status bar at the bottom of the panel, which makes
     // status_help work and puts a gripper in the lower right corner.
     Procedure End_Construct_Object
-        Integer iStyle iSize iOffset
+        Integer iStyle iSize iOffset iMinSize
 
         Forward Send End_Construct_Object
 
@@ -97,8 +98,15 @@ Class cRDCModalPanel is a ModalPanel
                 End_Object
             End_Object
             Get Size to iSize
+            Get piMinSize to iMinSize
             Set Size to (Hi(iSize) + iOffset) (Low(iSize))
-            Set piMinSize to (Hi(iSize) + iOffset) (Low(iSize))
+            // The object's own minimum when it set one, so a dialog can be dragged smaller than it
+            // opens; else the design size, as before. A piMinSize nobody set reads 0 x 0. The status
+            // bar's rows go on top of either, as they go on top of the Size.
+            If ((Hi(iMinSize) = 0) or (Low(iMinSize) = 0)) Begin
+                Move iSize to iMinSize
+            End
+            Set piMinSize to (Hi(iMinSize) + iOffset) (Low(iMinSize))
         End
     End_Procedure
 

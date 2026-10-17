@@ -65,7 +65,7 @@ Class cRDCDbModalPanel is a dbModalPanel
     // Put a status bar at the bottom of the panel, which makes
     // status_help work and puts a gripper in the lower right corner.
     Procedure End_Construct_Object
-        Integer iStyle iSize iOffset
+        Integer iStyle iSize iOffset iMinSize
 
         Forward Send End_Construct_Object
 
@@ -82,8 +82,15 @@ Class cRDCDbModalPanel is a dbModalPanel
                 End_Object
             End_Object
             Get Size to iSize
+            Get piMinSize to iMinSize
             Set Size to (Hi(iSize) + iOffset) (Low(iSize))
-            Set piMinSize to (Hi(iSize) + iOffset) (Low(iSize))
+            // The object's own minimum when it set one, so a dialog can be dragged smaller than it
+            // opens; else the design size, as before. A piMinSize nobody set reads 0 x 0. The status
+            // bar's rows go on top of either, as they go on top of the Size.
+            If ((Hi(iMinSize) = 0) or (Low(iMinSize) = 0)) Begin
+                Move iSize to iMinSize
+            End
+            Set piMinSize to (Hi(iMinSize) + iOffset) (Low(iMinSize))
         End
     End_Procedure
 
