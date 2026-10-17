@@ -35,6 +35,13 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.12
+
+- `cRDCModalPanel` and `cRDCDbModalPanel` keep the `piMinSize` a dialog sets for itself, so a resizable dialog
+  can be dragged smaller than it opens. Until now the class set the minimum to the dialog's design size after the
+  dialog had set its own, and such a dialog could only grow. A dialog that sets no minimum still gets its design
+  size as the minimum. The status bar the class adds is counted on top of either, as it is on top of the size.
+
 ## What is new in 1.0.11
 
 - `cRDCSuggestionIniForm`: `psIniFileName` now decides where the form keeps its list of earlier values. Empty,
@@ -142,7 +149,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.11
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.12
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
