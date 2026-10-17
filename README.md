@@ -35,6 +35,14 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.13
+
+- `cRDCSuggestionIniForm` no longer raises error 98 ("Invalid message GET_PUITIMEOUTTICKS") on every key pressed
+  in the form on DataFlex 23 and up. The class set up DataFlex's suggestion code with a copy of the DataFlex 20.1
+  set-up, whose timer property is named `piTimeOutTicks`; from 23.0 that code asks for `puiTimeOutTicks`. The
+  class now uses DataFlex's own set-up, so the name always matches the version. Its saved list of earlier values,
+  in the workspace's .ws file or in the ini file named in `psIniFileName`, works as before.
+
 ## What is new in 1.0.12
 
 - `cRDCModalPanel` and `cRDCDbModalPanel` keep the `piMinSize` a dialog sets for itself, so a resizable dialog
@@ -149,7 +157,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.12
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.13
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
