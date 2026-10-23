@@ -35,6 +35,16 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.14
+
+- The package asks for vWin32fh by version range, `^1.0.0`, instead of one commit. vWin32fh 1.0.0 fixes the
+  Windows folder dialog (`vSHBrowseForFolder`) in 64-bit programs: its declaration kept only 32 of the 64 bits of
+  the address Windows returns. RDCToolsLib uses that dialog in `cDataBaseFunctions` (choosing a backup folder) and
+  in `cRDCIniFileForm` (a form that asks for a folder).
+- A workspace that also asks for vWin32fh itself must ask for `1.0.0` or a range such as `^1.0.0`. A commit pin of
+  vWin32fh next to this release is reported as incompatible by df-cli.
+- DataFlex 19.1 to 25 use vWin32fh as a library folder and get the fix from the vWin32fh repository.
+
 ## What is new in 1.0.13
 
 - `cRDCSuggestionIniForm` no longer raises error 98 ("Invalid message GET_PUITIMEOUTTICKS") on every key pressed
@@ -157,7 +167,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.13
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.14
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
