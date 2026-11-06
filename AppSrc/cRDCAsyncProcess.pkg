@@ -284,6 +284,15 @@ End_Class
 // The progress panel RDCRunProgramBounded keeps alive while it waits: DataFlex's ghoStatusPanel
 // (StatPnl.pkg) with the RDC panel's ghoProgressBar (RDCStatusPanel.pkg), when the program has them.
 // Declared here too, guarded, so a program without a panel compiles - its runner simply nudges nothing.
+// The messages it sends them are registered for the same reason: without a progress bar class
+// (cProgressBar.pkg) or a status panel class (cProcessStatusPanel.pkg) in the program, piMaximum,
+// piPosition and Check_StatusPanel are not known when the function below is compiled, and the program
+// stops with error 4306. Registering a message the program already has does no harm.
+Register_Function piMaximum Returns Integer
+Register_Function piPosition Returns Integer
+Register_Procedure Set piPosition Integer iPos
+Register_Function Check_StatusPanel Returns Integer
+
 #IFNDEF ghoStatusPanel
     Global_Variable Handle ghoStatusPanel
     Move 0 to ghoStatusPanel

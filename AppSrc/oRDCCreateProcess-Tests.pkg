@@ -17,10 +17,8 @@
 
 Use DFUnit\Fixturing\Fixture.pkg
 Use StartProg.pkg
-// RDCRunProgramBounded (cRDCAsyncProcess.pkg) asks the progress bar for piMaximum and piPosition, and a program
-// with no progress bar class does not compile it: error 4306, forward reference not resolved. This test program
-// has none of its own, so the class comes in here.
-Use cProgressBar.pkg
+// No progress bar class here, on purpose: this test program has none, so it also shows that cRDCAsyncProcess.pkg
+// compiles without one (until 1.0.15 it stopped with error 4306 on piMaximum and piPosition).
 Use cRDCAsyncProcess.pkg
 Use cRDCExternalProgramResult.pkg
 
