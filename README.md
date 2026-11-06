@@ -35,6 +35,17 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.16
+
+- `cRDCCheckBox` follows its anchors. Its container is DataFlex's non-visual `Container` class, which has no
+  window of its own, so the runtime anchored nothing for it: the check box and the info icon are windows of the
+  panel itself. With `Set peAnchors to anBottomLeft` the check box stayed where it was when the panel grew, and a
+  grid anchored to all sides drew over it. The container now gives both its anchors - only the side they move
+  with, as both are sized to their text and icon: left and right keep them on the left, top and bottom at the top.
+- `cRDCAsyncProcess.pkg` compiles in a program without `cProgressBar.pkg` or `DFAllEnt.pkg`, as its own comment
+  says. `RDCRunProgramBounded` sends `piMaximum` and `piPosition` to the progress bar and `Check_StatusPanel` to
+  the panel; these messages are now registered above it, so the compiler no longer stops with error 4306.
+
 ## What is new in 1.0.15
 
 - A program started by `gStartProgram` (`StartProg.pkg`), `cRDCAsyncProcess` or `cRDCExternalProgramResult`
@@ -186,7 +197,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.15
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.16
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
