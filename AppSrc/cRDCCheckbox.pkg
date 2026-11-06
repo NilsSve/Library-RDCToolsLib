@@ -61,6 +61,7 @@ End_Class
 
 Register_Procedure OnChangeEvent
 Register_Procedure Set private.Checked_State
+Register_Procedure ApplyAnchorsToChildren
 Register_Function private.Checked_State Returns Boolean
 { ClassType=Abstract }
 Class _NewCheckBox is a CheckBox
@@ -136,7 +137,10 @@ Class _cCheckBoxContainer is a Container
         { Visibility=Private }
         Property Handle private.phoCheckBox
         { Visibility=Private }
-        Property Integer private.peAnchors
+        Property Handle private.phoInfo
+        // anTopLeft is the DataFlex default for a control.
+        { Visibility=Private }
+        Property Integer private.peAnchors anTopLeft
 
         { Category=Appearance }
         Property Boolean pbCreateInfoItem True
@@ -175,11 +179,42 @@ Class _cCheckBoxContainer is a Container
                 Set psToolTip to sToolTip
                 Set Bitmap to "ActionAbout.bmp"
             End_Object
+            Set private.phoInfo to (oInfo_tb(Self))
         End
         Else Begin
             Set psToolTip of hoCheckBox to sToolTip
         End
 
+        Send ApplyAnchorsToChildren
+    End_Procedure
+
+    // This container has no window of its own: DataFlex's Container class is non-visual, so the runtime
+    // anchors nothing for it. The check box and the info icon created above are windows of the panel
+    // itself (that is why they get the container's own Location), so they must get its anchors here -
+    // else "Set peAnchors to anBottomLeft" does nothing and a resized panel draws over the check box.
+    // Only the moving part is passed on: both are sized to their text and icon, and anchored to two
+    // opposite sides they would stretch. Left and right keep them on the left; top and bottom at the top.
+    { Visibility=Private }
+    Procedure ApplyAnchorsToChildren
+        Integer eAnchors
+        Handle hoCheckBox hoInfo
+
+        Get private.peAnchors to eAnchors
+        If ((eAnchors iand anLeftRight) = anLeftRight) Begin
+            Move (eAnchors - anRight) to eAnchors
+        End
+        If ((eAnchors iand anTopBottom) = anTopBottom) Begin
+            Move (eAnchors - anBottom) to eAnchors
+        End
+
+        Get private.phoCheckBox to hoCheckBox
+        If (hoCheckBox <> 0) Begin
+            Set peAnchors of hoCheckBox to eAnchors
+        End
+        Get private.phoInfo to hoInfo
+        If (hoInfo <> 0) Begin
+            Set peAnchors of hoInfo to eAnchors
+        End
     End_Procedure
 
     Procedure OnChangeEvent
@@ -259,6 +294,8 @@ Class _cCheckBoxContainer is a Container
     Procedure Set peAnchors Integer eAnchorMode
         Forward Set peAnchors to eAnchorMode
         Set private.peAnchors to eAnchorMode
+        // Before End_Construct_Object there are no children yet, and this does nothing.
+        Send ApplyAnchorsToChildren
     End_Procedure
 
     { Visibility=Private }
