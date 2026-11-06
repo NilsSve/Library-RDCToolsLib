@@ -35,6 +35,25 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.15
+
+- A program started by `gStartProgram` (`StartProg.pkg`), `cRDCAsyncProcess` or `cRDCExternalProgramResult`
+  gets every character of its command line and its working folder. From DataFlex 20 the three start it through
+  `CreateProcessW`, the Unicode function of Windows, by way of the new `RDCCreateProcess.pkg`. Until now they used
+  `CreateProcessA`, which takes only the characters of the machine's ANSI code page: a Polish, Greek or Chinese
+  letter on a Western European Windows reached the program as `?` or as a look-alike letter, and on DataFlex 20
+  and later `gStartProgram` and `cRDCExternalProgramResult` garbled even the Swedish and German letters. DataFlex
+  19.1 keeps `CreateProcessA`, since a string there is OEM text.
+- `cRDCExternalProgramResult` works in 64-bit programs; until now it answered -1 in every one of them. DataFlex
+  packs a struct with no gaps, and the security attributes it handed `CreatePipe` were 13 bytes where Windows
+  wants 24 (error 998). `tWinSecurityAttributes`, `tStartInfo` and their `tEPR_` twins now have the layout
+  Windows has, in 32- and 64-bit programs, and `bInherit` is an `Integer` - four bytes, like a Windows BOOL.
+- In a 64-bit program, `gStartProgram` and `cRDCAsyncProcess.StartProcess` now hand Windows the show-window
+  setting where Windows reads it, so the program's window shows or hides as the call asks.
+- `CreateProcessEf` is declared in `RDCCreateProcess.pkg`, and `StartProg.pkg` and `cRDCExternalProgramResult.pkg`
+  bring it in from there. `OpenProcessEf` returns a `Handle`. Every `External_Function` in these packages takes
+  one parameter per line.
+
 ## What is new in 1.0.14
 
 - The package asks for vWin32fh by version range, `^1.0.0`, instead of one commit. vWin32fh 1.0.0 fixes the
@@ -167,7 +186,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.14
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.15
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
@@ -209,7 +228,9 @@ class — which does not obviously point at the real cause.
 [DFUnit](https://github.com/NilsSve/Library-DFUnit). The tests are in `AppSrc\o<Subject>-Tests.pkg`, one file
 per subject, and `AppSrc\oUnit_Tests.pkg` lists them. The first files cover the code that differs between
 DataFlex versions: the whole-number registry helpers, `Utf8ToAnsi`, the tooltip wrap, the CodeJock "Grid"
-names, the Windows user name, the Pictures folder and the font metrics.
+names, the Windows user name, the Pictures folder and the font metrics. `oRDCCreateProcess-Tests.pkg` covers
+the program launchers: a folder named with Polish and Chinese letters that each of them starts a program in,
+and the sizes of the structs they hand Windows.
 
 The `RDCToolsLibDev<version>.sws` files take DFUnit from the sibling folder `..\DFUnit`, which `setup.bat`
 clones.
