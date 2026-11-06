@@ -23,11 +23,19 @@
 //    2014-09-21  NGS Removed all old syntax like TYPEDEF's, PUT GETADDRESS et al to instead
 //                use Structs and added "EPR" prefix to all variables to make them unique.
 //                Enclosed all structs with #IFNDEF's
+//    2026-11-06  NGS The program starts through RDCCreateProcess (RDCCreateProcess.pkg) - CreateProcessW from
+//                DataFlex 20, so every character of the command line and the folder reaches it. The
+//                OemToAnsi conversion before CreateProcessA garbled every national character on DataFlex
+//                20 and later. One CreatePipeEf declaration instead of two, and every External_Function
+//                takes one parameter per line. tEPR_WinSecurityAttributes and tEPR_StartInfo have the
+//                layout Windows has in a 64-bit program too - CreatePipe failed there with error 998, so the
+//                function answered -1 in every 64-bit program - and bInherit is four bytes, as a Windows BOOL.
 //****************************************************************************
 Use VdfBase.pkg
 Use Winuser.pkg
 Use Winkern.pkg
 Use vWin32fh.pkg
+Use RDCCreateProcess.pkg    // RDCCreateProcess - the program starts through it
 
 // ***** CONSTANTS & STRUCT DECLARATIONS *****
 //
@@ -55,17 +63,34 @@ Define EPR_STILL_ACTIVE                 for 259
 #ENDIF
 #ENDIF
 
+// Windows lays a struct out with every field on a multiple of its own size; DataFlex packs one field right
+// after the other. In a 64-bit program a pointer after a DWord then lands four bytes early, so these structs
+// get the gap Windows has, the way DataFlex's own File_dlg.pkg does it. Without it CreatePipe refused the
+// security attributes with error 998 and ExternalProgramResult answered -1 in every 64-bit program.
+
+// SECURITY_ATTRIBUTES: 12 bytes in a 32-bit program, 24 in a 64-bit one. bInherit is a Windows BOOL, four
+// bytes - a DataFlex Boolean is ONE byte in a struct, which made the struct 9 and 13 bytes long.
 #IFNDEF _struct_tEPR_WinSecurityAttributes
     Struct tEPR_WinSecurityAttributes
         DWord nLength
+#IFDEF IS$WIN64
+        Integer iMissingAlignment1
+#ENDIF
         Pointer lpDescriptor
-        Boolean bInherit
+        Integer bInherit
+#IFDEF IS$WIN64
+        Integer iMissingAlignment2
+#ENDIF
     End_Struct
 #ENDIF
 
+// STARTUPINFO: 68 bytes in a 32-bit program, 104 in a 64-bit one.
 #IFNDEF _struct_tEPR_StartInfo
     Struct tEPR_StartInfo
         DWord cb
+#IFDEF IS$WIN64
+        Integer iMissingAlignment1
+#ENDIF
         Pointer lpReserved
         Pointer lpDesktop
         Pointer lpTitle
@@ -79,6 +104,9 @@ Define EPR_STILL_ACTIVE                 for 259
         DWord dwFlags
         UShort wShowWindow
         UShort cbReserved2
+#IFDEF IS$WIN64
+        Integer iMissingAlignment2
+#ENDIF
         Pointer lpReserved2
         Handle hStdInput
         Handle hStdOutput
@@ -86,6 +114,7 @@ Define EPR_STILL_ACTIVE                 for 259
     End_Struct
 #ENDIF
 
+// PROCESS_INFORMATION: 16 bytes in a 32-bit program, 24 in a 64-bit one - no gap needed.
 #IFNDEF _struct_tEPR_ProcessInfo
     Struct tEPR_ProcessInfo
         Handle hProcess
@@ -97,36 +126,56 @@ Define EPR_STILL_ACTIVE                 for 259
 
 // ***** External Function Declarations *****
 //
+// CreateProcessEf is declared in RDCCreateProcess.pkg, Used above.
+
 #IFNDEF get_CloseHandleEf
-    External_Function CloseHandleEf "CloseHandle" KERNEL32.DLL Handle hObject Returns Integer
+    External_Function CloseHandleEf "CloseHandle" Kernel32.dll ;
+        Handle hObject ;
+        Returns Integer
 #ENDIF
 
+// hReadPipe and hWritePipe are the ADDRESSES of the two handles Windows fills in.
 #IFNDEF get_CreatePipeEf
-    External_Function CreatePipeEf "CreatePipe" kernel32.dll Handle hReadPipe Handle hWritePipe Pointer lpPipeAttributes DWord nbSize Returns Boolean
-#ENDIF
-
-#IFNDEF get_CreateProcessEf
-    External_Function CreateProcessEf "CreateProcessA" kernel32.dll Pointer pName Pointer pCmdL Pointer lpPAttr Pointer lpTAttr Integer bInherit Integer dwCrFlag Pointer pEnv Pointer lpCurDir Pointer lpStartup Pointer lpProcInfo Returns Integer
+    External_Function CreatePipeEf "CreatePipe" Kernel32.dll ;
+        Pointer hReadPipe ;
+        Pointer hWritePipe ;
+        Pointer lpPipeAttributes ;
+        DWord   nSize ;
+        Returns Boolean
 #ENDIF
 
 #IFNDEF get_GetExitCodeProcessEf
-    External_Function GetExitCodeProcessEf "GetExitCodeProcess" kernel32.dll Handle hProcess Pointer lpExitCode Returns Integer
-#ENDIF
-
-#IFNDEF get_CreatePipeEf
-    External_Function CreatePipeEf "CreatePipe" kernel32.dll Handle hReadPipe Handle hWritePipe Pointer lpPipeAttributes DWord nbSize Returns Boolean
+    External_Function GetExitCodeProcessEf "GetExitCodeProcess" Kernel32.dll ;
+        Handle  hProcess ;
+        Pointer lpExitCode ;
+        Returns Integer
 #ENDIF
 
 #IFNDEF get_PeekNamedPipeEf
-    External_Function PeekNamedPipeEf "PeekNamedPipe" kernel32.dll Handle hPipe Pointer lpBuffer DWord nBufferSize Pointer lpBytesRead Pointer lpTotalBytesAvailable Pointer lpBytesLeftThisMessage Returns Boolean
+    External_Function PeekNamedPipeEf "PeekNamedPipe" Kernel32.dll ;
+        Handle  hNamedPipe ;
+        Pointer lpBuffer ;
+        DWord   nBufferSize ;
+        Pointer lpBytesRead ;
+        Pointer lpTotalBytesAvail ;
+        Pointer lpBytesLeftThisMessage ;
+        Returns Boolean
 #ENDIF
 
 #IFNDEF get_ReadFileEf
-    External_Function ReadFileEf "ReadFile" kernel32.dll Handle hFile Pointer lpBuffer DWord dwNumberOfBytesToRead Pointer lpdwNumberOfBytesRead Pointer lpOverlapped Returns Boolean
+    External_Function ReadFileEf "ReadFile" Kernel32.dll ;
+        Handle  hFile ;
+        Pointer lpBuffer ;
+        DWord   nNumberOfBytesToRead ;
+        Pointer lpNumberOfBytesRead ;
+        Pointer lpOverlapped ;
+        Returns Boolean
 #ENDIF
 
 #IFNDEF get_SleepEf
-    External_Function SleepEf "Sleep" kernel32.dll Integer iMilliSeconds Returns Integer
+    External_Function SleepEf "Sleep" Kernel32.dll ;
+        Integer dwMilliseconds ;
+        Returns Integer
 #ENDIF
 
 Class cRDCExternalProgramResult is a cObject
@@ -144,11 +193,11 @@ Class cRDCExternalProgramResult is a cObject
     //
     // Acknowledgement: This code is curtesy of Bernhard Ponemayr.
     Function ExternalProgramResult String sCommand String sParams String sPath String[] ByRef sOutput Returns Integer
-        String sCmd sPara sWorkDir sExitCode sBuffer sLine
-        Pointer pCmd pWorkDir pStartup pProcessInfo pExitCode
+        String sCmd sPara sExitCode sBuffer sLine
+        Pointer pStartup pProcessInfo pExitCode
         Integer iRet iError iExitCode
         Handle hProcess hThread hReadPipe hWritePipe
-        Boolean bRet
+        Boolean bRet bCreated
         DWord dwBytesRead dwBytesLeft dwBytesTotal
         String[] sReturn
         tEPR_WinSecurityAttributes aAttributes
@@ -162,15 +211,7 @@ Class cRDCExternalProgramResult is a cObject
             Move ('"' + sCommand + '"') to sCommand
         End
 
-        Move (sCommand + " " + sParams + (Character(0))) to sCmd                        // Take Program and CmdLines
-        Move (sPath + (Character(0))) to sWorkDir
-        Move (AddressOf(sCmd)) to pCmd
-        Move (AddressOf(sWorkDir)) to pWorkDir
-        Move (OemToAnsi(pCmd, pCmd)) to iRet                                            // Convert to ANSI
-        Move (OemToAnsi(pWorkDir, pWorkDir)) to iRet
-        If (Trim(sPath) = "" or Trim(sPath) = ".") Begin
-            Move 0 to pWorkDir                                                          // If the Directory is empty or . use the current threads directory
-        End
+        Move (sCommand + " " + sParams) to sCmd                                         // Take Program and CmdLines
 
         Move (SizeOfType(tEPR_StartInfo)) to StartInfo.cb
         Move (EPR_STARTF_USESHOWWINDOW ior EPR_STARTF_USESTDHANDLES) to StartInfo.dwFlags
@@ -197,10 +238,12 @@ Class cRDCExternalProgramResult is a cObject
         Move (AddressOf(StartInfo))    to pStartup
         Move (AddressOf(ProcessInfo))  to pProcessInfo
 
-        Move (CreateProcessEf(0, pCmd, 0, 0, True, 0, 0, pWorkDir, pStartup, pProcessInfo)) to iRet   // Create the process
-        Move (GetLastError()) to iError
+        // The program, its parameters and the folder go to Windows through RDCCreateProcess - CreateProcessW
+        // from DataFlex 20, so every character of them arrives. An empty sPath, or ".", is the current folder.
+        // bInheritHandles is True: the child writes into the inheritable write end of the pipe.
+        Move (RDCCreateProcess(sCmd, sPath, True, 0, pStartup, pProcessInfo, &iError)) to bCreated
 
-        If (iRet = 0) Begin
+        If (bCreated = False) Begin
             Function_Return -1                                                               // if creation failed return -1
         End
         Move ProcessInfo.hProcess to hProcess

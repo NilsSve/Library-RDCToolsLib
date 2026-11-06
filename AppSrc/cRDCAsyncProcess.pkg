@@ -41,11 +41,13 @@
 Use VdfBase.pkg
 Use Winuser.pkg
 Use Winkern.pkg
-Use StartProg.pkg   // tStartInfo, tProcessInfo, tWinSecurityAttributes, CreateProcessEf, GetExitCodeProcessEf,
-                    // CloseHandleEf, TerminateProcessEf, SleepEf, GetLastError, STILL_ACTIVE, STARTF_USESHOWWINDOW
+Use StartProg.pkg           // tStartInfo, tProcessInfo, tWinSecurityAttributes, GetExitCodeProcessEf, CloseHandleEf,
+                            // TerminateProcessEf, SleepEf, GetLastError, STILL_ACTIVE, STARTF_USESHOWWINDOW
+Use RDCCreateProcess.pkg    // RDCCreateProcess - every program here starts through it
 
 // Before DataFlex 20 a string is OEM, not UTF-8, and there is no Utf8ToAnsi. ToANSI is the conversion that is
-// right there, so it stands in under that name and the calls below read the same on every version.
+// right there, so it stands in under that name. Nothing here calls it any more - the programs start through
+// RDCCreateProcess - but a program on DataFlex 19.1 may have come to rely on finding it in this package.
 #IF (!@ < 200)
 #IFNDEF get_Utf8ToAnsi
 Function Utf8ToAnsi Global String sText Returns String
@@ -64,7 +66,9 @@ End_Function
 // taskkill: the launched process is often a shell wrapper (a cmd.exe redirecting a child's output), and
 // a bare TerminateProcess on that handle kills only the wrapper, orphaning the real child it spawned.
 #IFNDEF get_GetProcessIdEf
-    External_Function GetProcessIdEf "GetProcessId" kernel32.dll Handle hProcess Returns Integer
+    External_Function GetProcessIdEf "GetProcessId" Kernel32.dll ;
+        Handle hProcess ;
+        Returns Integer
 #ENDIF
 
 Class cRDCAsyncProcess is a cObject
@@ -85,9 +89,10 @@ Class cRDCAsyncProcess is a cObject
     //   bShowWindow  True: the child's window is shown (a console, say). False: hidden, and a console
     //                child gets no console at all - the usual case for a background tool.
     Function StartProcess String sCommand String sParams String sWorkDir Boolean bShowWindow Returns Boolean
-        String sCmd sWorkDirZ
-        Pointer pCmd pWorkDir pStartup pProcessInfo
-        Integer iRet iError iFlags
+        String sCmd
+        Pointer pStartup pProcessInfo
+        Integer iError iFlags
+        Boolean bCreated
         tWinSecurityAttributes aAttributes
         tProcessInfo ProcessInfo
         tStartInfo   StartInfo
@@ -105,20 +110,11 @@ Class cRDCAsyncProcess is a cObject
             Move ('"' + sCommand + '"') to sCommand
         End
 
-        // UTF-8 TO ANSI, NOT OEM TO ANSI. DataFlex strings are UTF-8 and CreateProcessEf is CreateProcessA,
-        // so the command line and the folder must reach it in the ANSI code page. OemToAnsi read the
-        // UTF-8 bytes as OEM characters and mapped each one, so a path with a national character in it
-        // reached the child as garbled characters: "file not found", nothing run. Utf8ToAnsi is this
-        // runtime's conversion; a character outside the ANSI code page becomes '?', which only a
-        // CreateProcessW wrapper would carry.
-        Move (Utf8ToAnsi(sCommand + " " + sParams) + (Character(0))) to sCmd
-        Move (Utf8ToAnsi(sWorkDir) + (Character(0)))                 to sWorkDirZ
-        Move (AddressOf(sCmd))      to pCmd
-        Move (AddressOf(sWorkDirZ)) to pWorkDir
-        // "." is the explicit opt-in to inheriting the current directory - CreateProcess wants NULL for that.
-        If (Trim(sWorkDir) = ".") Begin
-            Move 0 to pWorkDir
-        End
+        // The command line and the folder go to Windows through RDCCreateProcess (RDCCreateProcess.pkg):
+        // CreateProcessW from DataFlex 20, so every character of a path reaches the child - CreateProcessA
+        // took only the characters of the machine's ANSI code page. "." is the explicit opt-in to inheriting
+        // the current directory; RDCCreateProcess hands Windows NULL for it.
+        Move (sCommand + " " + sParams) to sCmd
 
         Move (SizeOfType(tStartInfo)) to StartInfo.cb
         Move STARTF_USESHOWWINDOW     to StartInfo.dwFlags
@@ -136,9 +132,8 @@ Class cRDCAsyncProcess is a cObject
         Move (AddressOf(StartInfo))   to pStartup
         Move (AddressOf(ProcessInfo)) to pProcessInfo
 
-        Move (CreateProcessEf(0, pCmd, 0, 0, False, iFlags, 0, pWorkDir, pStartup, pProcessInfo)) to iRet
-        If (iRet = 0) Begin
-            Move (GetLastError()) to iError
+        Move (RDCCreateProcess(sCmd, sWorkDir, False, iFlags, pStartup, pProcessInfo, &iError)) to bCreated
+        If (bCreated = False) Begin
             Set psLastError to ("CreateProcess failed; GetLastError=" * String(iError))
             Function_Return False
         End
@@ -254,15 +249,15 @@ Class cRDCAsyncProcess is a cObject
     // since it is never polled.
     Function _RunHidden String sCommand String sParams Returns Boolean
         String  sCmd
-        Pointer pCmd pStartup pProcessInfo
-        Integer iRet iFlags
+        Pointer pStartup pProcessInfo
+        Integer iRet iFlags iError
+        Boolean bCreated
         tProcessInfo ProcessInfo
         tStartInfo   StartInfo
 
         If (Left(sCommand, 1) <> '"' and (Left(sCommand, 1) <> "'")) ;
             Move ('"' + sCommand + '"') to sCommand
-        Move (Utf8ToAnsi(sCommand + " " + sParams) + (Character(0))) to sCmd   // UTF-8 -> ANSI; see StartProcess
-        Move (AddressOf(sCmd))       to pCmd
+        Move (sCommand + " " + sParams) to sCmd   // to Windows through RDCCreateProcess; see StartProcess
 
         Move (SizeOfType(tStartInfo)) to StartInfo.cb
         Move STARTF_USESHOWWINDOW     to StartInfo.dwFlags
@@ -273,8 +268,8 @@ Class cRDCAsyncProcess is a cObject
         Move (AddressOf(StartInfo))   to pStartup
         Move (AddressOf(ProcessInfo)) to pProcessInfo
 
-        Move (CreateProcessEf(0, pCmd, 0, 0, False, iFlags, 0, 0, pStartup, pProcessInfo)) to iRet
-        If (iRet = 0) ;
+        Move (RDCCreateProcess(sCmd, ".", False, iFlags, pStartup, pProcessInfo, &iError)) to bCreated
+        If (bCreated = False) ;
             Function_Return False
 
         If (ProcessInfo.hProcess <> 0) ;

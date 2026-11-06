@@ -1,0 +1,213 @@
+// oRDCCreateProcess-Tests.pkg - RDCCreateProcess, and the three launchers that start their programs through it:
+// gStartProgram (StartProg.pkg), cRDCAsyncProcess (here through RDCRunProgramBounded) and
+// cRDCExternalProgramResult.
+//
+// From DataFlex 20 the test folder's name holds letters that no Western ANSI code page has - a Polish L with
+// stroke, a z with acute and two Chinese characters - so a launcher that still went through CreateProcessA
+// would hand cmd.exe something else for them, and cmd could neither make the folder nor start in it. The
+// Chinese characters are the ones that decide it: Windows maps a Polish letter its code page lacks to the
+// nearest Latin one, a valid folder name, so with Polish letters alone the old code could pass by making, and
+// then finding, a DIFFERENT folder. GetFileAttributesW looks for the folder by its real name, apart from any
+// launcher.
+//
+// Before DataFlex 20 a string is OEM and cannot hold those letters. The folder has a plain name there, and the
+// tests only prove that the launchers still start a program in a folder.
+//
+// Everything happens in one folder of the test's own under TEMP, which cmd.exe makes and removes.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use StartProg.pkg
+// RDCRunProgramBounded (cRDCAsyncProcess.pkg) asks the progress bar for piMaximum and piPosition, and a program
+// with no progress bar class does not compile it: error 4306, forward reference not resolved. This test program
+// has none of its own, so the class comes in here.
+Use cProgressBar.pkg
+Use cRDCAsyncProcess.pkg
+Use cRDCExternalProgramResult.pkg
+
+// The test's own look at the folder, by its wide name. -1 (INVALID_FILE_ATTRIBUTES) when there is none.
+#IF (!@ >= 200)
+#IFNDEF get_RDCTest_GetFileAttributesW
+    External_Function RDCTest_GetFileAttributesW "GetFileAttributesW" Kernel32.dll ;
+        Pointer lpFileName ;
+        Returns Integer
+#ENDIF
+#ENDIF
+
+// One Pointer: 4 bytes in a 32-bit program, 8 in a 64-bit one. The struct-size test takes the bitness from this,
+// not from IS$WIN64 - the symbol the padding it checks depends on.
+#IFNDEF _struct_tRDCTestOnePointer
+Struct tRDCTestOnePointer
+    Pointer p
+End_Struct
+#ENDIF
+
+Object oRDCCreateProcess_Tests is a cTestFixture
+    Set psTestFixtureName to "RDCCreateProcess - a program starts in a folder with any name"
+
+    Property String  psBaseFolder     ""
+    Property String  psTestFolder     ""
+    Property Integer piMakeFolderExit -99
+
+    // The test folder's name. From DataFlex 20 it is built from its UTF-8 bytes, so this source stays ASCII.
+    Function TestFolderName Returns String
+#IF (!@ < 200)
+        Function_Return "RDC plain folder"
+#ELSE
+        UChar[] aBytes
+
+        Move 197 to aBytes[0]     // C5 81    L with stroke, U+0141
+        Move 129 to aBytes[1]
+        Move 195 to aBytes[2]     // C3 B3    o with acute, U+00F3
+        Move 179 to aBytes[3]
+        Move 100 to aBytes[4]     // 64       d
+        Move 197 to aBytes[5]     // C5 BA    z with acute, U+017A
+        Move 186 to aBytes[6]
+        Move 32  to aBytes[7]     // 20       a space
+        Move 228 to aBytes[8]     // E4 B8 AD U+4E2D
+        Move 184 to aBytes[9]
+        Move 173 to aBytes[10]
+        Move 230 to aBytes[11]    // E6 96 87 U+6587
+        Move 150 to aBytes[12]
+        Move 135 to aBytes[13]
+        Function_Return ("RDC " + UCharArrayToString(aBytes))
+#ENDIF
+    End_Function
+
+    // cmd.exe makes the folder and a file in it. The folder's name travels on cmd's command line - through
+    // RDCRunProgramBounded, cRDCAsyncProcess.StartProcess and RDCCreateProcess - so a launcher that loses a
+    // character makes no folder at all, or another one.
+    Procedure Setup
+        String  sTemp sBase sFolder
+        Integer iChildExit
+
+        Get_Environment "TEMP" to sTemp
+        If (Right(sTemp, 1) <> "\") Begin
+            Move (sTemp + "\") to sTemp
+        End
+        Move (sTemp + "RDCCreateProcessTest") to sBase
+        Move (sBase + "\" + TestFolderName(Self)) to sFolder
+        Set psBaseFolder to sBase
+        Set psTestFolder to sFolder
+
+        Move (RDCRunProgramBounded("cmd.exe", ('/c mkdir "' + sFolder + '" 2>nul & echo ok> "' + sFolder + '\marker.txt"'), ".", 30)) to iChildExit
+        Set piMakeFolderExit to iChildExit
+    End_Procedure
+
+    // Removes the test's own folder under TEMP - and nothing when TEMP was not found (no drive in the path).
+    Procedure TearDown
+        String  sBase
+        Integer iVoid
+
+        Get psBaseFolder to sBase
+        If (Mid(sBase, 1, 2) = ":" and Right(sBase, 21) = "\RDCCreateProcessTest") Begin
+            Move (RDCRunProgramBounded("cmd.exe", ('/c rmdir /s /q "' + sBase + '"'), ".", 30)) to iVoid
+        End
+    End_Procedure
+
+#IF (!@ >= 200)
+    // The name is the 14 bytes it was built from, so no conversion has turned it into other letters before
+    // any launcher sees it.
+    { Published=True }
+    Procedure Test_The_Folder_Name_Is_The_UTF8_It_Was_Built_From
+        UChar[] aBytes
+
+        Move (StringToUCharArray(TestFolderName(Self))) to aBytes
+        Send AssertIAreEqual 18 (SizeOfArray(aBytes)) "'RDC ' and 14 bytes of UTF-8."
+        If (SizeOfArray(aBytes) = 18) Begin
+            Send AssertIAreEqual 197 aBytes[4]  "The L with stroke starts with byte C5."
+            Send AssertIAreEqual 228 aBytes[12] "The first Chinese character starts with byte E4."
+        End
+    End_Procedure
+#ENDIF
+
+    // cmd.exe made the folder, and made it under its real name.
+    { Published=True }
+    Procedure Test_A_Child_Makes_The_Folder_Under_Its_Real_Name
+#IF (!@ >= 200)
+        Integer iAttr
+        WString wFolder
+#ENDIF
+
+        Send AssertIAreEqual 0 (piMakeFolderExit(Self)) "cmd.exe made the folder and the file in it."
+#IF (!@ >= 200)
+        Move (psTestFolder(Self)) to wFolder
+        Move (RDCTest_GetFileAttributesW(AddressOf(wFolder))) to iAttr
+        Send Assert (iAttr <> -1 and (iAttr iand 16) <> 0) "A folder of exactly that name exists (FILE_ATTRIBUTE_DIRECTORY)."
+#ENDIF
+    End_Procedure
+
+    // The folder as the WORKING folder: Windows refuses a folder that does not exist (error 267), so a lost
+    // character shows as -1, "did not start".
+    { Published=True }
+    Procedure Test_cRDCAsyncProcess_Starts_In_The_Folder
+        Integer iChildExit
+
+        Move (RDCRunProgramBounded("cmd.exe", "/c if exist marker.txt (exit 0) else (exit 7)", psTestFolder(Self), 30)) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "cmd.exe started in the folder and found the file there (-1: it could not start)."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_gStartProgram_Starts_In_The_Folder
+        Integer iChildExit
+
+        Move (gStartProgram("cmd.exe", "/c if exist marker.txt (exit 0) else (exit 7)", psTestFolder(Self), False, True)) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "cmd.exe started in the folder and found the file there (-1: it could not start)."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_cRDCExternalProgramResult_Starts_In_The_Folder
+        Integer  iChildExit
+        String[] asOutput
+
+        Get ExternalProgramResult of ghoExternalProgramResult "cmd.exe" "/c if exist marker.txt (echo found& exit 0) else (echo missing& exit 7)" (psTestFolder(Self)) (&asOutput) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "cmd.exe started in the folder and found the file there (-1: it could not start)."
+        If (SizeOfArray(asOutput) > 0) Begin
+            Send AssertSAreEqual "found" (Trim(asOutput[0])) "Its output came back through the pipe."
+        End
+        Else Begin
+            Send Assert False "Its output came back through the pipe."
+        End
+    End_Procedure
+
+    // Each struct the launchers hand Windows is exactly as long as Windows' own, in a 32-bit and in a 64-bit
+    // program. DataFlex packs a struct with no gaps, so in a 64-bit program SECURITY_ATTRIBUTES was 13 bytes and
+    // STARTUPINFO 96 until the structs got the gaps Windows has.
+    { Published=True }
+    Procedure Test_The_Structs_Have_The_Sizes_Windows_Has
+        Integer iSecurity iStartup iProcess
+
+        If (SizeOfType(tRDCTestOnePointer) = 8) Begin
+            Move 24  to iSecurity
+            Move 104 to iStartup
+            Move 24  to iProcess
+        End
+        Else Begin
+            Move 12  to iSecurity
+            Move 68  to iStartup
+            Move 16  to iProcess
+        End
+        Send AssertIAreEqual iSecurity (SizeOfType(tWinSecurityAttributes))     "SECURITY_ATTRIBUTES, StartProg.pkg."
+        Send AssertIAreEqual iStartup  (SizeOfType(tStartInfo))                 "STARTUPINFO, StartProg.pkg."
+        Send AssertIAreEqual iProcess  (SizeOfType(tProcessInfo))               "PROCESS_INFORMATION, StartProg.pkg."
+        Send AssertIAreEqual iSecurity (SizeOfType(tEPR_WinSecurityAttributes)) "SECURITY_ATTRIBUTES, cRDCExternalProgramResult.pkg."
+        Send AssertIAreEqual iStartup  (SizeOfType(tEPR_StartInfo))             "STARTUPINFO, cRDCExternalProgramResult.pkg."
+        Send AssertIAreEqual iProcess  (SizeOfType(tEPR_ProcessInfo))           "PROCESS_INFORMATION, cRDCExternalProgramResult.pkg."
+    End_Procedure
+
+    // A program that is not there: False, and the reason Windows gave - read before anything could overwrite it.
+    { Published=True }
+    Procedure Test_RDCCreateProcess_Says_Why_A_Program_Did_Not_Start
+        Boolean      bCreated
+        Integer      iError
+        String       sCmd
+        tStartInfo   StartInfo
+        tProcessInfo ProcessInfo
+
+        Move (SizeOfType(tStartInfo)) to StartInfo.cb
+        Move ('"' + psBaseFolder(Self) + '\NoSuchProgram.exe"') to sCmd
+        Move (RDCCreateProcess(sCmd, ".", False, 0, AddressOf(StartInfo), AddressOf(ProcessInfo), &iError)) to bCreated
+        Send AssertFalse bCreated "No process was created."
+        Send AssertIAreEqual 2 iError "ERROR_FILE_NOT_FOUND."
+    End_Procedure
+
+End_Object

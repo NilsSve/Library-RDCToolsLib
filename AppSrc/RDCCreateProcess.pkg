@@ -1,0 +1,120 @@
+//****************************************************************************
+// $Module type: Package
+// $Module name: RDCCreateProcess
+// $Author     : Nils Svedmyr, RDC Tools International.
+// Copyright (c) 2026 RDC Tools International
+// E-mail      : support@rdctools.com
+// Web-site    : http://www.rdctools.com
+//
+// Created     : 2026-11-06
+//
+// Description : RDCCreateProcess - the one place in the library that hands a command line and a working
+//               folder to the Windows function CreateProcess. gStartProgram (StartProg.pkg),
+//               cRDCAsyncProcess and cRDCExternalProgramResult all start their programs through it.
+//
+//               From DataFlex 20 a string is UTF-8. It goes to CreateProcessW as a WString - UTF-16, the
+//               text Windows itself works in - so every character of a path or a parameter reaches the
+//               child as it is. CreateProcessA, which the library used before, takes only the characters
+//               of the machine's ANSI code page: any other one (a Polish, Greek or Chinese letter on a
+//               Western European Windows, say) reached the child as '?' or as a look-alike letter, and the
+//               child answered "file not found" or worked on another file.
+//
+//               Before DataFlex 20 a string is OEM and there is no WString. CreateProcessA is used there,
+//               after ToANSI, as the library always did.
+//
+// The code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// This is free software; you can redistribute it and/or modify it under the terms of the
+// GNU Lesser General Public License - see the "GNU Lesser General Public License.txt"
+// in the help folder for more details.
+//
+//****************************************************************************
+Use VdfBase.pkg
+Use Winkern.pkg     // GetLastError
+
+// The ANSI entry point: RDCCreateProcess calls it before DataFlex 20. StartProg.pkg and
+// cRDCExternalProgramResult.pkg declared it themselves until now; they bring it in from here, so a
+// program that calls CreateProcessEf itself still finds it.
+#IFNDEF get_CreateProcessEf
+    External_Function CreateProcessEf "CreateProcessA" Kernel32.dll ;
+        Pointer lpApplicationName ;
+        Pointer lpCommandLine ;
+        Pointer lpProcessAttributes ;
+        Pointer lpThreadAttributes ;
+        Integer bInheritHandles ;
+        DWord   dwCreationFlags ;
+        Pointer lpEnvironment ;
+        Pointer lpCurrentDirectory ;
+        Pointer lpStartupInfo ;
+        Pointer lpProcessInformation ;
+        Returns Integer
+#ENDIF
+
+// The wide entry point: RDCCreateProcess calls it from DataFlex 20. lpCommandLine and lpCurrentDirectory
+// are the addresses of WStrings. Declared on every version - Windows has it on all of them.
+#IFNDEF get_CreateProcessWEf
+    External_Function CreateProcessWEf "CreateProcessW" Kernel32.dll ;
+        Pointer lpApplicationName ;
+        Pointer lpCommandLine ;
+        Pointer lpProcessAttributes ;
+        Pointer lpThreadAttributes ;
+        Integer bInheritHandles ;
+        DWord   dwCreationFlags ;
+        Pointer lpEnvironment ;
+        Pointer lpCurrentDirectory ;
+        Pointer lpStartupInfo ;
+        Pointer lpProcessInformation ;
+        Returns Integer
+#ENDIF
+
+// Starts a process. Returns True when Windows created it.
+//   sCmdLine             The whole command line: the program - in double quotes when its path may hold a
+//                        space - and its parameters.
+//   sWorkDir             The folder the child starts in. Empty or "." is the current folder.
+//   bInheritHandles      True when the child shall inherit the caller's inheritable handles (the pipe of
+//                        cRDCExternalProgramResult, say).
+//   dwCreationFlags      As CreateProcess takes them, CREATE_NO_WINDOW for instance.
+//   pStartupInfo         The address of a tStartInfo (StartProg.pkg) or a struct with its layout. The A and
+//                        the W function take the same struct while its lpDesktop and lpTitle are 0.
+//   pProcessInformation  The address of a tProcessInfo, filled in when the process was created.
+//   iLastError           On False: GetLastError, read straight after the call, before anything else can
+//                        overwrite it. On True: 0.
+Function RDCCreateProcess Global String sCmdLine String sWorkDir Boolean bInheritHandles DWord dwCreationFlags Pointer pStartupInfo Pointer pProcessInformation Integer ByRef iLastError Returns Boolean
+    Integer iRet
+    Pointer pCmdLine pWorkDir
+#IF (!@ < 200)
+    String  sCmdLineA sWorkDirA
+#ELSE
+    WString wCmdLine wWorkDir
+#ENDIF
+
+    Move 0 to iLastError
+    Move 0 to pWorkDir
+
+#IF (!@ < 200)
+    Move (ToANSI(sCmdLine) + Character(0)) to sCmdLineA
+    Move (AddressOf(sCmdLineA)) to pCmdLine
+    If (Trim(sWorkDir) <> "" and Trim(sWorkDir) <> ".") Begin
+        Move (ToANSI(sWorkDir) + Character(0)) to sWorkDirA
+        Move (AddressOf(sWorkDirA)) to pWorkDir
+    End
+    Move (CreateProcessEf(0, pCmdLine, 0, 0, bInheritHandles, dwCreationFlags, 0, pWorkDir, pStartupInfo, pProcessInformation)) to iRet
+#ELSE
+    // CreateProcessW may write into the command line while it reads it, so the text has to be in a variable,
+    // never in a constant: a WString local is one. DataFlex ends a WString with a zero character of its own,
+    // as the wide calls in its own cApplication.pkg rely on.
+    Move sCmdLine to wCmdLine
+    Move (AddressOf(wCmdLine)) to pCmdLine
+    If (Trim(sWorkDir) <> "" and Trim(sWorkDir) <> ".") Begin
+        Move sWorkDir to wWorkDir
+        Move (AddressOf(wWorkDir)) to pWorkDir
+    End
+    Move (CreateProcessWEf(0, pCmdLine, 0, 0, bInheritHandles, dwCreationFlags, 0, pWorkDir, pStartupInfo, pProcessInformation)) to iRet
+#ENDIF
+
+    If (iRet = 0) Begin
+        Move (GetLastError()) to iLastError
+        Function_Return False
+    End
+    Function_Return True
+End_Function

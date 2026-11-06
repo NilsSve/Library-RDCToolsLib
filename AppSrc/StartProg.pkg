@@ -29,6 +29,13 @@
 // 22.09.2014 NGS: Removed legacy commands like TYPEDEF, PUT & GETADDRESS to instead use Structs & Addressof function.
 //                 This has the advantage that it is possible bo "IFNDEF" code, which is not the case with
 //                 TYPE declarations. The Studio also knows this syntax, which makes it easier to make code changes.
+// 06.11.2026 NGS: gStartProgram starts its program through RDCCreateProcess (RDCCreateProcess.pkg), which is
+//                 CreateProcessW from DataFlex 20: every character of the command line and the folder reaches
+//                 the program. The OemToAnsi conversion before CreateProcessA garbled every national
+//                 character on DataFlex 20 and later, where a string is UTF-8. CreateProcessEf is declared in
+//                 RDCCreateProcess.pkg now, and every External_Function takes one parameter per line.
+//                 tWinSecurityAttributes and tStartInfo have the layout Windows has in a 64-bit program too
+//                 (the gaps DataFlex does not add by itself), and bInherit is four bytes, as a Windows BOOL.
 
 #IFNDEF _struct_tWinSecurityAttributes
     Define STARTF_USESHOWWINDOW    for |CI$00000001
@@ -43,16 +50,35 @@
     Define STARTF_USEHOTKEY        for |CI$00000200
     Define STILL_ACTIVE            for 259
 
+    // SECURITY_ATTRIBUTES: 12 bytes in a 32-bit program, 24 in a 64-bit one. bInherit is a Windows BOOL, four
+    // bytes - a DataFlex Boolean is ONE byte in a struct, which made the struct 9 and 13 bytes long.
     Struct tWinSecurityAttributes
         DWord nLength
+#IFDEF IS$WIN64
+        Integer iMissingAlignment1
+#ENDIF
         Pointer lpDescriptor
-        Boolean bInherit
+        Integer bInherit
+#IFDEF IS$WIN64
+        Integer iMissingAlignment2
+#ENDIF
     End_Struct
 #ENDIF
 
+// Windows lays a struct out with every field on a multiple of its own size; DataFlex packs one field right
+// after the other. In a 64-bit program a pointer after a DWord then lands four bytes early, so these structs
+// get the gap Windows has, the way DataFlex's own File_dlg.pkg does it. Without it CreatePipe refused the
+// security attributes (error 998), and CreateProcess read STARTUPINFO's flags, show-window value and std
+// handles from the wrong places.
+
 #IFNDEF _struct_tStartInfo
+    // STARTUPINFO: 68 bytes in a 32-bit program, 104 in a 64-bit one. CreateProcessA and CreateProcessW take
+    // the same struct while lpDesktop and lpTitle are 0.
     Struct tStartInfo
         DWord cb
+#IFDEF IS$WIN64
+        Integer iMissingAlignment1
+#ENDIF
         Pointer lpReserved
         Pointer lpDesktop
         Pointer lpTitle
@@ -66,6 +92,9 @@
         DWord dwFlags
         UShort wShowWindow
         UShort cbReserved2
+#IFDEF IS$WIN64
+        Integer iMissingAlignment2
+#ENDIF
         Pointer lpReserved2
         Handle hStdInput
         Handle hStdOutput
@@ -74,6 +103,7 @@
 #ENDIF
 
 #IFNDEF _struct_tProcessInfo
+    // PROCESS_INFORMATION: 16 bytes in a 32-bit program, 24 in a 64-bit one - no gap needed.
     Struct tProcessInfo
         Handle hProcess
         Handle hThread
@@ -82,16 +112,21 @@
     End_Struct
 #ENDIF
 
-#IFNDEF get_CreateProcessEf
-    External_Function CreateProcessEf "CreateProcessA" kernel32.dll Pointer pName Pointer pCmdL Pointer lpPAttr Pointer lpTAttr Integer bInherit Integer dwCrFlag Pointer pEnv Pointer lpCurDir Pointer lpStartup Pointer lpProcInfo Returns Integer
-#ENDIF
+// RDCCreateProcess, which gStartProgram starts its program with - and CreateProcessEf (CreateProcessA),
+// declared there now for the programs that call it themselves.
+Use RDCCreateProcess.pkg
 
 #IFNDEF get_GetExitCodeProcessEf
-    External_Function GetExitCodeProcessEf "GetExitCodeProcess" kernel32.dll Handle hProcess Pointer lpExitCode Returns Integer
+    External_Function GetExitCodeProcessEf "GetExitCodeProcess" Kernel32.dll ;
+        Handle  hProcess ;
+        Pointer lpExitCode ;
+        Returns Integer
 #ENDIF
 
 #IFNDEF get_CloseHandleEf
-    External_Function CloseHandleEf "CloseHandle" kernel32.dll Handle hHandle Returns Integer
+    External_Function CloseHandleEf "CloseHandle" Kernel32.dll ;
+        Handle hObject ;
+        Returns Integer
 #ENDIF
 
 //HANDLE WINAPI OpenProcess(
@@ -99,30 +134,41 @@
 //  _In_  BOOL bInheritHandle,
 //  _In_  DWORD dwProcessId
 //);
-#IFNDEF GET_OpenProcessEf
-External_function OpenProcessEf "OpenProcess" kernel32.dll DWord dwAccess Integer bInherit Handle hPID Returns Integer
+#IFNDEF get_OpenProcessEf
+    External_Function OpenProcessEf "OpenProcess" Kernel32.dll ;
+        DWord   dwDesiredAccess ;
+        Integer bInheritHandle ;
+        DWord   dwProcessId ;
+        Returns Handle
 #ENDIF
 
 //BOOL WINAPI TerminateProcess(
 //  _In_  HANDLE hProcess,
 //  _In_  UINT uExitCode
 //);
-#IFNDEF GET_TerminateProcessEf
-External_function TerminateProcessEf "TerminateProcess" kernel32.dll Handle hProcess Integer uExitCode Returns Integer
+#IFNDEF get_TerminateProcessEf
+    External_Function TerminateProcessEf "TerminateProcess" Kernel32.dll ;
+        Handle  hProcess ;
+        Integer uExitCode ;
+        Returns Integer
 #ENDIF
 
 #IFNDEF get_SleepEf
-    External_Function SleepEf "Sleep" kernel32.dll Integer iMilliSeconds Returns Integer
+    External_Function SleepEf "Sleep" Kernel32.dll ;
+        Integer dwMilliseconds ;
+        Returns Integer
 #ENDIF
 
 #IFNDEF get_GetLastError
-  external_function GetLastError "GetLastError" kernel32.dll Returns Integer
+    External_Function GetLastError "GetLastError" Kernel32.dll ;
+        Returns Integer
 #ENDIF
 
 Function gStartProgram GLOBAL String sCommand String sParams String sDir Integer bVisible Integer bWaitForFinished Returns Integer
-    String sCmd sPara sWorkDir sExitCode
-    Pointer pCmd pWorkDir pStartup pProcessInfo pExitCode
+    String sCmd sPara sExitCode
+    Pointer pStartup pProcessInfo pExitCode
     Integer iRet iError iID iExitCode
+    Boolean bCreated
     Handle hProcess hThread
     tWinSecurityAttributes aAttributes
     tProcessInfo ProcessInfo
@@ -135,15 +181,7 @@ Function gStartProgram GLOBAL String sCommand String sParams String sDir Integer
         Move ('"' + sCommand + '"') to sCommand                                     // Add double Quotes to the Command if needed
     End
 
-    Move (sCommand + " " + sParams + (Character(0))) to sCmd                        // Take Program and CmdLines
-    Move (sDir + (Character(0))) to sWorkDir
-    Move (AddressOf(sCmd)) to pCmd
-    Move (AddressOf(sWorkDir)) to pWorkDir
-    Move (OemToAnsi(pCmd,pCmd)) to iRet                                             // Convert to ANSI
-    Move (OemToAnsi(pWorkDir,pWorkDir)) to iRet
-    If (Trim(sDir) = "" or Trim(sDir) = ".") Begin
-        Move 0 to pWorkDir                                                          // If the Directory is empty or . use the current threads directory
-    End
+    Move (sCommand + " " + sParams) to sCmd                                         // Take Program and CmdLines
 
     Move (SizeOfType(tStartInfo)) to StartInfo.cb
     Move STARTF_USESHOWWINDOW to StartInfo.dwFlags
@@ -158,10 +196,10 @@ Function gStartProgram GLOBAL String sCommand String sParams String sDir Integer
     Move (AddressOf(StartInfo))    to pStartup
     Move (AddressOf(ProcessInfo))  to pProcessInfo
 
-    Move (CreateProcessEf(0,pCmd,0,0,FALSE,0,0,pWorkDir,pStartup,pProcessInfo)) to iRet   // Create the process
-    Move (GetLastError()) to iError
-
-    If (iRet = 0) Begin
+    // The program, its parameters and the folder go to Windows through RDCCreateProcess - CreateProcessW from
+    // DataFlex 20, so every character of them arrives. An empty sDir, or ".", is the current folder.
+    Move (RDCCreateProcess(sCmd, sDir, False, 0, pStartup, pProcessInfo, &iError)) to bCreated
+    If (bCreated = False) Begin
         Function_Return -1                                                                // if creation failed return -1
     End
     Move ProcessInfo.hProcess to hProcess                                                 // Take the Process and Thread handles

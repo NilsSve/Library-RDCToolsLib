@@ -49,6 +49,7 @@ End_Object
 Use Base64Functions.pkg
 Use CJBrowseForFolder.pkg
 Use CaptureWindow.pkg
+Use RDCCreateProcess.pkg
 Use RDCRunProgram.pkg
 Use RDCStatusPanel.pkg
 Use RDCTimeSpan.pkg
