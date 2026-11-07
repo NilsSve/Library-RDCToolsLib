@@ -103,7 +103,11 @@ Class cRDCRichEditor is a cRichEdit
 
         If (sLinkText <> "") Begin
             Get Window_Handle to hWnd
+#IF (!@ < 200)
             Move (ShellExecute (hWnd, "open", sLinkText, "", "", SW_SHOWDEFAULT)) to iRetval
+#ELSE
+            Move (RDCShellExecuteW(hWnd, "open", sLinkText, "", "", SW_SHOWDEFAULT)) to iRetval
+#ENDIF
             If (iRetval <= 32) Begin
                 Move C_SE_BASE_ERROR_TEXT to sErrorText
                 Case Begin

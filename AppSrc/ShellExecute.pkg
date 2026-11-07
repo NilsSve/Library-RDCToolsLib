@@ -26,3 +26,20 @@ External_Function ShellExecute "ShellExecuteA" Shell32.Dll ;
    Integer nShowCmd ;
    Returns VOID_TYPE
 #ENDIF
+
+// The wide ShellExecute, which the rich editors call from DataFlex 20 to open a clicked link. The one above is the
+// ANSI ShellExecuteA, and its String parameters hand it the UTF-8 bytes of a DataFlex 20 string, so a link or a
+// path with a letter outside ASCII reached the shell garbled. Strings passed to the WString parameters are
+// converted by DataFlex, as vWin32fh's wide calls rely on. There is no WString before DataFlex 20.
+#IF (!@ >= 200)
+#IFNDEF get_RDCShellExecuteW
+External_Function RDCShellExecuteW "ShellExecuteW" Shell32.Dll ;
+   Handle  hwnd ;
+   WString wOperation ;
+   WString wFile ;
+   WString wParameters ;
+   WString wDirectory ;
+   Integer nShowCmd ;
+   Returns Handle
+#ENDIF
+#ENDIF

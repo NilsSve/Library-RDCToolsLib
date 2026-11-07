@@ -45,15 +45,27 @@ Class cRDCFileFunctions is a cObject
     End_Procedure
 
     // Returns the full path of the Application (no trailing "\")
+    // From DataFlex 20 the wide functions give the path back, every character as it is, whichever declaration of
+    // GetModuleFileName a program got (DataFlex's own converting wrapper, or the ANSI one in cRDCFileFunctions.h.pkg).
     Function ApplicationPath Returns String
         String sApplicationFileName sPath
         Integer iNumChars iRetval
+#IF (!@ >= 200)
+        WString wApplicationFileName
+#ENDIF
 
+#IF (!@ < 200)
         Move (Repeat(Character(0), 1024))    to sApplicationFileName
         Move (GetModuleFileName(0, AddressOf(sApplicationFileName), 1024)) to iNumChars
         Move (CString(sApplicationFileName)) to sApplicationFileName
         Move (PathRemoveFileSpec(AddressOf(sApplicationFileName))) to iRetval
         Move (CString(sApplicationFileName)) to sPath
+#ELSE
+        Move (ZeroString(1024)) to wApplicationFileName
+        Move (RDCGetModuleFileNameW(0, AddressOf(wApplicationFileName), 1024)) to iNumChars
+        Move (RDCPathRemoveFileSpecW(AddressOf(wApplicationFileName))) to iRetval
+        Move (CString(wApplicationFileName)) to sPath
+#ENDIF
 
         Function_Return sPath
     End_Function
@@ -141,6 +153,9 @@ Class cRDCFileFunctions is a cObject
         tWinFileTimeDC iLocalFileTime
         DateTime dtResult
         Boolean bConvertToLocalFileTime
+#IF (!@ >= 200)
+        WString wFormattedTime wFormattedDate
+#ENDIF
 
         Move False to bConvertToLocalFileTime
         If (num_arguments > 1) Begin
@@ -156,11 +171,23 @@ Class cRDCFileFunctions is a cObject
 
         Move (FileTimeToSystemTime(AddressOf(iFileTime), AddressOf(iSystemTime) )) to iSuccess
         If (iSuccess <> 0) Begin
+#IF (!@ < 200)
             Move (Repeat(Character(0), 255)) to sFormattedTime
             Move (GetTimeFormat(Locale_User_Default, 0, AddressOf(iSystemTime), 0, AddressOf(sFormattedTime), 255)) to iDataLength
 
             Move (Repeat(Character(0), 255)) to sFormattedDate
             Move (GetDateFormat(Locale_User_Default, 0, AddressOf(iSystemTime), 0, AddressOf(sFormattedDate), 255)) to iDataLength
+#ELSE
+            // The wide functions: a time or date format with a letter outside ASCII (an AM/PM sign, say) comes back
+            // as it is, where the ANSI ones gave bytes a DataFlex 20 string reads wrongly.
+            Move (ZeroString(255)) to wFormattedTime
+            Move (RDCGetTimeFormatW(Locale_User_Default, 0, AddressOf(iSystemTime), 0, AddressOf(wFormattedTime), 255)) to iDataLength
+            Move (CString(wFormattedTime)) to sFormattedTime
+
+            Move (ZeroString(255)) to wFormattedDate
+            Move (RDCGetDateFormatW(Locale_User_Default, 0, AddressOf(iSystemTime), 0, AddressOf(wFormattedDate), 255)) to iDataLength
+            Move (CString(wFormattedDate)) to sFormattedDate
+#ENDIF
 
             Move (Cstring(sFormattedDate) * Cstring(sFormattedTime) ) to dtResult
         End
@@ -194,11 +221,21 @@ Class cRDCFileFunctions is a cObject
     Function _WinAPIOpenFileForReadAndWrite String sFilename Returns Handle
         Integer iRetVal iErrornumber
         String sFilenameANSI
+#IF (!@ >= 200)
+        WString wFilename
+#ENDIF
 
+#IF (!@ < 200)
         Move (Utf8ToAnsi(sFilename)) to sFilenameANSI
         Append sFilenameANSI (Character(0)) (Character(0))
 
         Move (fCreatefile(AddressOf(sFilenameANSI), CI_Generic_Random, CI_File_Share_Random, CI_FNull, CI_Open_Existing, CI_File_Attribute_Normal, CI_FNull)) to iRetVal
+#ELSE
+        // CreateFileW: every character of the path reaches Windows. CreateFileA took the path after Utf8ToAnsi,
+        // so a letter outside the machine's ANSI code page became '?' and the file was not found.
+        Move sFilename to wFilename
+        Move (RDCCreateFileW(AddressOf(wFilename), CI_Generic_Random, CI_File_Share_Random, CI_FNull, CI_Open_Existing, CI_File_Attribute_Normal, CI_FNull)) to iRetVal
+#ENDIF
         If (iRetVal = INVALID_HANDLE_VALUE) Begin
             Move (GetLastError()) to iErrornumber
             Send Info_Box (C_$Error + ":" * String(iErrornumber) * "Could not open file:\n" + sFilename)

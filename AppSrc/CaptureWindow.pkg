@@ -145,6 +145,21 @@ External_Function Createfile "CreateFileA" kernel32.dll ;
     Returns Integer      //Returns handle that can be used to access the object
 #ENDIF
 
+// The wide CreateFile, which CaptureImage calls from DataFlex 20 with the address of a WString: CreateFileA took the
+// UTF-8 bytes of the path as ANSI ones, so a snapshot folder with a national letter in its name was not found and no
+// file was written. Declared as in cRDCFileFunctions.h.pkg, under the same guard.
+#IFNDEF get_RDCCreateFileW
+    External_Function RDCCreateFileW "CreateFileW" Kernel32.dll ;
+        Pointer lpFileName ;
+        DWord   dwDesiredAccess ;
+        DWord   dwShareMode ;
+        Pointer lpSecurityAttributes ;
+        DWord   dwCreationDisposition ;
+        DWord   dwFlagsAndAttributes ;
+        Handle  hTemplateFile ;
+        Returns Handle
+#ENDIF
+
 #IFNDEF Get_WriteFile
     External_Function WriteFile "WriteFile" Kernel32.dll ;
         Handle hFile ;     // Handle to the file
@@ -286,6 +301,9 @@ Function CaptureImage Global Handle hVent String sFile Returns Integer
     DWord dwSizeofDIB dwBytesWritten dwBmpSize
     Boolean baux
     Pointer lpbitmap pnulo
+#IF (!@ >= 200)
+    WString wFile
+#ENDIF
 
     //---------------------------------------------------
     // Get window handle to Windows and our View
@@ -339,8 +357,14 @@ Function CaptureImage Global Handle hVent String sFile Returns Integer
                  lpbitmap,AddressOf(bi), DIB_RGB_COLORS) ) to junk
 
              // A file is created, this is where we will save the screen capture.
+#IF (!@ < 200)
              Move (CreateFile(AddressOf(sFile),GENERIC_WRITE, 0, ;
                  hnulo,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL, hnulo)) to hfile
+#ELSE
+             Move sFile to wFile
+             Move (RDCCreateFileW(AddressOf(wFile), GENERIC_WRITE, 0, ;
+                 hnulo, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, hnulo)) to hfile
+#ENDIF
 
              // Add the size of the headers to the size of the bitmap to get the total file size
              Move (dwBmpSize + SizeOfType(BITMAPFILEHEADER) + SizeOfType(BITMAPINFOHEADER)) to dwSizeofDIB

@@ -147,3 +147,60 @@
     External_Function PathRemoveFileSpec "PathRemoveFileSpecA" Shlwapi.dll ;
         Pointer pszPath Returns Integer
 #ENDIF
+
+// The wide entry points. cRDCFileFunctions and CaptureWindow call them from DataFlex 20, the text the address of a
+// WString, so every character of a path reaches Windows - and comes back - as it is. fCreatefile, GetTimeFormat and
+// GetDateFormat above are the ANSI functions: a path went to fCreatefile after Utf8ToAnsi, so a letter outside the
+// machine's ANSI code page became '?' and the file was not found. GetModuleFileName and PathRemoveFileSpec are
+// different: DataFlex 20 has wrapper functions of those names (Winkern.pkg, WinShell.pkg) that convert, and a
+// program gets those whenever Windows.pkg comes before this file - the ANSI declarations here only otherwise. The
+// wide ones make ApplicationPath the same either way. Names of their own: the ANSI declarations keep theirs for the
+// programs that call them, and under one shared name an #IFNDEF would let either win without a word. Declared on
+// every version - Windows has them on all of them.
+#IFNDEF get_RDCCreateFileW
+    External_Function RDCCreateFileW "CreateFileW" Kernel32.dll ;
+        Pointer lpFileName ;
+        DWord   dwDesiredAccess ;
+        DWord   dwShareMode ;
+        Pointer lpSecurityAttributes ;
+        DWord   dwCreationDisposition ;
+        DWord   dwFlagsAndAttributes ;
+        Handle  hTemplateFile ;
+        Returns Handle
+#ENDIF
+
+#IFNDEF get_RDCGetModuleFileNameW
+    External_Function RDCGetModuleFileNameW "GetModuleFileNameW" Kernel32.dll ;
+        Handle  hModule ;
+        Pointer lpFilename ;
+        UInteger nSize ;
+        Returns UInteger
+#ENDIF
+
+#IFNDEF get_RDCPathRemoveFileSpecW
+    External_Function RDCPathRemoveFileSpecW "PathRemoveFileSpecW" Shlwapi.dll ;
+        Pointer pszPath ;
+        Returns Integer
+#ENDIF
+
+#IFNDEF get_RDCGetTimeFormatW
+    External_Function RDCGetTimeFormatW "GetTimeFormatW" Kernel32.dll ;
+        DWord   Locale ;
+        DWord   dwFlags ;
+        Pointer lpTime ;
+        Pointer lpFormat ;
+        Pointer lpTimeStr ;
+        Integer cchTime ;
+        Returns Integer
+#ENDIF
+
+#IFNDEF get_RDCGetDateFormatW
+    External_Function RDCGetDateFormatW "GetDateFormatW" Kernel32.dll ;
+        DWord   Locale ;
+        DWord   dwFlags ;
+        Pointer lpDate ;
+        Pointer lpFormat ;
+        Pointer lpDateStr ;
+        Integer cchDate ;
+        Returns Integer
+#ENDIF

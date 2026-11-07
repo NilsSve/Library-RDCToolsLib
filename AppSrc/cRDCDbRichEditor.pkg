@@ -167,7 +167,11 @@ Class cRDCDbRichEditor is a cDbRichEdit
 
         If (sLinkText <> "") Begin
             Get Window_Handle To hWnd
+#IF (!@ < 200)
             Move (ShellExecute (hWnd, "open", sLinkText, "", "", SW_SHOWDEFAULT)) To iRetval
+#ELSE
+            Move (RDCShellExecuteW(hWnd, "open", sLinkText, "", "", SW_SHOWDEFAULT)) To iRetval
+#ENDIF
             If (iRetval <= 32) Begin
                 Move C_SE_BASE_ERROR_TEXT to sErrorText
                 Case Begin

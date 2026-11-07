@@ -18,6 +18,7 @@ Object oWorkspace_Tests is a cTestFixture
     Use oRDCAppInteger-Tests.pkg
     Use oUtf8ToAnsi-Tests.pkg
     Use oRDCCreateProcess-Tests.pkg
+    Use oRDCFileFunctions-Tests.pkg
     Use oRDCGridToolTip-Tests.pkg
     Use oRDCCJGridNames-Tests.pkg
     Use oRDCApplication-Tests.pkg

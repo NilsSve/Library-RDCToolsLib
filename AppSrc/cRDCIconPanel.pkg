@@ -49,6 +49,22 @@ External_function ImageList_LoadImage "ImageList_LoadImage" comctl32.dll Handle 
 Integer cx Integer cGrow Integer crMask Integer uType Integer uFlags Returns Integer
 #ENDIF
 
+// The wide entry point: DoSetTaskBarIcon calls it from DataFlex 20, lpbmp the address of a WString. The plain name
+// above is the ANSI ImageList_LoadImageA, and the path went to it through OemToAnsi - right for the OEM string of
+// DataFlex 19, wrong for the UTF-8 of DataFlex 20, where an icon file in a folder with a national letter was not
+// found. It returns a Handle, as an HIMAGELIST is one: in a 64-bit program an Integer can cut it short.
+#IFNDEF get_RDCImageList_LoadImageW
+External_function RDCImageList_LoadImageW "ImageList_LoadImageW" comctl32.dll ;
+    Handle  hi ;
+    Pointer lpbmp ;
+    Integer cx ;
+    Integer cGrow ;
+    Integer crMask ;
+    Integer uType ;
+    Integer uFlags ;
+    Returns Handle
+#ENDIF
+
 Class cIconPanel_Mixin Is a Mixin
     Procedure Define_cIconPanel_Mixin
         Property String  private.psLargeTaskbarIcon        ""
@@ -125,16 +141,25 @@ Class cIconPanel_Mixin Is a Mixin
         Integer iTransparentColor iTaskbarIconStyle
         String sFile
         Pointer pFile
+#IF (!@ >= 200)
+        WString wFile
+#ENDIF
         Get IconTransparentColor To iTransparentColor
         Get TaskbarIconStyle To iTaskbarIconStyle
 
         Move (IconFullPathName(self,(LargeTaskBarIcon(self)))) to sFile
+#IF (!@ < 200)
         Move (sFile + (Character(0))) to sFile
         getaddress Of sFile to pFile
         Move (OemToAnsi(pFile,pFile)) to iRetVal
 
         Move (ImageList_LoadImage(0,pFile, 32, 0, iTransparentColor, ;
         iTaskbarIconStyle, (LR_LOADFROMFILE + LR_CREATEDIBSECTION))) To hWndImageList
+#ELSE
+        Move sFile to wFile
+        Move (RDCImageList_LoadImageW(0, AddressOf(wFile), 32, 0, iTransparentColor, ;
+        iTaskbarIconStyle, (LR_LOADFROMFILE + LR_CREATEDIBSECTION))) To hWndImageList
+#ENDIF
         If hWndImageList Begin
             Move (ImageList_GetIcon(hWndImageList, 0, ILD_NORMAL)) To hIcon
             Send Windows_Message WM_SETICON ICON_LARGE hIcon
@@ -143,11 +168,17 @@ Class cIconPanel_Mixin Is a Mixin
         End // hWndImageList
 
         Move (IconFullPathName(self,(SmallTaskBarIcon(self)))) to sFile
+#IF (!@ < 200)
         Move (sFile + (Character(0))) to sFile
         getaddress Of sFile to pFile
         Move (OemToAnsi(pFile,pFile)) to iRetVal
         Move (ImageList_LoadImage(0, pFile, 16, 0, iTransparentColor, ;
         iTaskbarIconStyle, (LR_LOADFROMFILE + LR_CREATEDIBSECTION))) To hWndImageList
+#ELSE
+        Move sFile to wFile
+        Move (RDCImageList_LoadImageW(0, AddressOf(wFile), 16, 0, iTransparentColor, ;
+        iTaskbarIconStyle, (LR_LOADFROMFILE + LR_CREATEDIBSECTION))) To hWndImageList
+#ENDIF
         If hWndImageList Begin
             Move (ImageList_GetIcon(hWndImageList, 0, ILD_NORMAL)) To hIcon
             Send Windows_Message WM_SETICON ICON_SMALL hIcon
