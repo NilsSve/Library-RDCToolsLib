@@ -1,6 +1,8 @@
 // oRDCCreateProcess-Tests.pkg - RDCCreateProcess, and the three launchers that start their programs through it:
 // gStartProgram (StartProg.pkg), cRDCAsyncProcess (here through RDCRunProgramBounded) and
-// cRDCExternalProgramResult.
+// cRDCExternalProgramResult. And the launches through the Windows shell instead, RDCShellExecuteEx and
+// RDCRunProgramWait (RDCRunProgram.pkg): the same folder, in the path of the program they start and in its
+// parameters.
 //
 // From DataFlex 20 the test folder's name holds letters that no Western ANSI code page has - a Polish L with
 // stroke, a z with acute and two Chinese characters - so a launcher that still went through CreateProcessA
@@ -21,6 +23,10 @@ Use StartProg.pkg
 // compiles without one (until 1.0.15 it stopped with error 4306 on piMaximum and piPosition).
 Use cRDCAsyncProcess.pkg
 Use cRDCExternalProgramResult.pkg
+Use RDCRunProgram.pkg
+
+// SEE_MASK_FLAG_NO_UI: a launch the shell refuses comes back as False, without a message box from Windows.
+Define RDCTest_SEE_MASK_FLAG_NO_UI for 1024
 
 // The test's own look at the folder, by its wide name. -1 (INVALID_FILE_ATTRIBUTES) when there is none.
 #IF (!@ >= 200)
@@ -71,9 +77,10 @@ Object oRDCCreateProcess_Tests is a cTestFixture
 #ENDIF
     End_Function
 
-    // cmd.exe makes the folder and a file in it. The folder's name travels on cmd's command line - through
-    // RDCRunProgramBounded, cRDCAsyncProcess.StartProcess and RDCCreateProcess - so a launcher that loses a
-    // character makes no folder at all, or another one.
+    // cmd.exe makes the folder, a file in it, and the script run.cmd, which writes the file its parameter names
+    // beside itself (%~dp0 is the script's own folder). The folder's name travels on cmd's command line -
+    // through RDCRunProgramBounded, cRDCAsyncProcess.StartProcess and RDCCreateProcess - so a launcher that
+    // loses a character makes no folder at all, or another one.
     Procedure Setup
         String  sTemp sBase sFolder
         Integer iChildExit
@@ -87,7 +94,7 @@ Object oRDCCreateProcess_Tests is a cTestFixture
         Set psBaseFolder to sBase
         Set psTestFolder to sFolder
 
-        Move (RDCRunProgramBounded("cmd.exe", ('/c mkdir "' + sFolder + '" 2>nul & echo ok> "' + sFolder + '\marker.txt"'), ".", 30)) to iChildExit
+        Move (RDCRunProgramBounded("cmd.exe", ('/c mkdir "' + sFolder + '" 2>nul & echo ok> "' + sFolder + '\marker.txt" & echo @echo ok^> "%~dp0%~1"> "' + sFolder + '\run.cmd"'), ".", 30)) to iChildExit
         Set piMakeFolderExit to iChildExit
     End_Procedure
 
@@ -167,23 +174,86 @@ Object oRDCCreateProcess_Tests is a cTestFixture
         End
     End_Procedure
 
+    // Waits for a process RDCShellExecuteEx started - at most 30 seconds, so a test cannot hang - and closes it.
+    Procedure WaitForTheShellsChild Handle hProcess
+        Integer iVoid
+
+        If (hProcess <> 0) Begin
+            Move (WaitForSingleObjectEf(hProcess, 30000)) to iVoid
+            Move (CloseHandleEf(hProcess)) to iVoid
+        End
+    End_Procedure
+
+    // The folder's name in the path of the PROGRAM the shell starts: the script in the folder. Through the ANSI
+    // ShellExecuteEx the Chinese characters reached the shell as '?', and it found no such file.
+    { Published=True }
+    Procedure Test_RDCShellExecuteEx_Starts_A_Script_In_The_Folder
+        Boolean bStarted
+        Handle  hProcess
+        Integer iChildExit
+
+        Move (RDCShellExecuteEx((psTestFolder(Self) + "\run.cmd"), "shell.txt", (RDC_SEE_MASK_NOCLOSEPROCESS + RDCTest_SEE_MASK_FLAG_NO_UI), 0, &hProcess)) to bStarted
+        Send WaitForTheShellsChild hProcess
+        Send Assert bStarted "The shell found the script under the folder's real name and started it."
+        Send Assert (hProcess <> 0) "The started process's handle came back."
+        Move (RDCRunProgramBounded("cmd.exe", "/c if exist shell.txt (exit 0) else (exit 7)", psTestFolder(Self), 30)) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "The script ran and wrote its file in the folder."
+    End_Procedure
+
+    // RDCRunProgramWait starting the script in the folder. It waits, so the script's file is there as soon as it
+    // returns. The same launch with SEE_MASK_FLAG_NO_UI goes first: RDCRunProgramWait asks for no such flag, so a
+    // shell that could not find the script would put Windows' message box on the screen and hold the run there.
+    { Published=True }
+    Procedure Test_RDCRunProgramWait_Starts_A_Script_In_The_Folder
+        Boolean bStarted
+        Handle  hProcess
+        Integer iChildExit
+        String  sScript
+
+        Move (psTestFolder(Self) + "\run.cmd") to sScript
+        Move (RDCShellExecuteEx(sScript, "probe.txt", (RDC_SEE_MASK_NOCLOSEPROCESS + RDCTest_SEE_MASK_FLAG_NO_UI), 0, &hProcess)) to bStarted
+        Send WaitForTheShellsChild hProcess
+        If (bStarted = False) Begin
+            Send Assert False "The shell could not find the script, so RDCRunProgramWait was not tried."
+            Procedure_Return
+        End
+
+        Send RDCRunProgramWait sScript "wait.txt"
+        Move (RDCRunProgramBounded("cmd.exe", "/c if exist wait.txt (exit 0) else (exit 7)", psTestFolder(Self), 30)) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "The script ran, and its file was there when RDCRunProgramWait returned."
+    End_Procedure
+
+    // The folder's name in the PARAMETERS: cmd.exe writes a file into the folder. Through the ANSI ShellExecuteEx
+    // the Chinese characters reached cmd as '?', and cmd wrote no file.
+    { Published=True }
+    Procedure Test_RDCRunProgramWait_Hands_The_Folder_Name_To_The_Program
+        Integer iChildExit
+
+        Send RDCRunProgramWait "cmd.exe" ('/c echo ok> "' + psTestFolder(Self) + '\param.txt"')
+        Move (RDCRunProgramBounded("cmd.exe", "/c if exist param.txt (exit 0) else (exit 7)", psTestFolder(Self), 30)) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "cmd.exe got the folder's real name and wrote its file there."
+    End_Procedure
+
     // Each struct the launchers hand Windows is exactly as long as Windows' own, in a 32-bit and in a 64-bit
     // program. DataFlex packs a struct with no gaps, so in a 64-bit program SECURITY_ATTRIBUTES was 13 bytes and
     // STARTUPINFO 96 until the structs got the gaps Windows has.
     { Published=True }
     Procedure Test_The_Structs_Have_The_Sizes_Windows_Has
-        Integer iSecurity iStartup iProcess
+        Integer iSecurity iStartup iProcess iShell
 
         If (SizeOfType(tRDCTestOnePointer) = 8) Begin
             Move 24  to iSecurity
             Move 104 to iStartup
             Move 24  to iProcess
+            Move 112 to iShell
         End
         Else Begin
             Move 12  to iSecurity
             Move 68  to iStartup
             Move 16  to iProcess
+            Move 60  to iShell
         End
+        Send AssertIAreEqual iShell    (SizeOfType(tRDCShellExecuteInfo))       "SHELLEXECUTEINFO, RDCRunProgram.pkg."
         Send AssertIAreEqual iSecurity (SizeOfType(tWinSecurityAttributes))     "SECURITY_ATTRIBUTES, StartProg.pkg."
         Send AssertIAreEqual iStartup  (SizeOfType(tStartInfo))                 "STARTUPINFO, StartProg.pkg."
         Send AssertIAreEqual iProcess  (SizeOfType(tProcessInfo))               "PROCESS_INFORMATION, StartProg.pkg."

@@ -9,8 +9,19 @@
 // Created     : 2026-10-09 - DFRefactor's RFRunProgram.pkg of 2026 (itself lifted out of DUF's
 //               WsGlobalFunctions.pkg) as a library package, the strings reaching Windows in the
 //               ANSI code page.
+//               2026-11-07 - From DataFlex 20 the strings go to ShellExecuteExW, every character as
+//               it is.
 //
 // Description : What a program hands to the Windows shell, through ShellExecuteEx.
+//
+//               RDCShellExecuteEx is the one place that calls it. From DataFlex 20 a string is UTF-8,
+//               and it goes to ShellExecuteExW as a WString - UTF-16, the text Windows itself works
+//               in - so every character of a path or a parameter reaches the shell as it is. The
+//               ANSI ShellExecuteEx, which the package used before, takes only the characters of the
+//               machine's ANSI code page: any other one (a Polish, Greek or Chinese letter on a
+//               Western European Windows, say) became '?' or a look-alike letter, and the shell
+//               found no such file. Before DataFlex 20 a string is OEM and there is no WString;
+//               the ANSI ShellExecuteEx is used there, after ToANSI, as before.
 //
 //               RDCRunProgramWait launches a program and blocks until it exits, with no console
 //               window flashing for a console-subsystem child (the DataFlex compiler is one).
@@ -41,7 +52,8 @@ Use StartProg.pkg              // CloseHandleEf
 Use vWin32fh.pkg               // vFilePathExists, vFolderExists
 
 // Before DataFlex 20 a string is OEM, not UTF-8, and there is no Utf8ToAnsi. ToANSI is the conversion that is
-// right there, so it stands in under that name and the calls below read the same on every version.
+// right there, so it stands in under that name. Nothing here calls it any more - RDCShellExecuteEx converts
+// for itself - but a program on DataFlex 19.1 may have come to rely on finding it in this package.
 #IF (!@ < 200)
 #IFNDEF get_Utf8ToAnsi
 Function Utf8ToAnsi Global String sText Returns String
@@ -79,33 +91,80 @@ End_Struct
 // WsGlobalFunctions.pkg defines the plain name without a guard.
 Define RDC_SEE_MASK_NOCLOSEPROCESS for 64
 
+// The ANSI entry point - the plain name is ShellExecuteExA in Shell32.dll. RDCShellExecuteEx calls it before
+// DataFlex 20; it stays declared here for a program that calls it itself, with ANSI strings.
 #IFNDEF get_ShellExecuteExEf
     External_Function ShellExecuteExEf "ShellExecuteEx" Shell32.dll Pointer pExecInfo Returns Integer
+#ENDIF
+
+// The wide entry point: RDCShellExecuteEx calls it from DataFlex 20, the lpFile and lpParameters of the struct
+// the addresses of WStrings. A name of its own, not ShellExecuteExEf: under that name's #IFNDEF an ANSI
+// declaration from another package would win without a word, and Windows would read every UTF-16 string as a
+// one-letter ANSI one. Declared on every version - Windows has it on all of them.
+#IFNDEF get_RDCShellExecuteExWEf
+    External_Function RDCShellExecuteExWEf "ShellExecuteExW" Shell32.dll Pointer pExecInfo Returns Integer
 #ENDIF
 
 #IFNDEF get_WaitForSingleObjectEf
     External_Function WaitForSingleObjectEf "WaitForSingleObject" Kernel32.dll Handle hHandle DWord dwMilliseconds Returns DWord
 #ENDIF
 
+// Hands sFile to the Windows shell: a program to start, a document or an address to open. Returns True when
+// the shell did. The procedures below go through it, and so can a program that wants a launch of its own
+// kind - shown, say, and waited on in a loop of its own.
+//   sFile        The program, document or address.
+//   sParameters  The command line for a program; "" for none (a document or an address takes none).
+//   iMask        The SEE_MASK flags. RDC_SEE_MASK_NOCLOSEPROCESS: the started process's handle is wanted back.
+//   iShow        How the window shows: 0 (SW_HIDE) hidden, 1 (SW_SHOWNORMAL) shown.
+//   hProcess     The started process's handle when iMask asks for it and the shell started a process,
+//                otherwise 0. The caller closes it (CloseHandleEf).
+// The strings go to ShellExecuteExW as WStrings from DataFlex 20, and to the ANSI ShellExecuteEx after ToANSI
+// before it. A WString ends with a zero character of its own, as the wide calls in DataFlex's own
+// cApplication.pkg rely on.
+Function RDCShellExecuteEx Global String sFile String sParameters Integer iMask Integer iShow Handle ByRef hProcess Returns Boolean
+    Integer iRet
+    tRDCShellExecuteInfo sInfo
+#IF (!@ < 200)
+    String  sFileA sParametersA
+#ELSE
+    WString wFile wParameters
+#ENDIF
+
+    Move 0 to hProcess
+    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
+    Move iMask to sInfo.fMask
+    Move iShow to sInfo.nShow
+#IF (!@ < 200)
+    Move (ToANSI(sFile)) to sFileA
+    Move (AddressOf(sFileA)) to sInfo.lpFile
+    If (sParameters <> "") Begin
+        Move (ToANSI(sParameters)) to sParametersA
+        Move (AddressOf(sParametersA)) to sInfo.lpParameters
+    End
+    Move (ShellExecuteExEf(AddressOf(sInfo))) to iRet
+#ELSE
+    Move sFile to wFile
+    Move (AddressOf(wFile)) to sInfo.lpFile
+    If (sParameters <> "") Begin
+        Move sParameters to wParameters
+        Move (AddressOf(wParameters)) to sInfo.lpParameters
+    End
+    Move (RDCShellExecuteExWEf(AddressOf(sInfo))) to iRet
+#ENDIF
+    Move sInfo.hProcess to hProcess
+    Function_Return (iRet <> 0)
+End_Function
+
 // Launches sProgram with sParameter and blocks until the process exits. Unlike a plain Runprogram, no
-// console window flashes for a console-subsystem child: the window is hidden. The strings reach
-// ShellExecuteEx, an ANSI entry, in the ANSI code page - a path with a national character in it
-// arrives intact; a character outside the code page becomes '?'.
+// console window flashes for a console-subsystem child: the window is hidden. From DataFlex 20 every
+// character of the program's path and of its parameters reaches the shell as it is (RDCShellExecuteEx).
 Procedure RDCRunProgramWait Global String sProgram String sParameter
     Handle hProcess
     Integer iVoid
-    String sProgramA sParameterA
-    tRDCShellExecuteInfo sInfo
+    Boolean bStarted
 
-    Move (Utf8ToAnsi(sProgram))   to sProgramA
-    Move (Utf8ToAnsi(sParameter)) to sParameterA
-    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
-    Move RDC_SEE_MASK_NOCLOSEPROCESS to sInfo.fMask
-    Move (AddressOf(sProgramA))   to sInfo.lpFile
-    Move (AddressOf(sParameterA)) to sInfo.lpParameters
-    Move 0 to sInfo.nShow          // SW_HIDE - no flash of a console window for a console child
-    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
-    Move sInfo.hProcess to hProcess
+    // 0 = SW_HIDE - no flash of a console window for a console child
+    Move (RDCShellExecuteEx(sProgram, sParameter, RDC_SEE_MASK_NOCLOSEPROCESS, 0, &hProcess)) to bStarted
     If (hProcess) Begin
         Move (WaitForSingleObjectEf(hProcess, -1)) to iVoid
         Move (CloseHandleEf(hProcess)) to iVoid
@@ -119,10 +178,9 @@ End_Procedure
 // /select needs the path QUOTED: Explorer takes everything after the comma as the target, and an
 // unquoted path stops at the first space, which is most of Program Files.
 Procedure RDCRevealInExplorer Global String sPath
-    Integer iVoid
-    String sArgs sProg
-    Boolean bIsDir
-    tRDCShellExecuteInfo sInfo
+    Handle hVoid
+    String sArgs
+    Boolean bIsDir bVoid
 
     Move (Trim(sPath)) to sPath
     If (sPath = "") ;
@@ -131,18 +189,13 @@ Procedure RDCRevealInExplorer Global String sPath
     If (bIsDir = False and (vFilePathExists(sPath)) = False) ;
         Procedure_Return
 
-    Move "explorer.exe" to sProg
     If (bIsDir = True) ;
-        Move (Utf8ToAnsi('"' + sPath + '"')) to sArgs
+        Move ('"' + sPath + '"') to sArgs
     Else ;
-        Move (Utf8ToAnsi('/select,"' + sPath + '"')) to sArgs
+        Move ('/select,"' + sPath + '"') to sArgs
 
-    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
-    Move 0 to sInfo.fMask                  // nothing waited on, so no handle wanted back
-    Move (AddressOf(sProg)) to sInfo.lpFile
-    Move (AddressOf(sArgs)) to sInfo.lpParameters
-    Move 1 to sInfo.nShow                  // SW_SHOWNORMAL - the window must be visible
-    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+    // Mask 0: nothing waited on, so no handle wanted back. 1 = SW_SHOWNORMAL - the window must be visible.
+    Move (RDCShellExecuteEx("explorer.exe", sArgs, 0, 1, &hVoid)) to bVoid
 End_Procedure
 
 // Opens a LOCAL .htm/.html page in whatever the user has set as their browser. Separate from
@@ -153,9 +206,9 @@ End_Procedure
 // The shell's default handler opens it: the user's chosen browser, and no program is named here,
 // since naming one would mean picking a browser on the user's behalf.
 Procedure RDCOpenHelpPage Global String sPath
-    Integer iVoid
-    String sLow sPathA
-    tRDCShellExecuteInfo sInfo
+    Handle hVoid
+    String sLow
+    Boolean bVoid
 
     Move (Trim(sPath)) to sPath
     If (sPath = "") ;
@@ -166,32 +219,24 @@ Procedure RDCOpenHelpPage Global String sPath
     If (Right(sLow, 5) <> ".html" and (Right(sLow, 4)) <> ".htm") ;
         Procedure_Return
 
-    Move (Utf8ToAnsi(sPath)) to sPathA
-    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
-    Move 0 to sInfo.fMask                  // nothing waited on, so no handle wanted back
-    Move (AddressOf(sPathA)) to sInfo.lpFile
-    // lpVerb stays null = the shell's default verb ("open") for .htm/.html.
-    Move 1 to sInfo.nShow                  // SW_SHOWNORMAL - the browser must be visible
-    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+    // No verb = the shell's default one ("open") for .htm/.html. Mask 0: nothing waited on, so no handle
+    // wanted back. 1 = SW_SHOWNORMAL - the browser must be visible.
+    Move (RDCShellExecuteEx(sPath, "", 0, 1, &hVoid)) to bVoid
 End_Procedure
 
 // Hands sTarget to the shell's default handler - the browser, for an http or https address - and
 // returns at once. http and https ONLY: a shell "open" on an arbitrary string is a way to run things,
 // so the scheme is checked here rather than trusted from the caller.
 Procedure RDCOpenUrl Global String sTarget
-    Integer iVoid
-    String sLow sTargetA
-    tRDCShellExecuteInfo sInfo
+    Handle hVoid
+    String sLow
+    Boolean bVoid
 
     Move (Lowercase(Trim(sTarget))) to sLow
     If (Left(sLow, 8) <> "https://" and Left(sLow, 7) <> "http://") ;
         Procedure_Return
 
-    Move (Utf8ToAnsi(sTarget)) to sTargetA
-    Move (SizeOfType(tRDCShellExecuteInfo)) to sInfo.cbSize
-    Move 0 to sInfo.fMask                  // nothing waited on, so no handle wanted back
-    Move (AddressOf(sTargetA)) to sInfo.lpFile
-    // lpVerb stays null = the shell's default verb ("open").
-    Move 1 to sInfo.nShow                  // SW_SHOWNORMAL - the browser must be visible
-    Move (ShellExecuteExEf(AddressOf(sInfo))) to iVoid
+    // No verb = the shell's default one ("open"). Mask 0: nothing waited on, so no handle wanted back.
+    // 1 = SW_SHOWNORMAL - the browser must be visible.
+    Move (RDCShellExecuteEx(sTarget, "", 0, 1, &hVoid)) to bVoid
 End_Procedure
