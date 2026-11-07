@@ -35,6 +35,21 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.18
+
+- From DataFlex 20 more of the library hands Windows wide text, so a path or a link with a national letter in it is
+  found: the snapshot file of `CaptureWindow` (`CreateFileW`), the taskbar icons of `cRDCIconPanel`
+  (`ImageList_LoadImageW` - the path went through `OemToAnsi` before), a link clicked in `cRDCRichEditor`
+  (`ShellExecuteW`), and the file `cRDCFileFunctions` opens to read or set its times (`CreateFileW` - before,
+  `Utf8ToAnsi` turned a letter outside the machine's ANSI code page into `?`). `WinAPIFileTimeToDateTime` formats
+  with `GetDateFormatW` and `GetTimeFormatW`.
+- `ApplicationPath` (`cRDCFileFunctions`) reads the program's folder with `GetModuleFileNameW` and
+  `PathRemoveFileSpecW`, the same whichever declaration of `GetModuleFileName` a program has: DataFlex's own
+  converting wrapper, or the ANSI one in `cRDCFileFunctions.h.pkg`.
+- The ANSI declarations keep their names (`fCreatefile`, `GetModuleFileName`, `ShellExecute`, ...) for programs that
+  call them; the wide ones have names of their own (`RDCCreateFileW`, `RDCShellExecuteW`, ...). DataFlex 19.1 keeps
+  the ANSI calls.
+
 ## What is new in 1.0.17
 
 - `RDCRunProgramWait`, `RDCRevealInExplorer`, `RDCOpenHelpPage` and `RDCOpenUrl` (`RDCRunProgram.pkg`) hand the
@@ -211,7 +226,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.17
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.18
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
