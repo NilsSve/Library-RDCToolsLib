@@ -13,6 +13,9 @@
 //
 // $Rev History:
 //    2012-07-22  Module header created
+//    2026-11-07  From DataFlex 20 the folder and the title go to the COM dialog as the DataFlex
+//                strings they are. ToANSI read the UTF-8 as OEM text, and a folder or a title
+//                with a national letter reached the dialog garbled.
 //****************************************************************************
 //Define UseSigClasses
 #IFDEF UseSigClasses
@@ -30,7 +33,9 @@ Function CJBrowseForFolder Global String sInitDir String sFilter String sDialogT
 #ELSE    
     Get Create (RefClass(cSigCJCommonDialog)) to ho
     If (sInitDir <> "") Begin
+#IF (!@ < 200)
         Move (ToANSI(sInitDir)) to sInitDir
+#ENDIF
         Set ComFileName of ho to sInitDir
     End
 
@@ -40,7 +45,9 @@ Function CJBrowseForFolder Global String sInitDir String sFilter String sDialogT
     End
 
     If (sDialogTitleText <> "") Begin
+#IF (!@ < 200)
         Move (ToANSI(sDialogTitleText)) to sDialogTitleText
+#ENDIF
         Set ComDialogTitle of ho to (sDialogTitleText - ":" * sInitDir)
     End
 

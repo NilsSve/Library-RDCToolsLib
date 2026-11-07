@@ -35,6 +35,10 @@ Define RDCTest_SEE_MASK_FLAG_NO_UI for 1024
         Pointer lpFileName ;
         Returns Integer
 #ENDIF
+// The machine's ANSI code page.
+#IFNDEF get_RDCTest_GetACP
+    External_Function RDCTest_GetACP "GetACP" Kernel32.dll Returns UInteger
+#ENDIF
 #ENDIF
 
 // One Pointer: 4 bytes in a 32-bit program, 8 in a 64-bit one. The struct-size test takes the bitness from this,
@@ -173,6 +177,57 @@ Object oRDCCreateProcess_Tests is a cTestFixture
             Send Assert False "Its output came back through the pipe."
         End
     End_Procedure
+
+#IF (!@ >= 200)
+    // Writes the bytes as one line of the file sFileName in the test folder. A DataFlex 20 channel writes a string's
+    // bytes as they are, so these need not be UTF-8.
+    Procedure WriteLineOfBytes String sFileName UChar[] aBytes
+        Integer iCh
+
+        Get Seq_New_Channel to iCh
+        Direct_Output channel iCh (psTestFolder(Self) + "\" + sFileName)
+        Writeln channel iCh (UCharArrayToString(aBytes))
+        Close_Output channel iCh
+        Send Seq_Release_Channel iCh
+    End_Procedure
+
+    // A program writes its own bytes - here "type" writes the bytes of two files: a-ring, a-umlaut, o-umlaut in
+    // the Windows code page (E5 E4 F6) and in UTF-8. Each comes back as the DataFlex string for those letters.
+    // (AnsiToOem made other letters of both until 1.0.19.) The code-page line is read in the machine's ANSI code
+    // page, so it is checked where that is 1252, the Western one.
+    { Published=True }
+    Procedure Test_cRDCExternalProgramResult_Decodes_Each_Line
+        Integer  iChildExit
+        String   sExpected
+        String[] asOutput
+        UChar[]  aAnsi aUtf8
+
+        Move 229 to aAnsi[0]
+        Move 228 to aAnsi[1]
+        Move 246 to aAnsi[2]
+        Move 195 to aUtf8[0]
+        Move 165 to aUtf8[1]
+        Move 195 to aUtf8[2]
+        Move 164 to aUtf8[3]
+        Move 195 to aUtf8[4]
+        Move 182 to aUtf8[5]
+        Move (UCharArrayToString(aUtf8)) to sExpected
+        Send WriteLineOfBytes "ansi.txt" aAnsi
+        Send WriteLineOfBytes "utf8.txt" aUtf8
+
+        Get ExternalProgramResult of ghoExternalProgramResult "cmd.exe" "/c type ansi.txt & type utf8.txt" (psTestFolder(Self)) (&asOutput) to iChildExit
+        Send AssertIAreEqual 0 iChildExit "cmd.exe typed the two files (-1: it could not start)."
+        If (SizeOfArray(asOutput) >= 2) Begin
+            If (RDCTest_GetACP() = 1252) Begin
+                Send AssertSAreEqual sExpected asOutput[0] "The code-page line."
+            End
+            Send AssertSAreEqual sExpected asOutput[1] "The UTF-8 line, as it is."
+        End
+        Else Begin
+            Send Assert False "Two lines came back through the pipe."
+        End
+    End_Procedure
+#ENDIF
 
     // Waits for a process RDCShellExecuteEx started - at most 30 seconds, so a test cannot hang - and closes it.
     Procedure WaitForTheShellsChild Handle hProcess

@@ -1,0 +1,92 @@
+// oRDCFontDialog-Tests.pkg - the two structs cRDCFontDialog hands to ChooseFont, and from DataFlex 20 the face name
+// in the wide LOGFONT. The dialog itself is not opened: it waits for a user. ChooseFont refuses a CHOOSEFONT of any
+// other size than its own (CDERR_STRUCTSIZE) before it shows anything, so the size is what decides whether the dialog
+// opens at all.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use cRDCFontDialog.pkg
+
+// One Pointer: 4 bytes in a 32-bit program, 8 in a 64-bit one - the bitness, apart from IS$WIN64.
+#IFNDEF _struct_tRDCFontTestOnePointer
+Struct tRDCFontTestOnePointer
+    Pointer p
+End_Struct
+#ENDIF
+
+Object oRDCFontDialog_Tests is a cTestFixture
+    Set psTestFixtureName to "cRDCFontDialog - the structs ChooseFont reads"
+
+    // CHOOSEFONT: 60 bytes in a 32-bit program, 104 in a 64-bit one (it was 88 there: no gaps, a four-byte
+    // lCustData). LOGFONTA is 60 bytes and LOGFONTW 92, in both.
+    { Published=True }
+    Procedure Test_The_Structs_Have_The_Sizes_Windows_Reads
+        Integer iChooseFont
+
+        If (SizeOfType(tRDCFontTestOnePointer) = 8) Begin
+            Move 104 to iChooseFont
+        End
+        Else Begin
+            Move 60 to iChooseFont
+        End
+        Send AssertIAreEqual iChooseFont (SizeOfType(tChooseFont)) "CHOOSEFONT."
+        Send AssertIAreEqual 60 (SizeOfType(tLogFont))             "LOGFONTA."
+        Send AssertIAreEqual 92 (SizeOfType(tRDCLogFontW))         "LOGFONTW."
+    End_Procedure
+
+#IF (!@ >= 200)
+    // A name with letters no ANSI code page holds all of: an L with stroke, an o with acute, a z with acute and two
+    // Chinese characters. Built from its UTF-8 bytes, so this source stays ASCII.
+    Function NationalFaceName Returns String
+        UChar[] aBytes
+
+        Move 197 to aBytes[0]     // C5 81    L with stroke, U+0141
+        Move 129 to aBytes[1]
+        Move 195 to aBytes[2]     // C3 B3    o with acute, U+00F3
+        Move 179 to aBytes[3]
+        Move 100 to aBytes[4]     // 64       d
+        Move 197 to aBytes[5]     // C5 BA    z with acute, U+017A
+        Move 186 to aBytes[6]
+        Move 32  to aBytes[7]     // 20       a space
+        Move 228 to aBytes[8]     // E4 B8 AD U+4E2D
+        Move 184 to aBytes[9]
+        Move 173 to aBytes[10]
+        Move 230 to aBytes[11]    // E6 96 87 U+6587
+        Move 150 to aBytes[12]
+        Move 135 to aBytes[13]
+        Function_Return (UCharArrayToString(aBytes))
+    End_Function
+
+    // The name goes into the struct as UTF-16 - one 16-bit unit per letter, each letter's own code - and comes back
+    // as the same DataFlex string. The other members are left as they were.
+    { Published=True }
+    Procedure Test_A_Face_Name_Goes_In_And_Comes_Back_As_It_Is
+        tRDCLogFontW lf
+
+        Move -13 to lf.lfHeight
+        Move 700 to lf.lfWeight
+        Move 34  to lf.lfPitchAndFamily
+        Move (RDCLogFontWWithFaceName(lf, NationalFaceName(Self))) to lf
+        Send AssertIAreEqual 321   lf.lfFaceName[0] "The first unit is U+0141, the L with stroke."
+        Send AssertIAreEqual 20013 lf.lfFaceName[5] "The sixth is U+4E2D, the first Chinese character."
+        Send AssertIAreEqual 0     lf.lfFaceName[7] "And the name ends after its seven letters."
+        Send AssertSAreEqual (NationalFaceName(Self)) (RDCLogFontWFaceName(lf)) "The same name comes back."
+        Send AssertIAreEqual (-13) lf.lfHeight      "lfHeight is untouched."
+        Send AssertIAreEqual 700 lf.lfWeight        "lfWeight is untouched."
+        Send AssertIAreEqual 34  lf.lfPitchAndFamily "lfPitchAndFamily, the byte right before the name, is untouched."
+    End_Procedure
+
+    // LOGFONT has room for 31 letters and a zero. A longer name is cut there, a shorter one leaves no trace of
+    // the one before it.
+    { Published=True }
+    Procedure Test_A_Long_Face_Name_Is_Cut_At_31_Letters
+        tRDCLogFontW lf
+
+        Move (RDCLogFontWWithFaceName(lf, Repeat("A", 40))) to lf
+        Send AssertSAreEqual (Repeat("A", 31)) (RDCLogFontWFaceName(lf)) "31 letters."
+        Send AssertIAreEqual 0 lf.lfFaceName[31] "The last unit stays zero."
+        Move (RDCLogFontWWithFaceName(lf, "Arial")) to lf
+        Send AssertSAreEqual "Arial" (RDCLogFontWFaceName(lf)) "A shorter name after it is that name alone."
+    End_Procedure
+#ENDIF
+
+End_Object

@@ -186,15 +186,30 @@ External_Function WinAPI_GetDeviceCaps "GetDeviceCaps" Gdi32.Dll Handle hDc Inte
 External_Function WinAPI_GetDc "GetDC" User32.Dll Handle hWnd Returns Handle
 External_Function WinAPI_CommDlgExtendedError "CommDlgExtendedError" COMDLG32.DLL Returns UInteger
 
+// The wide ChooseFont, which FontDialog calls from DataFlex 20 with a tRDCLogFontW: the face name travels as UTF-16, so
+// a font named in any script comes back as it is. ChooseFontA took and gave it in the machine's ANSI code page.
+#IFNDEF get_WinAPI_ChooseFontW
+External_Function WinAPI_ChooseFontW "ChooseFontW" COMDLG32.DLL Pointer lpChooseFont Returns Integer
+#ENDIF
+
+// CHOOSEFONT: 60 bytes in a 32-bit program, 104 in a 64-bit one. DataFlex packs a struct with no gaps, so the three
+// gaps Windows has in a 64-bit program are written out, and lCustData (an LPARAM) is pointer-sized. Without them the
+// struct was 88 bytes in a 64-bit program, and ChooseFont refused it with CDERR_STRUCTSIZE.
 Struct tChooseFont
     UInteger lStructSize
+#IFDEF IS$WIN64
+    UInteger iMissingAlignment1
+#ENDIF
     Handle hwndOwner
     Handle hDC
     Pointer lpLogFont
     Integer iPointSize
     UInteger Flags
     UInteger rgbColors
-    Integer lCustData
+#IFDEF IS$WIN64
+    UInteger iMissingAlignment2
+#ENDIF
+    Pointer lCustData
     Pointer lpfnHook
     Pointer lpTemplateName
     Handle hInstance
@@ -203,6 +218,9 @@ Struct tChooseFont
     UShort ___MISSING_ALIGNMENT__ // This member is not documented but needed and present in the header files
     Integer nSizeMin
     Integer nSizeMax
+#IFDEF IS$WIN64
+    UInteger iMissingAlignment3
+#ENDIF
 End_Struct
 
 Struct tLogFont
@@ -221,6 +239,64 @@ Struct tLogFont
     UChar lfPitchAndFamily
     UChar[LF_FACESIZE] lfFaceName
 End_Struct
+
+// LOGFONTW: the face name in UTF-16, 32 characters - 92 bytes in a 32-bit and a 64-bit program alike, the face name 28
+// bytes from the start (five LONGs and eight BYTEs). FontDialog uses it from DataFlex 20; tLogFont, the ANSI one,
+// keeps its name for the programs that use it.
+Struct tRDCLogFontW
+    Integer lfHeight
+    Integer lfWidth
+    Integer lfEscapement
+    Integer lfOrientation
+    Integer lfWeight
+    UChar lfItalic
+    UChar lfUnderline
+    UChar lfStrikeOut
+    UChar lfCharSet
+    UChar lfOutPrecision
+    UChar lfClipPrecision
+    UChar lfQuality
+    UChar lfPitchAndFamily
+    UShort[LF_FACESIZE] lfFaceName
+End_Struct
+
+#IF (!@ >= 200)
+#IFNDEF get_RDCFont_lstrlenW
+External_Function RDCFont_lstrlenW "lstrlenW" Kernel32.dll Pointer lpString Returns Integer
+#ENDIF
+
+// lf with sFaceName as its face name: at most 31 UTF-16 characters, and zeros after them. The name is copied to its
+// place in the struct, 28 bytes from the struct's own address - never through the address of a member.
+Function RDCLogFontWWithFaceName Global tRDCLogFontW lf String sFaceName Returns tRDCLogFontW
+    WString wFace
+    Integer iChars i
+    Boolean bOk
+
+    For i From 0 To (LF_FACESIZE - 1)
+        Move 0 To lf.lfFaceName[i]
+    Loop
+    Move sFaceName To wFace
+    Move (RDCFont_lstrlenW(AddressOf(wFace))) To iChars
+    If (iChars > (LF_FACESIZE - 1)) Begin
+        Move (LF_FACESIZE - 1) To iChars
+    End
+    If (iChars > 0) Begin
+        Move (MemCopy(AddressOf(lf) + 28, AddressOf(wFace), (iChars * 2))) To bOk
+    End
+    Function_Return lf
+End_Function
+
+// The face name lf holds, as a DataFlex string - read from a copy with a zero after its 32 characters, so a name that
+// fills them all still ends.
+Function RDCLogFontWFaceName Global tRDCLogFontW lf Returns String
+    WString wFace
+    Boolean bOk
+
+    Move (ZeroString(LF_FACESIZE + 1)) To wFace
+    Move (MemCopy(AddressOf(wFace), AddressOf(lf) + 28, (LF_FACESIZE * 2))) To bOk
+    Function_Return (CString(wFace))
+End_Function
+#ENDIF
 
 Class cRDCFontDialog is a cObject
     Procedure Construct_Object
@@ -294,11 +370,15 @@ Class cRDCFontDialog is a cObject
 
     //Doc/ Interface=Public
     Function FontDialog Returns Integer
-        Integer iResult iFamily iPitch iLength iPos
+        Integer iResult iFamily iPitch iLength iPos iChar
         Integer iLogPixelsY iFontType
         String sFaceName
         Handle hOwner hDC
+#IF (!@ < 200)
         tLogFont ttLogFont
+#ELSE
+        tRDCLogFontW ttLogFont
+#ENDIF
         tChooseFont ttChooseFont
         Boolean bState bReportErrors
 
@@ -342,10 +422,16 @@ Class cRDCFontDialog is a cObject
 
         Get psFaceName To sFaceName
         Move (Trim (Left (sFaceName, 31))) To sFaceName
+#IF (!@ < 200)
+        // ChooseFontA reads the name in the ANSI code page; a DataFlex 19 string is OEM.
+        Move (ToANSI (sFaceName)) To sFaceName
         Move (Length (sFaceName)) To iLength
         For iPos From 1 To iLength
             Move (Ascii (Mid (sFaceName, 1, iPos))) To ttLogFont.lfFaceName[iPos - 1]
         Loop
+#ELSE
+        Move (RDCLogFontWWithFaceName(ttLogFont, sFaceName)) To ttLogFont
+#ENDIF
 
         Move (SizeOfType (tChooseFont)) To ttChooseFont.lStructSize
         Move hOwner To ttChooseFont.hwndOwner
@@ -446,7 +532,11 @@ Class cRDCFontDialog is a cObject
         Get piSizeMin To ttChooseFont.nSizeMin
         Get piSizeMax To ttChooseFont.nSizeMax
 
+#IF (!@ < 200)
         Move (WinAPI_ChooseFont (AddressOf (ttChooseFont))) To iResult
+#ELSE
+        Move (WinAPI_ChooseFontW (AddressOf (ttChooseFont))) To iResult
+#ENDIF
 
         If (Not (iResult)) Begin
             Move (WinAPI_CommDlgExtendedError ()) To iResult
@@ -517,7 +607,25 @@ Class cRDCFontDialog is a cObject
         Set piOutPrecision To ttLogFont.lfOutPrecision
         Set piClipPrecision To ttLogFont.lfClipPrecision
         Set piQuality To ttLogFont.lfQuality
-        Set psFaceName To (AddressOf (ttLogFont.lfFaceName))
+        // The face name from the struct's characters. (It was the address of the member - a number, not the name.)
+#IF (!@ < 200)
+        Move "" To sFaceName
+        Move 0 To iPos
+        Move ttLogFont.lfFaceName[0] To iChar
+        While (iChar <> 0 and iPos < LF_FACESIZE)
+            If (iChar < 0) Begin
+                Move (iChar + 256) To iChar
+            End
+            Move (sFaceName + Character(iChar)) To sFaceName
+            Increment iPos
+            If (iPos < LF_FACESIZE) Begin
+                Move ttLogFont.lfFaceName[iPos] To iChar
+            End
+        Loop
+        Set psFaceName To (ToOEM(sFaceName))
+#ELSE
+        Set psFaceName To (RDCLogFontWFaceName(ttLogFont))
+#ENDIF
         Set piPitch To (Integer (ttLogFont.lfPitchAndFamily) iAnd |CI$3)
         Set piFamily To (Integer (ttLogFont.lfPitchAndFamily) iAnd |CI$FC)
         Set piPointSize To ttChooseFont.iPointSize
