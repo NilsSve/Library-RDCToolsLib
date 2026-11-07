@@ -35,6 +35,16 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.19
+
+- `cRDCFontDialog` opens in a 64-bit program: its CHOOSEFONT has the gaps Windows has there (104 bytes; it was 88,
+  and `ChooseFont` refused it). From DataFlex 20 it calls `ChooseFontW`, so a face name in any script goes in and
+  comes back as it is. `psFaceName` after the dialog is the name the user chose - it was the address of the name.
+- `cRDCExternalProgramResult` decodes each line of a program's output on its own from DataFlex 20: as it is when it
+  is UTF-8, else from the machine's ANSI code page. `AnsiToOem` turned every national letter into another one there.
+- `CJBrowseForFolder` hands the folder and the title to the dialog as they are from DataFlex 20; `ToANSI` garbled a
+  national letter.
+
 ## What is new in 1.0.18
 
 - From DataFlex 20 more of the library hands Windows wide text, so a path or a link with a national letter in it is
@@ -226,7 +236,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.18
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.19
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
