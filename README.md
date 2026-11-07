@@ -35,6 +35,20 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.17
+
+- `RDCRunProgramWait`, `RDCRevealInExplorer`, `RDCOpenHelpPage` and `RDCOpenUrl` (`RDCRunProgram.pkg`) hand the
+  Windows shell every character of a path or a parameter. From DataFlex 20 they go through the new global
+  function `RDCShellExecuteEx`, which calls `ShellExecuteExW`, the Unicode function of Windows. Until now they
+  called `ShellExecuteEx`, which is the ANSI `ShellExecuteExA`: a Polish, Greek or Chinese letter on a Western
+  European Windows reached the shell as `?` or as a look-alike letter, the shell found no such file, and
+  `RDCRunProgramWait` returned at once without the program having run. DataFlex 19.1 keeps the ANSI call, since a
+  string there is OEM text.
+- `RDCShellExecuteEx` can also be called on its own, for a launch of another kind - a window that shows, say,
+  waited on in a loop of its own. It returns whether the shell started the file, and the process handle when
+  `RDC_SEE_MASK_NOCLOSEPROCESS` asks for it. `ShellExecuteExEf` stays declared, for a program that calls it
+  itself with ANSI text.
+
 ## What is new in 1.0.16
 
 - `cRDCCheckBox` follows its anchors. Its container is DataFlex's non-visual `Container` class, which has no
@@ -197,7 +211,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.16
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.17
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
