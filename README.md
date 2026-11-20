@@ -35,6 +35,13 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.20
+
+- `RDCRevealInExplorer` shows a file in its folder, selected. It took every file for a folder - `vFolderExists` is
+  true for an existing file too - and so opened the file in its program (an `.ini` in Notepad). `RDCIsFolder` (new)
+  tells the two apart by the path's attributes, and a file is selected through the shell's own
+  `SHOpenFolderAndSelectItems` (`RDCSelectInFolder`, new), with `explorer.exe /select` only if that fails.
+
 ## What is new in 1.0.19
 
 - `cRDCFontDialog` opens in a 64-bit program: its CHOOSEFONT has the gaps Windows has there (104 bytes; it was 88,
@@ -236,7 +243,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.19
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.20
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
