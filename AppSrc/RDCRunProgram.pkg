@@ -11,6 +11,10 @@
 //               ANSI code page.
 //               2026-11-07 - From DataFlex 20 the strings go to ShellExecuteExW, every character as
 //               it is.
+//               2026-11-20 - RDCRevealInExplorer tells a file from a folder by its attributes (RDCIsFolder):
+//               vFolderExists is True for a file too, so a file was "opened" as a folder - explorer.exe
+//               "<file>" opens it in its program. A file is selected through the shell's own
+//               SHOpenFolderAndSelectItems (RDCSelectInFolder), explorer.exe /select only if that fails.
 //
 // Description : What a program hands to the Windows shell, through ShellExecuteEx.
 //
@@ -31,7 +35,8 @@
 //               (cRDCAsyncProcess.pkg), through a wrapper that redirects its output.
 //
 //               RDCRevealInExplorer opens Windows Explorer with a file selected in its folder, or a
-//               folder opened; RDCOpenHelpPage opens a local .htm/.html page in the user's own
+//               folder opened - a file through RDCSelectInFolder, the shell's own call for it;
+//               RDCOpenHelpPage opens a local .htm/.html page in the user's own
 //               browser; RDCOpenUrl hands an http or https address to it. The three return at once,
 //               and each takes the string only where it names something real - a path on disk, a
 //               page, a web address: handing an arbitrary string to the shell is a way to run
@@ -105,6 +110,34 @@ Define RDC_SEE_MASK_NOCLOSEPROCESS for 64
     External_Function RDCShellExecuteExWEf "ShellExecuteExW" Shell32.dll Pointer pExecInfo Returns Integer
 #ENDIF
 
+// A path's attributes (2026-11-20) - RDCIsFolder. The A form before DataFlex 20, the W form from it.
+#IFNDEF get_RDCGetFileAttributesWEf
+    External_Function RDCGetFileAttributesWEf "GetFileAttributesW" Kernel32.dll Pointer lpFileName Returns Integer
+#ENDIF
+#IFNDEF get_RDCGetFileAttributesAEf
+    External_Function RDCGetFileAttributesAEf "GetFileAttributesA" Kernel32.dll Pointer lpFileName Returns Integer
+#ENDIF
+
+// The shell's own "open the folder with this item selected" (2026-11-20) - RDCSelectInFolder. An item ID list
+// (a PIDL) for the file, the call, and the list freed again. The A form before DataFlex 20, the W form from it.
+#IFNDEF get_RDCILCreateFromPathWEf
+    External_Function RDCILCreateFromPathWEf "ILCreateFromPathW" Shell32.dll Pointer pszPath Returns Pointer
+#ENDIF
+#IFNDEF get_RDCILCreateFromPathAEf
+    External_Function RDCILCreateFromPathAEf "ILCreateFromPathA" Shell32.dll Pointer pszPath Returns Pointer
+#ENDIF
+#IFNDEF get_RDCILFreeEf
+    External_Function RDCILFreeEf "ILFree" Shell32.dll Pointer pidl Returns Integer
+#ENDIF
+#IFNDEF get_RDCSHOpenFolderAndSelectItemsEf
+    External_Function RDCSHOpenFolderAndSelectItemsEf "SHOpenFolderAndSelectItems" Shell32.dll ;
+        Pointer  pidlFolder ;
+        UInteger cidl ;
+        Pointer  apidl ;
+        DWord    dwFlags ;
+        Returns Integer
+#ENDIF
+
 #IFNDEF get_WaitForSingleObjectEf
     External_Function WaitForSingleObjectEf "WaitForSingleObject" Kernel32.dll Handle hHandle DWord dwMilliseconds Returns DWord
 #ENDIF
@@ -171,23 +204,89 @@ Procedure RDCRunProgramWait Global String sProgram String sParameter
     End
 End_Procedure
 
+// True when sPath names a folder that is there - FILE_ATTRIBUTE_DIRECTORY (16) in the attributes Windows gives
+// for it; False for a file, and for a path that is not there (GetFileAttributes returns -1). Not vFolderExists:
+// that lists "dir:<path>", and an existing file lists itself, so it says True for a file too.
+Function RDCIsFolder Global String sPath Returns Boolean
+    Integer iAttr
+#IF (!@ < 200)
+    String sPathA
+#ELSE
+    WString wPath
+#ENDIF
+
+    If (Trim(sPath) = "") ;
+        Function_Return False
+#IF (!@ < 200)
+    Move (ToANSI(sPath)) to sPathA
+    Move (RDCGetFileAttributesAEf(AddressOf(sPathA))) to iAttr
+#ELSE
+    Move sPath to wPath
+    Move (RDCGetFileAttributesWEf(AddressOf(wPath))) to iAttr
+#ENDIF
+    If (iAttr = -1) ;
+        Function_Return False
+    Function_Return ((iAttr iand 16) <> 0)
+End_Function
+
+// Opens the folder of the file sFile in Windows Explorer, with the file selected - the shell's own
+// SHOpenFolderAndSelectItems, given the file's item ID list alone (no folder list and no item count: the call
+// then opens the item's parent and selects it). An Explorer window already showing that folder is reused.
+// Returns True when the shell did it, False when the file could not be named to the shell or the call failed
+// (COM not initialised, say) - RDCRevealInExplorer then starts explorer.exe /select instead. sFile must be a
+// full path; the caller checks that it exists.
+Function RDCSelectInFolder Global String sFile Returns Boolean
+    Pointer pidl
+    Integer iHr iVoid
+#IF (!@ < 200)
+    String sFileA
+#ELSE
+    WString wFile
+#ENDIF
+
+#IF (!@ < 200)
+    Move (ToANSI(sFile)) to sFileA
+    Move (RDCILCreateFromPathAEf(AddressOf(sFileA))) to pidl
+#ELSE
+    Move sFile to wFile
+    Move (RDCILCreateFromPathWEf(AddressOf(wFile))) to pidl
+#ENDIF
+    If (pidl = 0) ;
+        Function_Return False
+    // S_OK is 0; any other HRESULT is a failure.
+    Move (RDCSHOpenFolderAndSelectItemsEf(pidl, 0, 0, 0)) to iHr
+    Move (RDCILFreeEf(pidl)) to iVoid
+    Function_Return (iHr = 0)
+End_Function
+
 // Opens Windows Explorer showing sPath - a file SELECTED in its folder, or a folder opened. Nothing is
 // waited on, and the window is shown. THE PATH MUST EXIST, and that is checked here rather than at the
 // caller: requiring a real file or folder on disk means the worst a bad caller can do is show the user
 // a directory. explorer.exe is named for the same reason - the shell picks no handler from the string.
 // /select needs the path QUOTED: Explorer takes everything after the comma as the target, and an
 // unquoted path stops at the first space, which is most of Program Files.
+// FILE OR FOLDER BY ITS ATTRIBUTES (RDCIsFolder), 2026-11-20. This used vFolderExists, which is True for an
+// existing file too - it lists "dir:<path>", and a file lists itself - so every file took the folder branch and
+// explorer.exe "<file>" OPENED it in its program: DFRefactorFT's Export showed its .ini in Notepad instead of in
+// its folder (Nils 2026-11-20; a log in the running program showed the branch). A file then goes through
+// RDCSelectInFolder, the shell's own call, and explorer.exe /select only when that fails.
 Procedure RDCRevealInExplorer Global String sPath
     Handle hVoid
     String sArgs
-    Boolean bIsDir bVoid
+    Boolean bIsDir bVoid bShown
 
     Move (Trim(sPath)) to sPath
     If (sPath = "") ;
         Procedure_Return
-    Move (vFolderExists(sPath)) to bIsDir
+    Move (RDCIsFolder(sPath)) to bIsDir
     If (bIsDir = False and (vFilePathExists(sPath)) = False) ;
         Procedure_Return
+
+    If (bIsDir = False) Begin
+        Move (RDCSelectInFolder(sPath)) to bShown
+        If (bShown = True) ;
+            Procedure_Return
+    End
 
     If (bIsDir = True) ;
         Move ('"' + sPath + '"') to sArgs
