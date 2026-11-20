@@ -13,7 +13,6 @@ Use DFUnit\Fixturing\Fixture.pkg
 Use cRDCAsyncProcess.pkg        // RDCRunProgramBounded - cmd.exe makes the folder and the file, and removes them
 Use cRDCFileFunctions.pkg
 Use vWin32fh.pkg                // vFolderExists, vFilePathExists
-Use RDCRunProgram.pkg           // RDCIsFolder
 
 Object oRDCFileFunctions_Tests is a cTestFixture
     Set psTestFixtureName to "cRDCFileFunctions - the program's folder, and a file in a folder with any name"
@@ -143,19 +142,19 @@ Object oRDCFileFunctions_Tests is a cTestFixture
         Send AssertIAreEqual (DateGetYear(CurrentDateTime())) (DateGetYear(dtWritten)) "The last write time reads back as a DateTime of this year."
     End_Procedure
 
-    // RDCIsFolder tells a folder from a file by its attributes (2026-11-20). vFolderExists is True for an existing
-    // FILE too - it lists "dir:<path>", and a file lists itself - which is how RDCRevealInExplorer once took a file
-    // for a folder and opened it in its program instead of showing it.
+    // vPathIsDirectory tells a folder from a file; vFolderExists does not (2026-11-20): it lists "dir:<path>", and an
+    // existing FILE lists itself - which is how RDCRevealInExplorer once took a file for a folder and opened it in its
+    // program instead of showing it. RDCRevealInExplorer asks vPathIsDirectory now.
     { Published=True }
-    Procedure Test_RDCIsFolder_Tells_A_Folder_From_A_File
+    Procedure Test_vPathIsDirectory_Tells_A_Folder_From_A_File
         String sFolder
 
         Move (psFileFunctionsFolder(Self)) to sFolder
-        Send Assert (RDCIsFolder(sFolder)) ("The test's folder is a folder:" * sFolder)
-        Send AssertFalse (RDCIsFolder(sFolder + "\marker.txt")) "A file in it is not."
-        Send AssertFalse (RDCIsFolder(sFolder + "\No Such Thing 7Q")) "A path that is not there is not."
-        Send AssertFalse (RDCIsFolder("")) "Nor is an empty path."
-        Send Assert (vFolderExists(sFolder + "\marker.txt")) "vFolderExists says True for the file - the reason RDCIsFolder exists."
+        Send Assert (vPathIsDirectory(sFolder)) ("The test's folder is a folder:" * sFolder)
+        Send AssertFalse (vPathIsDirectory(sFolder + "\marker.txt")) "A file in it is not."
+        Send AssertFalse (vPathIsDirectory(sFolder + "\No Such Thing 7Q")) "A path that is not there is not."
+        Send AssertFalse (vPathIsDirectory("")) "Nor is an empty path."
+        Send Assert (vFolderExists(sFolder + "\marker.txt")) "vFolderExists says True for the file - why RDCRevealInExplorer does not use it."
     End_Procedure
 
 End_Object

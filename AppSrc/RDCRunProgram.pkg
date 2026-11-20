@@ -11,7 +11,7 @@
 //               ANSI code page.
 //               2026-11-07 - From DataFlex 20 the strings go to ShellExecuteExW, every character as
 //               it is.
-//               2026-11-20 - RDCRevealInExplorer tells a file from a folder by its attributes (RDCIsFolder):
+//               2026-11-20 - RDCRevealInExplorer tells a file from a folder with vPathIsDirectory:
 //               vFolderExists is True for a file too, so a file was "opened" as a folder - explorer.exe
 //               "<file>" opens it in its program. A file is selected through the shell's own
 //               SHOpenFolderAndSelectItems (RDCSelectInFolder), explorer.exe /select only if that fails.
@@ -110,14 +110,6 @@ Define RDC_SEE_MASK_NOCLOSEPROCESS for 64
     External_Function RDCShellExecuteExWEf "ShellExecuteExW" Shell32.dll Pointer pExecInfo Returns Integer
 #ENDIF
 
-// A path's attributes (2026-11-20) - RDCIsFolder. The A form before DataFlex 20, the W form from it.
-#IFNDEF get_RDCGetFileAttributesWEf
-    External_Function RDCGetFileAttributesWEf "GetFileAttributesW" Kernel32.dll Pointer lpFileName Returns Integer
-#ENDIF
-#IFNDEF get_RDCGetFileAttributesAEf
-    External_Function RDCGetFileAttributesAEf "GetFileAttributesA" Kernel32.dll Pointer lpFileName Returns Integer
-#ENDIF
-
 // The shell's own "open the folder with this item selected" (2026-11-20) - RDCSelectInFolder. An item ID list
 // (a PIDL) for the file, the call, and the list freed again. The A form before DataFlex 20, the W form from it.
 #IFNDEF get_RDCILCreateFromPathWEf
@@ -204,31 +196,6 @@ Procedure RDCRunProgramWait Global String sProgram String sParameter
     End
 End_Procedure
 
-// True when sPath names a folder that is there - FILE_ATTRIBUTE_DIRECTORY (16) in the attributes Windows gives
-// for it; False for a file, and for a path that is not there (GetFileAttributes returns -1). Not vFolderExists:
-// that lists "dir:<path>", and an existing file lists itself, so it says True for a file too.
-Function RDCIsFolder Global String sPath Returns Boolean
-    Integer iAttr
-#IF (!@ < 200)
-    String sPathA
-#ELSE
-    WString wPath
-#ENDIF
-
-    If (Trim(sPath) = "") ;
-        Function_Return False
-#IF (!@ < 200)
-    Move (ToANSI(sPath)) to sPathA
-    Move (RDCGetFileAttributesAEf(AddressOf(sPathA))) to iAttr
-#ELSE
-    Move sPath to wPath
-    Move (RDCGetFileAttributesWEf(AddressOf(wPath))) to iAttr
-#ENDIF
-    If (iAttr = -1) ;
-        Function_Return False
-    Function_Return ((iAttr iand 16) <> 0)
-End_Function
-
 // Opens the folder of the file sFile in Windows Explorer, with the file selected - the shell's own
 // SHOpenFolderAndSelectItems, given the file's item ID list alone (no folder list and no item count: the call
 // then opens the item's parent and selects it). An Explorer window already showing that folder is reused.
@@ -265,7 +232,7 @@ End_Function
 // a directory. explorer.exe is named for the same reason - the shell picks no handler from the string.
 // /select needs the path QUOTED: Explorer takes everything after the comma as the target, and an
 // unquoted path stops at the first space, which is most of Program Files.
-// FILE OR FOLDER BY ITS ATTRIBUTES (RDCIsFolder), 2026-11-20. This used vFolderExists, which is True for an
+// FILE OR FOLDER BY vPathIsDirectory (vWin32fh), 2026-11-20. This used vFolderExists, which is True for an
 // existing file too - it lists "dir:<path>", and a file lists itself - so every file took the folder branch and
 // explorer.exe "<file>" OPENED it in its program: DFRefactorFT's Export showed its .ini in Notepad instead of in
 // its folder (Nils 2026-11-20; a log in the running program showed the branch). A file then goes through
@@ -278,7 +245,7 @@ Procedure RDCRevealInExplorer Global String sPath
     Move (Trim(sPath)) to sPath
     If (sPath = "") ;
         Procedure_Return
-    Move (RDCIsFolder(sPath)) to bIsDir
+    Move (vPathIsDirectory(sPath)) to bIsDir
     If (bIsDir = False and (vFilePathExists(sPath)) = False) ;
         Procedure_Return
 
