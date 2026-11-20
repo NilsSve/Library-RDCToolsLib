@@ -35,6 +35,11 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.21
+
+- `RDCIsFolder`, added in 1.0.20, is removed again: vWin32fh's own `vPathIsDirectory` already tells a folder from a
+  file, and `RDCRevealInExplorer` asks it now. A program that called `RDCIsFolder` calls `vPathIsDirectory` instead.
+
 ## What is new in 1.0.20
 
 - `RDCRevealInExplorer` shows a file in its folder, selected. It took every file for a folder - `vFolderExists` is
@@ -243,7 +248,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.20
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.21
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
