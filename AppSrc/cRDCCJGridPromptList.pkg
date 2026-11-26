@@ -27,8 +27,10 @@ Class cRDCCJGridPromptList is a cCJGridPromptList
         Set pbSelectTextOnEdit to False
         Set pbHeaderSelectsColumn to False
         Set pbRestoreLayout to True
-        Set pbAutoOrdering to False
-        Set pbAutoSearch to False
+        // A click on a column header sorts by that column, and typing opens a search on the sorted column - the
+        // way a lookup list is used. Both were off until 1.0.22.
+        Set pbAutoOrdering to True
+        Set pbAutoSearch to True
         Set pbAutoSeed to False
         Set pbUseFocusCellRectangle to True
         Set piTooltipMaxWidth to 400
