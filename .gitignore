@@ -8,6 +8,8 @@
 **/appsrc/**/*.dep
 **/appsrc/**/*.dbg
 **/appsrc/**/*.exe.manifest
+# ...except the test program's, a fixed file the build embeds (DFUnit)
+!**/appsrc/**/UnitTests*.exe.manifest
 **/appsrc/**/*.err
 **/appsrc/**/*.fld
 **/appsrc/**/*.pbg
