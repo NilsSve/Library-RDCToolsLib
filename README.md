@@ -35,6 +35,13 @@ buttons, splitter support, a tool panel docked as a CodeJock dialog bar that rem
 height (`cRDCCJToolPanel`) with the grid that shares its context menu (`cRDCCJToolPanelGrid`), and
 CodeJock menu items for changing colours, skins and text-edit options.
 
+## What is new in 1.0.22
+
+- The lookup lists can be searched again. `cRDCDbCJGridPromptList` and `cRDCCJGridPromptList` switched off DataFlex's
+  `pbAutoSearch` and `pbAutoOrdering`, so typing in a list did nothing and a click on a column header did not sort by
+  it. Both are on now: a click on a header sorts by that column, and typing opens the search on the sorted column -
+  "SE" and Enter go to Sweden. A list that set them itself is unchanged.
+
 ## What is new in 1.0.21
 
 - `RDCIsFolder`, added in 1.0.20, is removed again: vWin32fh's own `vPathIsDirectory` already tells a folder from a
@@ -248,7 +255,7 @@ CodeJock menu items for changing colours, skins and text-edit options.
 **DataFlex 26 and later** — add it as a package, with the version after a `#`:
 
 ```
-https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.21
+https://github.com/NilsSve/Library-RDCToolsLib.git/RDC-Windows-Sub-Classes-Library.sws#1.0.22
 ```
 
 Each release has a version tag (`1.0.1`, `1.0.2`, ...), listed under Tags on GitHub. Pin a tag, not a
